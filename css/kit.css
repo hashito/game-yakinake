@@ -1,4 +1,4 @@
-/* game-kit e962dd12: css/kit.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 0c515586: css/kit.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: shared styles for first-person browser games (windows, HUD, buttons, touch controls,
    status chips, steppers, kanban, app-like software screens, tabs, stamps, share buttons; at the end
    progression pg-*, sim UI nt-/tb-/dl-/ch-*, journal jr-* / stream veil st-* / hiding hd-*, chat cx-*).
@@ -3534,6 +3534,16 @@ body.gf-warming .wm-layer, body.gf-warming .rn-wrap, body.gf-warming #mg, body.g
   .mgx-st-line { height: 4.35em; font-size: 0.86em; }
 }
 @media (max-height: 360px) and (min-width: 600px) { .mgx--st .mgx-head .btn { min-height: 44px; padding-block: 4px; } }
+/* safe-listen (1.28.0): a slot per number of the code - its way to turn, then the number once it catches */
+.mgx-sf-slots { display: flex; gap: 6px; flex: 1 1 100%; justify-content: center; }
+.mgx-sf-slot { flex: 1 1 0; max-width: 96px; display: flex; flex-direction: column; align-items: center; padding: 2px 4px; border: 2px solid var(--gf-border, #5a5a5a); border-radius: 6px; line-height: 1.2; color: var(--gf-text); }
+.mgx-sf-slot small { font-size: 0.78em; white-space: nowrap; }
+.mgx-sf-slot b { font-size: 1.15em; font-variant-numeric: tabular-nums; letter-spacing: 0.05em; }
+.mgx-sf-slot.now { border-color: var(--gf-accent, #3a7a5a); box-shadow: 0 0 0 2px var(--gf-accent, #3a7a5a); }  /* pair-ok */
+.mgx-sf-slot.heard { border-color: #d8a020; box-shadow: 0 0 0 2px #d8a020; }  /* pair-ok */
+.mgx-sf-slot.done { border-color: var(--gf-accent, #3a7a5a); }
+@media (max-width: 599px) { .mgx-st.mgx-sf { --st-h: clamp(150px, calc(100dvh - 480px), 320px); } }
+@media (max-height: 500px) and (min-width: 600px) { .mgx-sf-slot { padding: 0 4px; } .mgx-sf-slot small { font-size: 0.72em; } .mgx-sf-slot b { font-size: 1em; } .mgx-sf .mgx-st-line { height: 2.9em; } .mgx-sf .mgx-st-side .btn { min-height: 44px; } }
 .mgx-dr-rock { min-width: 120px; }
 .mgx-dr-pull { min-width: 140px; }
 .mgx-tp-all { min-width: 132px; }
@@ -3784,3 +3794,209 @@ body.touch #say.on { pointer-events: auto; }   /* a tap on the thought band open
 .mgx-photo-knob { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; background: #e8b040; /* pair-ok */ box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5); pointer-events: none; transition: transform 0.08s ease-out; }
 .mgx-photo-pad .mgx-photo-shutter { min-height: 64px; }
 @media (max-height: 500px) { .mgx-photo-stick { --s: 112px; } .mgx-photo-knob { width: 44px; height: 44px; margin: -22px 0 0 -22px; } .mgx-photo-pad { width: auto; gap: 10px; } }
+
+/* 1.26.0 (鏡屋 2026-11-22 「横向きのスマホで、ファインダーと番号錠がスクロールなしで収まるように」, P44): a short landscape screen
+   (844x390, 844x340) shows a whole mini game without scrolling: the help is one line (a tap opens it), the stick and the lock rows are
+   compact, the lock's 「開ける」 sits beside the rows */
+@media (max-height: 500px) and (min-width: 600px) {
+  .mgx .mgx-help { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 2px 0 6px; line-height: 1.5; cursor: pointer; }
+  .mgx .mgx-help.mgx-help--open { white-space: normal; }
+  .mgx .mgx-msg { margin: 4px 0 0; min-height: 0; height: 1.6em; line-height: 1.6; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .mgx-photo:has(.mgx-photo-pad) { grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; gap: 6px 14px; }
+  .mgx-photo:has(.mgx-photo-pad) .mgx-photo-view { grid-row: 1 / 3; width: min(330px, 36vw, calc((100dvh - 190px) * 1.5)); }
+  .mgx-mirror-box { width: min(300px, calc(100dvh - 180px)); margin: 6px; }
+  .mgx-mirror-m { width: 42px; height: 42px; margin: -21px 0 0 -21px; }
+  .mgx-mirror-m i { width: 38px; margin-left: -19px; }
+  .mgx-photo-pad { grid-template-columns: minmax(96px, 1fr) auto auto; gap: 10px; }
+  .mgx-photo-stick { --s: 100px; }
+  .mgx-photo-knob { width: 40px; height: 40px; margin: -20px 0 0 -20px; }
+  .mgx-photo-pad .mgx-photo-shutter { min-height: 52px; padding-inline: 12px; }
+  .mgx-body:has(> .mgx-code-pick) { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; }
+  .mgx-code-pick { gap: 5px; margin: 0; width: 100%; }
+  .mgx-code-row { grid-template-columns: minmax(0, 1fr) auto; padding: 3px 8px; gap: 4px 10px; }
+  .mgx-code-q { line-height: 1.3; }
+  .mgx-code-opt { min-width: 44px; min-height: 44px; font-size: 1.05em; }
+  .mgx-order { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; }
+  .mgx-order-list { gap: 3px; }
+  .mgx-order-step { min-height: 44px; padding: 2px 10px; }
+  .mgx-order .mgx-row { margin-top: 0; }
+  .mgx-order .mgx-row .btn { white-space: normal; width: 6.5em; min-height: 56px; padding-inline: 8px; line-height: 1.3; }
+  .mgx-order-step { line-height: 1.3; font-size: 0.94em; }
+  .mgx-body:has(> .mgx-code-pick) .mgx-code-btn { margin: 0; min-width: 0; min-height: 56px; padding-inline: 16px; }
+}
+@media (max-height: 360px) and (min-width: 600px) {
+  .mgx .mgx-head { min-height: 0; }
+  .mgx .mgx-head .mgx-close { margin-block: 0; }
+  .mgx-code-pick { gap: 4px; }
+  .mgx-code-row { padding: 1px 8px; }
+  .mgx-photo-stick { --s: 92px; }
+  .mgx-photo:has(.mgx-photo-pad) .mgx-photo-view { width: min(300px, 34vw, calc((100dvh - 190px) * 1.5)); }
+  .mgx-mirror-box { width: min(300px, calc(100dvh - 170px)); margin: 6px; }
+  .mgx-order { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; }
+  .mgx-order-list { gap: 3px; }
+  .mgx-order-step { min-height: 44px; padding: 2px 10px; }
+  .mgx-order .mgx-row { margin-top: 0; }
+  .mgx-order .mgx-row .btn { white-space: normal; width: 6.5em; min-height: 56px; padding-inline: 8px; line-height: 1.3; }
+  .mgx-order-step { line-height: 1.3; font-size: 0.94em; }
+}
+/* 1.26.1 (五人分の朝 P36 at 390x844, layer-board): the STEP line and the hint lines have fixed boxes (a longer text scrolls inside them),
+   so a longer step or one more hint never moves the parts or the buttons */
+.mgx-layer-step { height: calc(3em + 16px); line-height: 1.5; overflow-y: auto; box-sizing: border-box; }
+.mgx-layer-hint { height: 3em; line-height: 1.5; overflow-y: auto; align-content: start; }
+.mgx-layer-hint[hidden] { display: grid; visibility: hidden; }
+/* 1.26.3 (五人分の朝 P44 at 844x390 / 667x375 / 844x340, layer-board scrolled by 535-569 px): on a short landscape screen the board is two
+   columns - the parts on the left (two to a row; js/mg-layer-board.js marks a part that does not fit half a row .wide and it takes a whole
+   row), the STEP line, the tools (戻す・初めへ・手掛かり・照合) two by two and the hints in a side column on the right. Each part is one row: its
+   label in a narrow column, then the choices as compact chips (44 px high, a long choice wraps to two lines inside its chip). The picture
+   is left out (the STEP line and the labels carry it); an order list drops its arrows (tap two steps to swap them, as before). */
+@media (max-height: 500px) and (min-width: 600px) {
+  .mgx-layer { grid-template-columns: minmax(0, 1fr) 212px; grid-template-areas: "parts step" "parts tools" "parts hint"; grid-template-rows: auto auto minmax(3.2em, 1fr); gap: 5px 10px; align-items: start; }
+  .mgx-layer > .mgx-layer-fig { display: none; }
+  .mgx-layer > .mgx-layer-step { grid-area: step; height: calc(3em + 8px); padding: 4px 8px; font-size: 0.82em; }
+  .mgx-layer > .mgx-layer-parts { grid-area: parts; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 4px; }
+  .mgx-layer > .mgx-layer-hint { grid-area: hint; height: 100%; min-height: 3.2em; font-size: 0.8em; }
+  .mgx-layer > .mgx-layer-tools { grid-area: tools; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 0; }
+  .mgx-layer-tools .btn { width: 100%; min-width: 0; min-height: 44px; padding: 2px 6px; font-size: 0.8em; line-height: 1.2; white-space: normal; justify-content: center; }
+  .mgx-layer-part { display: flex; align-items: center; gap: 6px; padding: 2px 6px; min-width: 0; }
+  .mgx-layer-part.wide { grid-column: 1 / -1; }
+  .mgx-layer-label { margin: 0; font-size: 0.8em; flex: 0 0 5.4em; line-height: 1.25; }
+  .mgx-layer-opts { flex: 1 1 0; min-width: 0; gap: 4px; flex-wrap: wrap; }
+  .mgx-layer-opt { min-height: 44px; min-width: 44px; max-width: 8.5em; padding: 2px 7px; font-size: 0.8em; line-height: 1.2; }
+  .mgx-layer-opt.on::before { content: none; }
+  .mgx-layer-opt.on { box-shadow: inset 0 0 0 2px var(--gf-accent-ink, #fff); }
+  .mgx-layer-count { margin: 0; font-size: 0.78em; flex: none; }
+  .mgx-layer-part .mgx-order-list { flex: 1 1 0; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+  .mgx-layer-part .mgx-order-list li { flex: 1 1 0; min-width: 0; }
+  .mgx-layer-part .mgx-order-step { min-height: 44px; padding: 2px 6px; font-size: 0.8em; gap: 4px; line-height: 1.2; }
+  .mgx-layer-part .mgx-order-mv { display: none; }
+  .mgx-layer-shift { gap: 6px; }
+  .mgx-layer-shift .btn { min-height: 44px; min-width: 44px; }
+  .mgx-layer-tools .btn svg { width: 1.1em; height: 1.1em; flex: none; }
+}
+@media (max-height: 500px) and (min-width: 600px) {
+  /* a part whose choices do not fit beside the label: the label goes above them (.stack, js/mg-layer-board.js) */
+  .mgx-layer-part.stack { flex-wrap: wrap; gap: 2px 6px; }
+  .mgx-layer-part.stack > .mgx-layer-label { flex: 1 1 100%; }
+}
+/* a narrower landscape phone (667x375): a narrower side column and label, smaller chips */
+@media (max-height: 500px) and (min-width: 600px) and (max-width: 760px) {
+  .mgx-layer { grid-template-columns: minmax(0, 1fr) 176px; }
+  .mgx-layer > .mgx-layer-step { height: calc(4.2em + 8px); line-height: 1.4; font-size: 0.78em; }
+  .mgx-layer-label { flex-basis: 4.4em; font-size: 0.74em; }
+  .mgx-layer-opt { max-width: 7em; padding: 2px 6px; font-size: 0.76em; }
+  .mgx-layer-part .mgx-order-step { font-size: 0.76em; }
+}
+/* 1.26.4 (出口はこちらです P44: tune-radio 70-114 px, lock-pick 43-87 px, switch-panel 73-117 px at 844x390 / 844x340 / 667x375): on a short
+   landscape screen every mini game window puts its help line up in the title row (one line, a tap opens it as before; the head becomes part
+   of the window's grid, ~30 px for the board), and these three lay out sideways: the radio's band, words and meters left of the knob, the
+   lock's pins left of the wrench and the button, the switch board's cells lower than they are wide */
+@media (max-height: 500px) and (min-width: 600px) {
+  .mgx { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; column-gap: 10px; align-items: center; }
+  .mgx > .mgx-head { display: contents; }
+  .mgx > .mgx-head > b { grid-row: 1; grid-column: 1; max-width: 40vw; line-height: 1.3; }
+  .mgx > .mgx-head > .mgx-pips { grid-row: 1; grid-column: 3; }
+  .mgx > .mgx-head > .mgx-close { grid-row: 1; grid-column: 4; }
+  .mgx > .mgx-help { grid-row: 1; grid-column: 2; margin: 0; }
+  .mgx > :not(.mgx-head):not(.mgx-help) { grid-column: 1 / -1; }
+  .mgx > .mgx-body { margin-top: 6px; }
+  .mgx-radio { display: grid; grid-template-columns: minmax(0, 380px) auto; grid-template-areas: "band knob" "heard knob" "signal knob" "bars knob" "hold knob"; justify-content: center; align-items: center; gap: 4px 24px; }
+  .mgx-radio > .mgx-radio-band { grid-area: band; width: 100%; }
+  .mgx-radio > .mgx-radio-heard { grid-area: heard; width: 100%; height: 2.6em; }
+  .mgx-radio > .mgx-radio-signal { grid-area: signal; width: 100%; }
+  .mgx-radio > .mgx-radio-bars { grid-area: bars; width: 100%; height: 30px; }
+  .mgx-radio > .mgx-radio-hold { grid-area: hold; width: 100%; }
+  .mgx-radio > .mgx-radio-knob { grid-area: knob; width: 100px; height: 100px; }
+  .mgx-lock { display: grid; grid-template-columns: auto auto; grid-template-areas: "body wrench" "body btn"; justify-content: center; align-items: center; gap: 10px 24px; }
+  .mgx-lock > .mgx-lock-body { grid-area: body; width: 300px; }
+  .mgx-lock > .mgx-lock-wrench { grid-area: wrench; align-self: end; }
+  .mgx-lock > .mgx-lock-btn { grid-area: btn; align-self: start; min-width: 200px; }
+  .mgx-switch { width: min(calc(var(--n, 3) * 76px + 24px), 100%); gap: 6px; padding: 8px; }
+  .mgx-sw { aspect-ratio: auto; min-height: 44px; height: calc((100dvh - 220px) / var(--n, 3)); max-height: 64px; flex-direction: row; gap: 10px; }
+  .mgx-sw-lamp { width: 22px; height: 22px; }
+}
+@media (max-height: 360px) and (min-width: 600px) {
+  .mgx { padding-block: 10px; }
+  .mgx > .mgx-body { margin-top: 2px; }
+  .mgx > .mgx-msg { margin-top: 2px; }
+  .mgx-radio > .mgx-radio-knob { width: 88px; height: 88px; }
+  .mgx-radio > .mgx-radio-bars { height: 24px; }
+}
+/* 1.26.5 (八尺 P44: the salt / pour mini game scrolled 16-31 px at 667x375 / 844x340): on a short landscape screen the dish stands left of the button */
+@media (max-height: 500px) and (min-width: 600px) {
+  .mgx-pour { flex-direction: row; justify-content: center; gap: 28px; }
+}
+
+/* 1.27.0 photo-focus cfg.full (鏡屋 「写真を取るUIについて画像を全面に出して、ジョイスティックを重ねるみたいな表示にしてほしい」): the picture fills the
+   screen, the controls float over it, see-through. Portrait: the stick, the gauges and the shutter in one row at the bottom. Landscape: the
+   stick at the bottom left, the gauges over the shutter at the right, the frame in the middle clear. tools/check-playtest.mjs P46. */
+.mgx-full-layer { position: fixed; inset: 0; z-index: 2147482000; background: #000; animation: mgx-full-in 0.18s ease-out; }  /* pair-ok: behind the picture */
+@keyframes mgx-full-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .mgx-full-layer { animation: none; } }
+.mgx.mgx--photo-full { position: absolute; inset: 0; width: auto; max-width: none; height: auto; max-height: none; margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: #000; overflow: hidden; transform: none; animation: none; }  /* pair-ok: no mgx-open (it moves the panel by -50 %) */
+.mgx.mgx--photo-full .mgx-head { position: absolute; z-index: 3; top: 0; left: 0; right: 0; margin: 0; padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 6px max(12px, env(safe-area-inset-left)); border: 0; background: linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.35) 75%, rgba(0, 0, 0, 0)); color: #f4efe4; }  /* pair-ok: over a dark picture */
+.mgx.mgx--photo-full { display: block; }  /* not the 1.26.4 short-landscape window grid (the head row would sit under the gauges) */
+.mgx.mgx--photo-full > .mgx-head { display: flex; }
+.mgx.mgx--photo-full .mgx-head b { color: #f4efe4; text-shadow: 0 1px 2px #000; }  /* pair-ok */
+.mgx.mgx--photo-full .mgx-close { background: rgba(0, 0, 0, 0.5); color: #f4efe4; border-color: rgba(255, 255, 255, 0.45); }  /* pair-ok */
+.mgx.mgx--photo-full .mgx-help { position: absolute; z-index: 3; top: 58px; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); box-sizing: border-box; height: calc(2.9em + 6px); margin: 0; padding: 3px 10px; border-radius: 6px; background: rgba(0, 0, 0, 0.5); color: #ece6da; font-size: 13px; line-height: 1.45; white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; text-overflow: clip; cursor: pointer; }  /* pair-ok: 1.29.0 two lines in a fixed box, never 「…」 (P46) */
+.mgx.mgx--photo-full .mgx-help.mgx-help--open { height: auto; display: block; -webkit-line-clamp: unset; }
+.mgx.mgx--photo-full .mgx-body { position: absolute; inset: 0; margin: 0; padding: 0; max-height: none; overflow: hidden; }
+.mgx.mgx--photo-full .mgx-photo { position: absolute; inset: 0; display: block; }
+.mgx.mgx--photo-full .mgx-photo-view { position: absolute; inset: 0; width: auto !important; height: auto; aspect-ratio: auto; border: 0; border-radius: 0; grid-row: auto; }
+.mgx.mgx--photo-full .mgx-photo-meter { top: 108px; right: max(12px, env(safe-area-inset-right)); bottom: auto; font-size: 13px; }
+.mgx.mgx--photo-full .mgx-photo-read { position: absolute; z-index: 3; top: 108px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 120px); height: auto; margin: 0; overflow: visible; }
+.mgx.mgx--photo-full .mgx-photo-read span { background: rgba(0, 0, 0, 0.6); }  /* pair-ok */
+.mgx.mgx--photo-full .mgx-msg { position: absolute; z-index: 3; left: 0; right: 0; bottom: 196px; margin-inline: auto; transform: none; width: fit-content; max-width: calc(100% - 24px); height: auto; margin-block: 0; padding: 4px 12px; border-radius: 6px; background: rgba(0, 0, 0, 0.62); color: #f4efe4; overflow: visible; }  /* pair-ok: centred by margins (the line's 'in' animation moves it with transform) */
+.mgx.mgx--photo-full .mgx-msg:empty { display: none; }
+.mgx.mgx--photo-full .mgx-photo-pad { position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; width: auto; margin: 0; padding: 18px max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "stick gauges shutter"; align-items: end; gap: 12px; background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.5)); pointer-events: none; }  /* pair-ok */
+.mgx.mgx--photo-full .mgx-photo-pad > * { pointer-events: auto; }
+.mgx.mgx--photo-full .mgx-photo-stick { grid-area: stick; background-color: rgba(16, 16, 16, 0.38); }  /* pair-ok: see-through over the picture */
+.mgx.mgx--photo-full .mgx-photo-knob { opacity: 0.9; }
+.mgx.mgx--photo-full .mgx-photo-gauges { grid-area: gauges; align-self: end; padding: 6px 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.5); color: #ece6da; }  /* pair-ok */
+.mgx.mgx--photo-full .mgx-photo-shutter { grid-area: shutter; min-height: 64px; min-width: 104px; opacity: 0.94; }
+.mgx.mgx--photo-full .mgx-next { position: absolute !important; z-index: 4; left: 50%; top: auto; bottom: max(22px, env(safe-area-inset-bottom)); margin: 0 !important; transform: translateX(-50%); }
+/* 1.29.0 (鏡屋, director notes): the guide fades as it gets close (inline opacity), both right = green + one pulse; the good shot is held like a
+   print (the rest dark) until 「次へ」; a timed shot darkens and pulses the edge, with the seconds left */
+.mgx.mgx--photo-full .mgx-photo-read span { transition: opacity 0.25s; }
+.mgx.mgx--photo-full.mgx--photo-ready .mgx-photo-frame { border-color: #8fe0a0; animation: mgx-ready-pulse 0.6s ease-out 1; }  /* pair-ok */
+@keyframes mgx-ready-pulse { 0% { box-shadow: 0 0 0 0 rgba(143, 224, 160, 0.85); } 100% { box-shadow: 0 0 0 18px rgba(143, 224, 160, 0); } }
+.mgx.mgx--photo-full.mgx--photo-shot .mgx-photo-pad, .mgx.mgx--photo-full.mgx--photo-shot .mgx-photo-read, .mgx.mgx--photo-full.mgx--photo-shot .mgx-photo-outline,
+.mgx.mgx--photo-full.mgx--photo-shot .mgx-help, .mgx.mgx--photo-full.mgx--photo-shot .mgx-photo-meter, .mgx.mgx--photo-full.mgx--photo-shot .mgx-photo-edge, .mgx.mgx--photo-full.mgx--photo-shot .mgx-photo-left { visibility: hidden; }
+.mgx.mgx--photo-full.mgx--photo-shot .mgx-photo-frame { border: 6px solid #f4efe4; box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.74), 0 8px 28px rgba(0, 0, 0, 0.7); animation: mgx-shot-in 0.7s ease-out 1; }  /* pair-ok: a print */
+@keyframes mgx-shot-in { 0% { box-shadow: 0 0 0 100vmax rgba(255, 255, 255, 0.9); } 100% { box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.74), 0 8px 28px rgba(0, 0, 0, 0.7); } }
+.mgx.mgx--photo-full.mgx--photo-shot .mgx-stamp { display: none; }  /* the print is the reward: no stamp over what was taken */
+.mgx.mgx--photo-full.mgx--photo-shot .mgx-msg { top: auto; bottom: calc(max(22px, env(safe-area-inset-bottom)) + 62px); font-size: 1.15em; padding: 6px 16px; }
+.mgx.mgx--photo-full .mgx-photo-edge { position: absolute; inset: 0; z-index: 2; pointer-events: none; box-shadow: inset 0 0 70px 34px rgba(0, 0, 0, 0.88); animation: mgx-edge 1.3s ease-in-out infinite; }  /* pair-ok */
+.mgx.mgx--photo-full.mgx--photo-low .mgx-photo-edge { box-shadow: inset 0 0 90px 46px rgba(46, 0, 0, 0.92); animation-duration: 0.5s; }  /* pair-ok */
+.mgx.mgx--photo-full.mgx--photo-late .mgx-photo-edge { animation: none; }
+@keyframes mgx-edge { 50% { opacity: 0.5; } }
+.mgx.mgx--photo-full .mgx-photo-left { position: absolute; z-index: 3; top: 170px; left: 50%; transform: translateX(-50%); padding: 2px 8px; border-radius: 6px; background: rgba(0, 0, 0, 0.62); color: #ffd6c8; font-size: 14px; font-weight: 700; }  /* pair-ok */
+.mgx.mgx--photo-full.mgx--photo-late .mgx-photo-shutter { opacity: 0.4; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .mgx.mgx--photo-full .mgx-photo-frame, .mgx.mgx--photo-full .mgx-photo-edge { animation: none !important; } }
+@media (orientation: landscape) {
+  .mgx.mgx--photo-full .mgx-photo-pad { grid-template-columns: auto minmax(0, 1fr) minmax(0, 200px); grid-template-areas: "stick . gauges" "stick . shutter"; }
+  .mgx.mgx--photo-full .mgx-photo-shutter { justify-self: end; }
+  .mgx.mgx--photo-full .mgx-msg { bottom: auto; top: 130px; }
+  .mgx.mgx--photo-full .mgx-help { top: 48px; right: max(100px, env(safe-area-inset-right)); }
+  .mgx.mgx--photo-full .mgx-photo-meter { top: 60px; }
+  .mgx.mgx--photo-full .mgx-photo-read, .mgx.mgx--photo-full .mgx-photo-left { top: 98px; }
+  .mgx.mgx--photo-full .mgx-photo-left { left: max(12px, env(safe-area-inset-left)); transform: none; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .mgx.mgx--photo-full .mgx-head { padding-top: 6px; padding-bottom: 4px; }
+  .mgx.mgx--photo-full .mgx-help { top: 40px; font-size: 12px; }
+  .mgx.mgx--photo-full .mgx-photo-read { top: 86px; font-size: 13px; }
+  .mgx.mgx--photo-full .mgx-photo-left { top: 86px; }
+  .mgx.mgx--photo-full .mgx-photo-meter { top: 58px; }
+  .mgx.mgx--photo-full .mgx-msg { top: 118px; }
+  .mgx.mgx--photo-full .mgx-photo-pad { padding-top: 8px; gap: 8px 12px; }
+  .mgx.mgx--photo-full .mgx-photo-gauges { padding: 4px 8px; gap: 4px; }
+  .mgx.mgx--photo-full .mgx-photo-shutter { min-height: 52px; }
+}
+@media (orientation: landscape) and (max-height: 360px) {
+  .mgx.mgx--photo-full .mgx-help { top: 38px; }
+  .mgx.mgx--photo-full .mgx-photo-read, .mgx.mgx--photo-full .mgx-photo-left { top: 82px; }
+  .mgx.mgx--photo-full .mgx-photo-meter { top: 56px; }
+  .mgx.mgx--photo-full .mgx-msg { top: 112px; }
+}

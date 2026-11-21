@@ -38,6 +38,10 @@ export function closeTapSource() {
   })()`;
 }
 
+// close the open mini game: the library's .mgx-close, or a game's own window in #mg-custom (its [data-close] / 閉じる button); 1.28.1:
+// a custom window left open (札の家 keyring) stayed on screen and every later task measured it instead of its own
+const mgCloseJs = (v) => `(${v}.querySelector('.mgx-close, [data-close]') || [...${v}.querySelectorAll('button')].find((b) => /閉じる|やめる|中断/.test(b.textContent || '')) || { click() {} }).click();`;
+
 /** open the library mini game of task <id>, make every caption longer, and report the controls that moved (then close it) */
 export function mgStableSource(id) {
   return `(async () => {
@@ -54,8 +58,47 @@ export function mgStableSource(id) {
       const now = at(); now.forEach((p, i) => { const d = Math.hypot(p[0] - before[i][0], p[1] - before[i][1]); if (d > 2) moved.push((el.className || el.tagName) + ' -> ' + (ctl[i].className || ctl[i].tagName) + ' ' + Math.round(d) + 'px'); });
       el.textContent = old; await new Promise((r) => requestAnimationFrame(r));
     }
-    (host.querySelector('.mgx-close') || { click() {} }).click(); await Promise.race([run, new Promise((r) => setTimeout(r, 800))]);
+    ${mgCloseJs('host')} await Promise.race([run, new Promise((r) => setTimeout(r, 800))]);
     return { type: (t.minigame || {}).type, open: true, controls: ctl.length, texts: texts.length, moved: [...new Set(moved)].slice(0, 6) };
+  })()`;
+}
+
+/** P44 (1.26.0, 鏡屋 「横向きのスマホでスクロールなし」): a mini game open on a phone: the panel must not scroll, and every control
+ *  (buttons, sliders, the stick) must be inside the screen. Returns { open, type, scroll: px, off: [control, px] } */
+export function mgFitSource(id) {
+  return `(async () => {
+    const t = g.data.tasks.find((x) => x.id === ${JSON.stringify(id)}); if (!t || !g.runMinigame) return null;
+    const run = g.runMinigame(t); await new Promise((r) => setTimeout(r, 900));
+    const root = document.querySelector('.mgx') || document.getElementById('mg-custom'); if (!root) return { type: (t.minigame || {}).type, open: false };
+    const H = innerHeight, W = innerWidth, off = [];
+    let scroll = 0;
+    for (const el of [root, ...root.querySelectorAll('*')]) {
+      const cs = getComputedStyle(el); if (!/(auto|scroll)/.test(cs.overflowY) || el.classList.contains('mgx-msg')) continue;
+      scroll = Math.max(scroll, el.scrollHeight - el.clientHeight);
+    }
+    for (const e of root.querySelectorAll('[role=slider], button, input, select, .mgx-photo-stick')) {
+      const r = e.getBoundingClientRect(); if (r.width < 3 || r.height < 3) continue;
+      const by = Math.max(0, r.bottom - H, -r.top, r.right - W, -r.left); if (by > 2) off.push([(e.className || e.tagName).toString().slice(0, 40) + ' ' + (e.textContent || '').trim().slice(0, 8), Math.round(by)]);
+    }
+    // 1.26.3: nothing of the HUD on top of the window (the phone's 目的 chip sat on the title)
+    { const rr = root.getBoundingClientRect(); for (const e of document.querySelectorAll('#gf-goal-chip, #hud-left')) { const s = getComputedStyle(e), r = e.getBoundingClientRect(); if (s.display !== 'none' && s.visibility !== 'hidden' && r.width > 2 && r.left < rr.right && r.right > rr.left && r.top < rr.bottom && r.bottom > rr.top) off.push(['#' + e.id + ' over the window', Math.round(Math.min(r.right, rr.right) - Math.max(r.left, rr.left))]); } }
+    // P46 (1.27.0): photo-focus cfg.full - how much of the screen the picture covers, and the floating controls that overlap each other
+    let full = null;
+    if (root.classList.contains('mgx--photo-full')) {
+      const v = root.querySelector('.mgx-photo-view').getBoundingClientRect(), cover = Math.max(0, Math.min(v.right, W) - Math.max(v.left, 0)) * Math.max(0, Math.min(v.bottom, H) - Math.max(v.top, 0)) / (W * H);
+      const parts = ['.mgx-close', '.mgx-help', '.mgx-photo-read', '.mgx-photo-meter', '.mgx-photo-left', '.mgx-photo-stick', '.mgx-photo-gauges', '.mgx-photo-shutter'].map((s) => [s, root.querySelector(s)])
+        .filter(([, e]) => e && getComputedStyle(e).display !== 'none').map(([s, e]) => [s, e.getBoundingClientRect()]).filter(([, r]) => r.width > 2 && r.height > 2);
+      const overlaps = [];
+      for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) {
+        const a = parts[i][1], b = parts[j][1], ix = Math.min(a.right, b.right) - Math.max(a.left, b.left), iy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+        if (ix > 2 && iy > 2) overlaps.push([parts[i][0], parts[j][0], Math.round(ix), Math.round(iy)]);
+      }
+      // 1.29.0: the help is a fixed box of two lines - cut text (「…」 or more than two lines) is a fault
+      const h = root.querySelector('.mgx-help'), helpCut = !!h && getComputedStyle(h).display !== 'none' && (h.scrollHeight > h.clientHeight + 1 || h.scrollWidth > h.clientWidth + 1 || getComputedStyle(h).textOverflow === 'ellipsis');
+      full = { cover: Math.round(cover * 1000) / 1000, overlaps, helpCut, help: h ? h.textContent.trim() : '' };
+    }
+    ${mgCloseJs('root')} await Promise.race([run, new Promise((r) => setTimeout(r, 800))]);
+    return { type: (t.minigame || {}).type, open: true, scroll: Math.round(scroll), off: off.slice(0, 6), full };
   })()`;
 }
 

@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/hud-slots.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit a0cd84bd: js/hud-slots.js — edit in game-kit and run tools/kit-sync.js */
 // HUD slots (rule U27, docs/hud-slots.md): every HUD part has ONE region, so notifications can never sit on the clock, the sensors or the menu.
 //
 //   tl      top-left stack   goal chip, STEP chip                       (#hud-left, flow, order)
@@ -160,6 +160,9 @@ export function layoutHudSlots() {
   const rects = (sel) => [...document.querySelectorAll(sel)].map(visibleRect).filter(Boolean);
   const kids = (id) => { const c = document.getElementById(id); return c ? [...c.children].map((k) => paintedRect(k)).filter(Boolean) : []; };
   const stacks = [...kids(SLOTS.tl), ...kids(SLOTS.tr), ...[document.getElementById("t-menu")].map((k) => k && paintedRect(k)).filter(Boolean)];
+  // 1.26.2: a phone's 目的 chip (js/phone-play.js) is a top stack too while playing, also while a line hides it for a moment (the lane does not jump)
+  const chip = document.getElementById("gf-goal-chip");
+  if (chip && document.body.classList.contains("gf-phone") && document.body.classList.contains("gf-playing") && getComputedStyle(chip).display !== "none") { const r = chip.getBoundingClientRect(); if (r.width > 1 && r.height > 1) stacks.push(r); }
   const bottoms = [];
   const push = (r) => { if (r) bottoms.push(r); };
   push(visibleRect(document.getElementById("crosshair")));

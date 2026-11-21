@@ -1,5 +1,8 @@
 {
  "lampPool": true,
+ "dims": {
+  "doorH": 2.05
+ },
  "rooms": [
   {
    "id": "H_TOU",
@@ -1160,8 +1163,8 @@
   {
    "id": "S_TAPE",
    "room": "P_TSU",
-   "x": 114,
-   "z": 1,
+   "x": 116.6,
+   "z": 0.95,
    "label": "留守番の録音機"
   },
   {
@@ -1931,6 +1934,79 @@
    "w": 1.6,
    "d": 0.8,
    "kind": "desk"
+  },
+  {
+   "id": "F_NS_RADIO",
+   "room": "H_NS",
+   "x": 12.6,
+   "z": 0.35,
+   "w": 1.2,
+   "d": 0.5,
+   "kind": "desk"
+  },
+  {
+   "id": "F_O_KAICHO_SB",
+   "room": "O_KAICHO",
+   "x": 152.6,
+   "z": 4.5,
+   "w": 1.7,
+   "d": 0.55,
+   "kind": "table",
+   "rot": 90
+  },
+  {
+   "id": "F_SHOTEN_STALL",
+   "room": "S_SHOTEN",
+   "x": 60.2,
+   "z": 16.5,
+   "w": 1.6,
+   "d": 0.6,
+   "kind": "table"
+  },
+  {
+   "id": "F_SHOTEN_CRATE",
+   "room": "S_SHOTEN",
+   "x": 67.6,
+   "z": 21.4,
+   "w": 0.7,
+   "d": 0.7,
+   "kind": "crate"
+  },
+  {
+   "id": "F_RF_C1",
+   "room": "O_ROOF",
+   "x": 131,
+   "z": 2.2,
+   "w": 0.9,
+   "d": 0.9,
+   "kind": "crate"
+  },
+  {
+   "id": "F_RF_C2",
+   "room": "O_ROOF",
+   "x": 143.2,
+   "z": 2.2,
+   "w": 0.9,
+   "d": 0.9,
+   "kind": "crate"
+  },
+  {
+   "id": "F_RF_C3",
+   "room": "O_ROOF",
+   "x": 131,
+   "z": 12.2,
+   "w": 0.9,
+   "d": 0.9,
+   "kind": "crate"
+  },
+  {
+   "id": "F_RF_C4",
+   "room": "O_ROOF",
+   "x": 142.6,
+   "z": 12.8,
+   "w": 0.9,
+   "d": 0.9,
+   "kind": "crate"
   }
  ],
  "start": "H_TOU",

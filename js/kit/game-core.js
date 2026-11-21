@@ -1,4 +1,4 @@
-/* game-kit 80041248: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 0c515586: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -77,7 +77,7 @@ import { installTimedShot } from './timed-shot.js';
 import { VoiceQueue } from './voice-queue.js';
 import { installNpcAudit } from './npc-audit.js';
 
-export const CORE_VERSION = '1.25.3';
+export const CORE_VERSION = '1.29.2';
 // the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
 export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board', 'darkroom-develop', 'tape-splice', 'switchboard', 'steam-letter', 'puzzle-box', 'rubbing', 'knot-untangle', 'torn-paper', 'safe-listen', 'footprint-track'];
 const $ = (id) => document.getElementById(id);
@@ -249,7 +249,7 @@ export function createGame(cfg) {
   const def = buildProgressionDef(data.stages, tasks, plan);
   const prog = ctx.prog = new Progression(def);
   prog.on('levelup', (e) => { if (!ctx.skipping) bus.emit('stage:up', { level: e.level.id, unlocks: e.unlocks }); });   // ctx.skipping: a test scene walks there quietly
-  const world = ctx.world = wdef ? wdef.build(ctx) : buildWorld(plan, { isUnlocked: (k) => prog.isUnlocked(k) });
+  const world = ctx.world = wdef ? wdef.build(ctx) : buildWorld(plan, { ...(plan.dims || {}), isUnlocked: (k) => prog.isUnlocked(k) });   // 1.28.0: plan.dims (doorH, wallH ...: the body-sized world of 夜勤明けの街 #3)
   world.onBarrierOpen = () => { if (state.started && !ctx.skipping) safe(() => ctx.audio.noiseBurst({ dur: 0.7, freq: 300, q: 0.8, gain: 0.22, type: 'lowpass', wet: 0.3 })); };
   if (world.group && !world.group.parent) scene.add(world.group);
   world.floorY = world.floorY || (() => 0);

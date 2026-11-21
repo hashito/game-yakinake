@@ -1,4 +1,4 @@
-/* game-kit 10af67dd: js/mg-frame.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 0c515586: js/mg-frame.js — edit in game-kit and run tools/kit-sync.js */
 // The frame of the library mini games (js/mg-*.js): a top-anchored panel (title, close, help, the stage, a message line) inside the host
 // the game gives. Esc and the close button end without penalty. Style: css/kit.css "mini game library" block (.mgx-*, theme tokens).
 //   const f = mgFrame(host, { title, help, cfg, ctx }, (ok) => done(ok));
@@ -15,10 +15,31 @@ export const skinOf = (cfg = {}) => (SKINS.includes(cfg.skin) ? cfg.skin : 'pape
 
 export function mgFrame(host, { title = '', help = '', cfg = {}, ctx = {} } = {}, done = () => {}) {
   const calm = !!ctx.calm || (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches);
-  host.innerHTML = `<div class="mgx mgx--skin-${skinOf(cfg)}${calm ? ' mgx--calm' : ''}" role="dialog" aria-label="${esc(title)}"><div class="mgx-head"><b>${esc(title)}</b><span class="mgx-pips" aria-hidden="true"></span><button type="button" class="btn mgx-close" data-close>閉じる</button></div>${help ? `<p class="mgx-help">${esc(help)}</p>` : ''}<div class="mgx-body"></div><p class="mgx-msg" aria-live="polite"></p></div>`;
+  host.innerHTML = `<div class="mgx mgx--skin-${skinOf(cfg)}${calm ? ' mgx--calm' : ''}" role="dialog" aria-label="${esc(title)}"><div class="mgx-head"><b>${esc(title)}</b><span class="mgx-pips" aria-hidden="true"></span><button type="button" class="btn mgx-close" data-close>閉じる</button></div>${help ? `<p class="mgx-help" title="${esc(help)}">${esc(help)}</p>` : ''}<div class="mgx-body"></div><p class="mgx-msg" aria-live="polite"></p></div>`;
   const root = host.querySelector('.mgx'), msg = host.querySelector('.mgx-msg'), body = host.querySelector('.mgx-body'), pips = host.querySelector('.mgx-pips');
+  // 1.26.0 (鏡屋 「横向きのスマホでスクロールなし」): on a short landscape screen the help is one line (css); a tap shows all of it
+  const helpEl = host.querySelector('.mgx-help'); if (helpEl) helpEl.addEventListener('click', () => helpEl.classList.toggle('mgx-help--open'));
   let finished = false, winning = false;
+  // 1.29.2 (夜勤明けの街 P44: search-dark, pump-gauge, code-drums, steady-hand, rotate-pipes, tape-splice scrolled 14-78 px at 844x390,
+  // 667x375, 844x340): on a short landscape screen a panel that still does not fit scales its stage down (to 60 % at most) instead of
+  // scrolling. The stage keeps its layout and its pointer maths (getBoundingClientRect follows the scale).
+  const fit = () => {
+    if (finished || !body.isConnected) return;
+    body.style.transform = ''; body.style.marginBottom = '';
+    if (typeof innerHeight === 'undefined' || !(innerHeight <= 500 && innerWidth > innerHeight)) return;
+    const over = root.scrollHeight - root.clientHeight, h = body.offsetHeight;
+    if (over <= 1 || !h) return;
+    const k = Math.max(0.6, (h - over - 2) / h);
+    body.style.transformOrigin = 'top center'; body.style.transform = `scale(${k.toFixed(3)})`; body.style.marginBottom = `${-Math.ceil(h * (1 - k))}px`;
+  };
+  const refit = () => requestAnimationFrame(() => requestAnimationFrame(fit));
+  let ro = null;
+  if (typeof requestAnimationFrame !== 'undefined') {
+    refit(); setTimeout(refit, 400);
+    if (typeof ResizeObserver !== 'undefined') { ro = new ResizeObserver(() => refit()); ro.observe(body); }
+  }
   const offs = [];
+  if (typeof addEventListener !== 'undefined' && typeof requestAnimationFrame !== 'undefined') { addEventListener('resize', refit); offs.push(() => removeEventListener('resize', refit), () => ro && ro.disconnect()); }
   const replay = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
   const f = {
     body,
@@ -41,6 +62,7 @@ export function mgFrame(host, { title = '', help = '', cfg = {}, ctx = {} } = {}
       b.style.cssText = 'display:block;position:relative;z-index:2;min-height:48px;min-width:10rem;margin:10px auto 0';
       const after = host.querySelector('.mgx-msg') || body;
       after.parentNode.insertBefore(b, after.nextSibling);
+      refit();
       const t0 = Date.now(), press = () => { if (Date.now() - t0 >= 350) f.end(true); };
       b.onclick = press;
       f.on('keydown', (e) => { if (e.code === 'Enter' || e.code === 'Space' || e.code === 'KeyE') { e.preventDefault(); press(); } });

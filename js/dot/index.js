@@ -35,11 +35,21 @@ const STATION_PART = { S_CART: 'crash-cart', S_TOOL: 'toolbox', S_SAFE: 'safe', 
   S_GEN: 'generator', S_RECORD: 'desk', S_EVID: 'locker', S_SERVER: 'server' };
 // stations whose thing is already there without a part: a person (their figure), a door or a lock (the door), the helipad (its Ｈ)
 const STATION_BARE = ['S_CHISATO', 'S_GENZO', 'S_GONDO', 'S_SHIRA', 'S_KATA', 'S_NOGUCHI', 'S_HAYASE', 'S_HELI', 'S_ODOOR', 'S_FORCE', 'S_ARMORY', 'S_MARTLOCK', 'S_SHUTTER'];
-const STATION_MOUNT = { S_TOOL: { y: 0, back: 0.2 }, S_RADIO: { y: 1.0, back: 0.1 }, S_BREAKER: { y: 0.9, wall: true }, S_TAPE: { y: 0.76 }, S_RIFLE: { y: 0.76 }, S_SAFE: { back: 0.1 } };
+// how a station's thing stands: y (above the floor), back (toward the wall), seat (put down on the furniture under it, 1.2.0 #1: the radio,
+// the tape deck and the rifle case floated at a fixed height), size (its longest side in metres, 1.2.0 #3)
+const STATION_MOUNT = { S_TOOL: { y: 0, back: 0.2 }, S_RADIO: { back: 0.22, seat: true, size: 0.36 }, S_BREAKER: { y: 0, back: 0.02 }, S_TAPE: { back: 0.5, seat: true, size: 0.3 },
+  S_RIFLE: { back: 0.05, seat: true, size: 1.2 }, S_SAFE: { back: 0.1 } };
+// 1.2.0 (play test #3 「自分の体のサイズに合わせて」): the real sizes for a body with eyes at 1.6 m. surf = the height of the working surface
+// (nat = where the part's own surface is, measured from its voxels: the desk's monitor stands above it), h = the whole height, len = a vehicle's length
+const REAL = { desk: { surf: 0.74, nat: 0.75 }, 'steel-desk': { surf: 0.74, nat: 0.75 }, counter: { surf: 0.92, nat: 0.73 }, table: { surf: 0.72, nat: 0.75 },
+  bed: { surf: 0.55, nat: 0.43 }, shelf: { h: 1.8 }, 'shop-shelf': { h: 1.55 }, locker: { h: 1.8 }, vending: { h: 1.8 }, fridge: { h: 1.75 }, server: { h: 1.9 },
+  crate: { h: 0.6 }, bench: { h: 0.8 }, 'street-lamp': { h: 4.2 }, 'body-cabinets': { h: 1.9 },
+  'car-stalled': { h: 1.45, len: 4.4 }, 'car-stalled-red': { h: 1.45, len: 4.4 }, 'car-burnt': { h: 1.35, len: 4.4 }, 'car-doors-open': { h: 1.45, len: 4.4 },
+  'police-car': { h: 1.5, len: 4.6 }, ambulance: { h: 2.3, len: 5.0 }, 'bus-side': { h: 2.5, len: 9.6 } };
 // mood props: [room, k, x, z, face (rad), scale]
 const PROPS = [
   ['H_ROKA', 'wheelchair', 7.5, 7.2, 0.6], ['H_ROKA', 'iv-fallen', 15.5, 5.6, 1.2], ['H_ROKA', 'gurney', 25.8, 6.8, 0], ['H_SHO', 'iv-fallen', 22, 4.2, 0.4],
-  ['H_HAN', 'cone', 31.6, 2.2, 0], ['S_URA', 'cone', 40, 1.2, 0], ['S_URA', 'street-lamp', 46.4, 0.6, Math.PI], ['S_URA', 'street-lamp', 34, 12.4, 0],
+  ['H_HAN', 'cone', 31.6, 2.2, 0], ['S_URA', 'cone', 40, 1.2, 0], ['S_URA', 'gurney', 44.2, 7.9, Math.PI / 2, 1, 'P_URA_GURNEY'], ['S_URA', 'street-lamp', 46.4, 0.6, Math.PI], ['S_URA', 'street-lamp', 34, 12.4, 0],
   ['S_ODORI', 'street-lamp', 50, 5.6, Math.PI], ['S_ODORI', 'street-lamp', 62, -3.6, 0], ['S_ODORI', 'street-lamp', 70, 5.6, Math.PI], ['S_ODORI', 'street-lamp', 56, -3.6, 0], ['S_SHOTEN', 'street-lamp', 65, 16.4, 0], ['O_PLAZA', 'street-lamp', 146, 23, 0], ['S_ODORI', 'cone', 68, 4.4, 0], ['S_ODORI', 'pole', 56, 5.6, 0],
   ['S_MART', 'barricade', 62, 6.6, 0], ['S_SHOTEN', 'street-lamp', 54, 16.4, 0], ['S_SHOTEN', 'street-lamp', 76, 16.4, 0], ['S_SHOTEN', 'cone', 81.8, 17, 0],
   ['S_HIROBA', 'sandbags', 94, 10, Math.PI / 2], ['S_HIROBA', 'street-lamp', 84, 7, 0], ['S_HIROBA', 'cone', 87, 20, 0],
@@ -47,12 +57,15 @@ const PROPS = [
   ['O_OFF', 'collapsed-shelf', 142.4, 8, 0],
 ];
 // the loot lying in the world: the parts that exist for it
-const LOOT_PART = { pistol: 'pistol', shotgun: 'shotgun', medkit: 'medkit', aidkit: 'medkit', p9: 'ammo-9mm', shell: 'ammo-12g' };
+// 1.2.0 (#3 #4): every thing of the case has its part, at its real size (the longest side, m)
+const LOOT_PART = { pistol: ['pistol', 0.2], shotgun: ['shotgun', 1.0], medkit: ['medkit', 0.34], aidkit: ['medkit', 0.24], p9: ['ammo-9mm', 0.12], shell: ['ammo-12g', 0.12],
+  rifleAmmo: ['ammo-rifle', 0.11], water: ['water', 0.24], bandage: ['bandage', 0.11], nails: ['nails', 0.16], powder: ['powder', 0.13], disinfect: ['disinfect', 0.18],
+  canned: ['canned', 0.1], casing: ['casing', 0.11] };
 
 export default async function dotLayer(ext, { manifest, data }) {
   document.documentElement.dataset.dot = 'fps';
   installPhotoHooks();
-  const D = window.__dot = { timings: {}, furniture: [], props: [], stations: [], loot: 0 };
+  const D = window.__dot = { timings: {}, furniture: [], props: [], stations: [], loot: 0, surf: {}, seated: [] };
   const t0 = performance.now();
   const index = await fetch(AT('assets/stacks/index.json')).then((r) => r.json()).catch(() => ({}));
   const px = Object.fromEntries(await Promise.all(Object.keys(index).map(async (k) => [k, await loadPixels(AT(`assets/stacks/${k}.png`))])));
@@ -68,18 +81,24 @@ export default async function dotLayer(ext, { manifest, data }) {
     return geo.get(k);
   };
   const part = (k, s = 1) => { const m = new THREE.Mesh(cgeo(k), mat); m.name = `dot-part:${k}`; m.scale.setScalar(s); m.castShadow = true; m.receiveShadow = true; return m; };
-  // a part filling a box (its long side along the box's long side), front toward `face`
+  // a part filling a box: its long side along the box's long side (of the two ways, the one nearer `face`), its height the real one (REAL).
+  // 1.2.0 (#3): the cars came out 1.85 m long and 0.5 m high, the bus 4.6 m, the shelves 0.8 m (a rotated box swapped the axes twice)
   function fit(k, box, face = 0, o = {}) {
     const g = cgeo(k), gs = g.boundingBox.getSize(new THREE.Vector3()), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
-    const longX = gs.x >= gs.z, boxLongX = size.x >= size.z;
-    const yaw = face + (longX === boxLongX ? 0 : Math.PI / 2);
-    const q = Math.abs(Math.sin(yaw)) > 0.5, bw = q ? size.z : size.x, bd = q ? size.x : size.z;
-    const s = Math.min(bw / gs.x, bd / gs.z) * (o.k || 1);
-    const sy = o.exactY ? size.y / gs.y : Math.min(s * 1.15, Math.max(s, (o.hmax || 9) / gs.y));
+    const partLongX = gs.x >= gs.z, boxLongX = size.x >= size.z;
+    let yaw = partLongX === boxLongX ? 0 : Math.PI / 2;
+    if (Math.cos(face - yaw) < 0) yaw += Math.PI;
+    const R = REAL[k] || {}, pl = Math.max(gs.x, gs.z), ps = Math.min(gs.x, gs.z), bl = Math.max(size.x, size.z), bs = Math.min(size.x, size.z);
+    let sl = bl / pl, ss = bs / ps, sy;
+    if (o.vehicle) { sl = ss = (R.len || bl) / pl; sy = R.h ? R.h / gs.y : sl; }
+    else sy = R.surf ? R.surf / R.nat : R.h ? R.h / gs.y : Math.max(0.6, Math.min(1.6, Math.min(sl, ss)));
     const m = new THREE.Mesh(g, mat); m.castShadow = true; m.receiveShadow = true;
-    m.scale.set(Math.min(bw / gs.x, s * 1.2), o.free ? s : sy, Math.min(bd / gs.z, s * 1.2)); m.rotation.y = yaw; m.position.set(c.x, box.min.y, c.z); m.name = `dot-stack:${k}`;
+    m.scale.set(partLongX ? sl : ss, sy, partLongX ? ss : sl); m.rotation.y = yaw; m.position.set(c.x, box.min.y, c.z); m.name = `dot-stack:${k}`;
     return m;
   }
+  // a part at its real size: REAL (height) or a longest side in metres
+  const sized = (m, k, size) => { const gs = cgeo(k).boundingBox.getSize(new THREE.Vector3()), R = REAL[k];
+    if (size) m.scale.setScalar(size / Math.max(gs.x, gs.y, gs.z)); else if (R && R.h) m.scale.y = R.h / gs.y; else if (R && R.surf) m.scale.y = R.surf / R.nat; return m; };
 
   ext.registerBoot('dot-pictures', async (ctx, report) => {
     const t = performance.now();
@@ -110,18 +129,36 @@ export default async function dotLayer(ext, { manifest, data }) {
         obj.updateWorldMatrix(true, true);
         const box = new THREE.Box3().setFromObject(obj); if (box.isEmpty()) continue;
         obj.traverse((x) => { if (x.isMesh) x.visible = false; });
-        const face = ((f.rot || 0) * Math.PI) / 180;
         const vehicle = /car|bus|ambulance/.test(k);
-        const m = fit(k, box, face, { exactY: /desk|bed|bench|counter|table/.test(k), hmax: vehicle ? 4 : (box.max.y - box.min.y) * 1.05, free: vehicle });
+        let face = ((f.rot || 0) * Math.PI) / 180, m;
+        if (vehicle) {
+          // a vehicle: its real length, turned the way the prop is turned, standing on the middle of the prop's box (the kit's car recipe is
+          // one size for every vehicle, the bus too)
+          const q = new THREE.Quaternion(); obj.getWorldQuaternion(q); const ax = new THREE.Vector3(1, 0, 0).applyQuaternion(q);
+          face = Math.atan2(-ax.z, ax.x) + Math.PI / 2;   // the kit's car recipe runs along its local z
+          const cx = (box.min.x + box.max.x) / 2, cz = (box.min.z + box.max.z) / 2;
+          m = fit(k, new THREE.Box3(new THREE.Vector3(cx - 1, box.min.y, cz - 0.5), new THREE.Vector3(cx + 1, box.max.y, cz + 0.5)), 0, { vehicle: true });
+          const gs = cgeo(k).boundingBox.getSize(new THREE.Vector3()); m.rotation.y = face + (gs.x >= gs.z ? 0 : Math.PI / 2);
+        } else m = fit(k, box, face);
         W.group.add(m);
+        D.surf[f.id] = m;
+        // what the body bumps into and what the pickups stand on follow the part: a desk's top at its working surface, a vehicle's footprint
+        m.updateWorldMatrix(true, false);
+        const vb = new THREE.Box3().setFromObject(m), cols = W.colliders.filter((cc) => cc.box && !cc.off && box.containsPoint(cc.box.getCenter(new THREE.Vector3())));
+        for (const cc of cols) {
+          if (vehicle) { cc.box.min.x = vb.min.x + 0.12; cc.box.max.x = vb.max.x - 0.12; cc.box.min.z = vb.min.z + 0.12; cc.box.max.z = vb.max.z - 0.12; cc.box.max.y = vb.max.y; }
+          else if (REAL[k] && REAL[k].surf) cc.box.max.y = box.min.y + REAL[k].surf;
+          else if (REAL[k] && REAL[k].h) cc.box.max.y = box.min.y + REAL[k].h;
+        }
         D.furniture.push({ id: f.id, k });
       }
       if (ctx.pixelStyle) ctx.pixelStyle.sweep();
       D.timings.furniture = Math.round(performance.now() - t);
+      D.dressed = true; setTimeout(() => settle(), 0);
     };
     dress();
     // ---- the stations' own things ----
-    const swaps = [];
+    const swaps = [], seats = [];
     const lamps = [];
     for (const [sid, spec] of Object.entries(STATION_PART)) {
       const st = plan.stations.find((s) => s.id === sid); const S = typeof spec === 'string' ? { k: spec } : spec;
@@ -130,9 +167,10 @@ export default async function dotLayer(ext, { manifest, data }) {
       // the part stands at the station, its back toward the nearest wall
       const dl = st.x - R.x, dr = R.x + R.w - st.x, dt = st.z - R.z, db = R.z + R.d - st.z, mn = Math.min(dl, dr, dt, db);
       const face = mn === dt ? 0 : mn === db ? Math.PI : mn === dl ? Math.PI / 2 : -Math.PI / 2;
-      const m = part(S.k); m.rotation.y = face;
+      const m = sized(part(S.k), S.k, mnt.size); m.rotation.y = face;
       const back = mnt.back || 0; m.position.set(st.x - Math.sin(face) * back, fy(st.room) + (mnt.y || 0), st.z - Math.cos(face) * back);
       W.group.add(m); D.stations.push([sid, S.k]);
+      if (mnt.seat) seats.push(m);
       const old = W.group.getObjectByName(`stlook:${sid}`); if (old) old.traverse((x) => { if (x.isMesh) x.visible = false; });
       if (S.after) swaps.push({ m, after: S.after });
     }
@@ -204,15 +242,18 @@ export default async function dotLayer(ext, { manifest, data }) {
     })();
     const headMat = new THREE.MeshBasicMaterial({ color: 0xffc070 }); headMat.userData.dot = 'flat';
     const poolMat = new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.8 }); poolMat.userData.dot = 'flat';
-    function lampDress(x, y, z) {
-      const hd = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.3), headMat); hd.position.set(x, y + 4.05, z); hd.name = 'dot-lamp-head'; W.group.add(hd);
+    // 1.2.0 (#1 #3): the pole is 4.2 m (it was 2.25 m with its glowing head floating at 4 m); the head hangs under the end of the arm
+    function lampDress(x, y, z, face = 0) {
+      const top = y + REAL['street-lamp'].h, ax = Math.sin(face) * 0.16, az = Math.cos(face) * 0.16;
+      const hd = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.1, 0.3), headMat); hd.position.set(x + ax, top - 0.28, z + az); hd.rotation.y = face; hd.name = 'dot-lamp-head'; W.group.add(hd);
       const pl = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), poolMat); pl.rotation.x = -Math.PI / 2; pl.position.set(x, y + 0.03, z); pl.name = 'dot-lamp-pool'; pl.renderOrder = 2; W.group.add(pl);
     }
     // ---- the mood props ----
-    for (const [room, k, x, z, face = 0, s = 1] of PROPS) {
+    for (const [room, k, x, z, face = 0, s = 1, id = null] of PROPS) {
       if (!index[k]) { D.props.push([k, 'missing']); continue; }
-      const m = part(k, s); m.rotation.y = face; m.position.set(x, fy(room), z); W.group.add(m); D.props.push([k, room]);
-      if (k === 'street-lamp') { lamps.push(new THREE.Vector3(x, fy(room) + 4.2, z)); lampDress(x, fy(room), z); }
+      const m = sized(part(k, s), k); m.rotation.y = face; m.position.set(x, fy(room), z); W.group.add(m); D.props.push([k, room]);
+      if (id) D.surf[id] = m;
+      if (k === 'street-lamp') { lamps.push(new THREE.Vector3(x, fy(room) + 4.0, z)); lampDress(x, fy(room), z, face); }
     }
     // the street lamps that still burn: three sodium lights follow the three lamps nearest the player (cheap on a phone)
     const lampLights = [0, 1, 2].map(() => { const l = new THREE.PointLight(0xffa850, 0, 16, 1.2); l.name = 'dot-street-lamp'; scene.add(l); return l; });
@@ -222,12 +263,63 @@ export default async function dotLayer(ext, { manifest, data }) {
     if (index.helicopter) { heli = part('helicopter'); heli.position.set(136, W.floorY(4) + 40, 6); heli.rotation.y = Math.PI / 2; heli.visible = false; W.group.add(heli); D.heli = heli; }
     // ---- the loot: a part where one exists ----
     const dressLoot = ({ mesh, def }) => {
-      const k = LOOT_PART[def.item]; if (!k || !index[k] || mesh.userData.dotDone) return;
+      const lp = LOOT_PART[def.item], k = lp && lp[0]; if (!k || !index[k] || mesh.userData.dotDone) return;
       mesh.userData.dotDone = true; if (mesh.userData.model) mesh.userData.model.visible = false;
-      const m = part(k, 1); mesh.add(m); D.loot++;
+      const m = sized(part(k, 1), k, lp[1]); m.rotation.y = ((def.id.length * 37) % 360) * Math.PI / 180; mesh.add(m); D.loot++;
+      if (D.dressed) seatLoot(mesh);
     };
     const G = window.__yk;
     if (G) { G.on('loot:placed', dressLoot); for (const o of W.interactables) if (String(o.name).startsWith('loot:')) dressLoot({ mesh: o, def: o.userData.def }); }
+    // ---- 1.2.0 (#1 #4): everything put down on what is under it - the things of the case on their shelf / desk / counter / car (loot "on"),
+    // the safe rooms' logs, the papers, the stations' radio / tape deck / rifle case. Nothing floats (kit tools/rest-check.mjs P45).
+    const rc = new THREE.Raycaster(), DOWN = new THREE.Vector3(0, -1, 0);
+    const shown = (o) => { for (let q = o; q; q = q.parent) if (q.visible === false) return false; return true; };
+    const drawnBox = (o) => { const b = new THREE.Box3(); o.updateWorldMatrix(true, true); o.traverse((q) => { if (q.isMesh && q.material && q.material.visible !== false && shown(q)) b.expandByObject(q); }); return b; };
+    const supports = () => { const out = Object.values(D.surf); for (const o of W.group.children) if (/^floor:/.test(o.name || '') || (o.name || '').startsWith('dot-part:')) out.push(o); return out; };
+    // the first surface under (x, from, z), or the floor of the room
+    function surfaceAt(x, z, from, floorY, own) {
+      // five rays a few cm apart (a shelf board with gaps, a car's curved hood)
+      // (the middle one when it meets something; a side ray can catch the edge of a shelf's side panel)
+      let best = null; const sup = supports().filter((o) => o !== own);
+      for (const [dx, dz] of [[0, 0], [0.07, 0], [-0.07, 0], [0, 0.07], [0, -0.07]]) {
+        rc.set(new THREE.Vector3(x + dx, from, z + dz), DOWN); rc.far = from - floorY + 0.05;
+        const h = rc.intersectObjects(sup, true).find((q) => !own || !own.getObjectById(q.object.id));
+        if (h && dx === 0 && dz === 0) return h.point.y;
+        if (h && (best == null || h.point.y < best)) best = h.point.y;
+      }
+      return best ?? floorY;
+    }
+    // put `obj` down at (x, z) (default: where it is), starting the ray at `from`
+    function putDown(obj, floorY, o = {}) {
+      const b = drawnBox(obj); if (b.isEmpty()) return null;
+      const c = b.getCenter(new THREE.Vector3()), x = o.x ?? c.x, z = o.z ?? c.z;
+      obj.position.x += x - c.x; obj.position.z += z - c.z;
+      const y = surfaceAt(x, z, o.from ?? b.max.y + 0.4, floorY, obj);
+      obj.position.y += y - b.min.y + 0.003;
+      return y;
+    }
+    // a loot's place on its furniture: along the long side (at: 0..1), on the board under `lvl` (shelves: 'mid' 1.3 m, 'low' 0.75 m)
+    function seatLoot(mesh) {
+      const def = mesh.userData.def || {}, R = roomOf(def.room), f0 = W.floorY(R.floor || 0);
+      const host = def.on && D.surf[def.on];
+      if (!host) { putDown(mesh, f0, { from: f0 + 0.3 }); D.seated.push([def.id, def.on ? `missing ${def.on}` : 'floor', 0]); return; }
+      const hb = new THREE.Box3().setFromObject(host), hs = hb.getSize(new THREE.Vector3()), along = def.at ?? 0.5, alongX = hs.x >= hs.z;
+      const x = alongX ? hb.min.x + hs.x * (0.15 + along * 0.7) : (hb.min.x + hb.max.x) / 2 + (def.dx || 0), z = alongX ? (hb.min.z + hb.max.z) / 2 + (def.dz || 0) : hb.min.z + hs.z * (0.15 + along * 0.7);
+      const from = def.lvl === 'low' ? f0 + 0.75 : def.lvl === 'mid' || /shelf/.test(host.name) ? f0 + 1.3 : hb.max.y + 0.3;
+      const y = putDown(mesh, f0, { x, z, from });
+      D.seated.push([def.id, def.on, y == null ? null : +(y - f0).toFixed(2)]);
+    }
+    function settle() {
+      for (const o of W.interactables) {
+        const n = String(o.name || '');
+        if (n.startsWith('loot:')) seatLoot(o);
+        else if (n.startsWith('log:')) { const R = roomOf(o.userData.def.room); putDown(o, W.floorY(R.floor || 0)); }
+        else if (n.startsWith('doc:') && !(o.userData.def && (o.userData.def.wall || o.userData.pasted))) { const R = roomOf(o.userData.def.room); putDown(o, W.floorY(R.floor || 0)); }
+      }
+      for (const m of seats) { const R = plan.rooms.find((r) => { const p = m.position; return p.x >= r.x && p.x <= r.x + r.w && p.z >= r.z && p.z <= r.z + r.d && Math.abs(W.floorY(r.floor || 0) - p.y) < 2.5; }); putDown(m, R ? W.floorY(R.floor || 0) : m.position.y, { from: m.position.y + 1.2 }); }
+    }
+    D.settle = settle;
+
     // ---- the palette over everything, and again while the world changes (doors, the dressing above) ----
     const dotify = () => dotifyScene(THREE, scene, { pal: PAL });
     D.dotified = dotify();

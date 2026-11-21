@@ -16,9 +16,14 @@ export function phoneLayoutSource() {
     // the panels: the top-level parts of each HUD region (a card, a button), not every span inside them
     const sel = ['#hud-left', '#hud-right > *', '#hs-tc > *', '#prompt', '#say', '.tl-lane > .tl-item', '#touch > *', '#gf-goal-chip', '#ga-wait'];
     const parts = [...new Set(sel.flatMap((q) => [...document.querySelectorAll(q)]))].filter(vis).filter((e) => !(e.id === 'hud-left' && !e.textContent.trim())).filter(drawn);
-    const rects = parts.map((e) => { const r = e.getBoundingClientRect(); return { n: name(e), l: Math.max(0, r.left), t: Math.max(0, r.top), r: Math.min(innerWidth, r.right), b: Math.min(innerHeight, r.bottom), e }; });
+    const box = (e, only) => { const r = e.getBoundingClientRect(); return { n: name(e), l: Math.max(0, r.left), t: Math.max(0, r.top), r: Math.min(innerWidth, r.right), b: Math.min(innerHeight, r.bottom), e, only }; };
+    const rects = parts.map((e) => box(e));
+    // 1.26.2: each action button (#t-right is often a zero-size anchor, so '#touch > *' missed it): for the overlaps only, the cover stays as it was
+    // (第零処理区: the column ran up under the 体力 / 武器 panels at 812x375 and nothing here saw it)
+    for (const e of document.querySelectorAll('#t-buttons > *')) if (vis(e) && !parts.includes(e)) rects.push(Object.assign(box(e, true), { n: 't-buttons ' + (e.textContent.trim() || name(e)).slice(0, 8) }));
     let hit = 0, n = 0;
-    for (let y = 2; y < innerHeight; y += 4) for (let x = 2; x < innerWidth; x += 4) { n++; if (rects.some((q) => x >= q.l && x < q.r && y >= q.t && y < q.b)) hit++; }
+    const cov = rects.filter((q) => !q.only);
+    for (let y = 2; y < innerHeight; y += 4) for (let x = 2; x < innerWidth; x += 4) { n++; if (cov.some((q) => x >= q.l && x < q.r && y >= q.t && y < q.b)) hit++; }
     const overlaps = [];
     for (let i = 0; i < rects.length; i++) for (let j = i + 1; j < rects.length; j++) {
       const a = rects[i], b = rects[j]; if (a.e.contains(b.e) || b.e.contains(a.e)) continue;
@@ -29,6 +34,6 @@ export function phoneLayoutSource() {
     const shown = (e) => vis(e) && !!e.textContent.trim();
     const msgs = [document.getElementById('say'), ...document.querySelectorAll('.tl-lane > .tl-item:not(.tl-read)'), document.querySelector('.gf-ch'), document.getElementById('prompt'), document.body.classList.contains('gf-goal-open') ? null : document.getElementById('hud-left')].filter(shown).map(name);
     const B = document.body;
-    return { msgs, cover: +(hit / Math.max(1, n)).toFixed(3), overlaps: overlaps.slice(0, 8), rotate: vis(document.getElementById('gf-rotate')), phone: B.classList.contains('gf-phone'), portrait: innerHeight > innerWidth, parts: rects.map((q) => q.n) };
+    return { msgs, cover: +(hit / Math.max(1, n)).toFixed(3), overlaps: overlaps.slice(0, 8), rotate: vis(document.getElementById('gf-rotate')), phone: B.classList.contains('gf-phone'), portrait: innerHeight > innerWidth, parts: cov.map((q) => q.n) };
   })()`;
 }

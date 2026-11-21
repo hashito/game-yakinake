@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 91f5d7e8: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
 // The standard world builder (docs/standard-3d.md, layer "world"): plan.json (rooms, corridors, doors, stations) -> THREE objects,
 // colliders, doors that open and a room lookup. Boxes only: floors, ceilings, walls with door gaps and lintels, door panels, task
 // stations. The look is a flat palette per room kind + the preset lighting; richer looks (texture-library, props, env-props) are added
@@ -375,6 +375,9 @@ export function buildWorld(plan, o = {}) {
     // the room's pendant hangs off the flight, over where the player arrives (its cord must not run through the steps)
     const lampU = near - sgn * 0.45;
     for (const k of ['lamp', 'lampshade', 'lampbulb', 'lampcord']) { const o = group.getObjectByName(`${k}:${R.id}`); if (o) { if (alongX) o.position.x = lampU; else o.position.z = lampU; } }
+    // 1.27.0 (鏡屋 「ライトの土がズレている」): with plan.lampPool the light is a pooled PointLight placed from `lamps`, not the lamp: move its entry
+    // too, or the lit spot stays 0.3 m off the pendant (蔵 over the cellar stairs). tools/check-playtest.mjs P45.
+    if (lamps) for (const e of lamps) if (e.room === R.id) { if (alongX) e.x = lampU; else e.z = lampU; }
     const u0 = Math.min(near, far), u1 = Math.max(near, far), rect = alongX ? { x0: u0, x1: u1, z0: side - W / 2, z1: side + W / 2 } : { x0: side - W / 2, x1: side + W / 2, z0: u0, z1: u1 };
     return { look, hit, rect };
   }

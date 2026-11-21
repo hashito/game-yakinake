@@ -39,6 +39,9 @@ PARTS = {
     # the things lying in the world (loot)
     'pistol': 'game-arakawa-pistol', 'shotgun': 'game-arakawa-shotgun', 'medkit': 'game-arakawa-medkit', 'ammo-9mm': 'game-arakawa-ammo-9mm',
     'ammo-12g': 'game-arakawa-ammo-12g',
+    # 1.2.0 (play test #4: things on shelves and desks, each recognisable): the rest of the case's things lying in the world
+    'water': 'glb-water-bottle', 'bandage': 'game-arakawa-bandage', 'nails': 'kushi-q5-nail-box', 'powder': 'kagamiya-g2-powder-tin',
+    'disinfect': 'game-bottle', 'canned': 'ketsuban-candy-tin', 'casing': 'kagamiya-g2-film-tin', 'ammo-rifle': 'arakawa-pickup-ammo',
 }
 
 

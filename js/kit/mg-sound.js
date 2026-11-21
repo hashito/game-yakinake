@@ -1,4 +1,4 @@
-/* game-kit 10af67dd: js/mg-sound.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 0c515586: js/mg-sound.js — edit in game-kit and run tools/kit-sync.js */
 // The default sounds of the library mini games (standard 1.10.18): every js/mg-<type>.js calls hooks.sound(name, ctx, v); a game that gives
 // no sound hook of its own gets these, made on the spot with WebAudio (ctx.audio = js/audio.js: tone / noiseBurst; no sound files).
 //   mgSound(type, name, audio, v)  plays one cue ('bell' v = which bell, 'turn' / 'hum' / 'step' v = 0..1); unknown names are silent
@@ -69,6 +69,7 @@ const BY_TYPE = {
   'tune-radio': {   // static that clears into a carrier tone as the needle nears the voice
     turn: (a, v = 0) => { N(a, { dur: 0.14, freq: 2400, q: 0.4, gain: 0.07 * (1 - v) + 0.01, wet: 0.05 }); if (v > 0.2) T(a, { dur: 0.16, freq: 440 + 220 * v, type: 'sine', gain: 0.03 * v, wet: 0.2, vibrato: 6 * (1 - v) }); },
   },
+  'photo-focus': { ready: (a) => COMMON.join(a) },   // standard 1.29.0: full mode, the size and the focus are both right
   'code-drums': { turn: (a) => tick(a, 1300, 0.16) },
   'cipher-wheel': { tick: (a) => tick(a, 1100, 0.14) },
   'compass-bearing': { tick: (a) => tick(a, 3400, 0.08) },

@@ -355,5 +355,61 @@
   "n": 11,
   "src": "game-arakawa-ammo-12g",
   "mpp": 0.007
+ },
+ "water": {
+  "w": 9,
+  "d": 9,
+  "n": 23,
+  "src": "glb-water-bottle",
+  "mpp": 0.007
+ },
+ "bandage": {
+  "w": 14,
+  "d": 20,
+  "n": 11,
+  "src": "game-arakawa-bandage",
+  "mpp": 0.007
+ },
+ "nails": {
+  "w": 41,
+  "d": 31,
+  "n": 14,
+  "src": "kushi-q5-nail-box",
+  "mpp": 0.007
+ },
+ "powder": {
+  "w": 32,
+  "d": 25,
+  "n": 12,
+  "src": "kagamiya-g2-powder-tin",
+  "mpp": 0.007
+ },
+ "disinfect": {
+  "w": 9,
+  "d": 9,
+  "n": 23,
+  "src": "game-bottle",
+  "mpp": 0.007
+ },
+ "canned": {
+  "w": 27,
+  "d": 21,
+  "n": 7,
+  "src": "ketsuban-candy-tin",
+  "mpp": 0.007
+ },
+ "casing": {
+  "w": 23,
+  "d": 24,
+  "n": 13,
+  "src": "kagamiya-g2-film-tin",
+  "mpp": 0.007
+ },
+ "ammo-rifle": {
+  "w": 19,
+  "d": 11,
+  "n": 11,
+  "src": "arakawa-pickup-ammo",
+  "mpp": 0.007
  }
 }

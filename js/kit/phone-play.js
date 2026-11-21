@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/phone-play.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit e65f8b2b: js/phone-play.js — edit in game-kit and run tools/kit-sync.js */
 // Phone play (standard 1.21.0, 札の家 ドット版 一人称, the user's phone play 2026-11-21:
 // 「携帯で行う場合は横でのプレイを推奨にしたほうが良い」「メッセージや通知で領域を使いすぎているのでタスクなどは携帯の場合は常時表示をやめたほうが良い」
 // 「可能なら携帯の場合に全画面表示できると良い」).
@@ -14,6 +14,8 @@
 //     where there is no page fullscreen (iOS Safari) a short 「ホーム画面に追加」 note instead (the page's manifest / apple-mobile-web-app
 //     meta make a home-screen start fullscreen; the meta are added here when the page has none). Every call fails quietly.
 // ctx.phone = { on, portrait, fullscreen(), canFullscreen, standalone, openGoal(on), flashGoal(sec) }
+import { schedule as scheduleHudLayout } from './hud-slots.js';
+
 export const PHONE_CSS = `
 body.gf-phone #hud-left{display:none}
 body.gf-phone.gf-goal-open #hud-left,body.gf-phone.gf-goal-flash #hud-left{display:flex;position:fixed;top:calc(env(safe-area-inset-top,0px) + 58px);left:calc(env(safe-area-inset-left,0px) + 10px);width:min(78vw,360px)!important;max-height:min(60dvh,60vh);overflow:auto;z-index:30;pointer-events:auto}
@@ -24,22 +26,25 @@ body.gf-phone #hud-left #guide[data-open] .sg-card,body.gf-phone.gf-goal-open #h
 body.gf-phone.gf-playing #gf-goal-chip{display:flex;position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);z-index:31;align-items:center;gap:6px;min-height:44px;min-width:44px;padding:6px 12px;font-size:15px}
 body.gf-phone.gf-playing #gf-goal-chip.gf-new::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--gf-accent,#e0a040)}
 body.gf-reading #gf-goal-chip{visibility:hidden!important}
+body.gf-phone:has(.mgx) #gf-goal-chip,body.gf-phone:has(#mg-custom) #gf-goal-chip,body.gf-phone:has(.wm-layer:not(.wm-warm)) #gf-goal-chip,body.gf-phone:has(.mgx) #hud-left,body.gf-phone:has(#mg-custom) #hud-left,body.gf-phone:has(.wm-layer:not(.wm-warm)) #hud-left{visibility:hidden!important}   /* 1.26.3: not over a mini game or a window (五人分の朝: the chip sat on the 報告書 title at 390x844) */
 body.gf-phone .tl-lane>.tl-item~.tl-item{display:none}
 body.gf-phone.gf-playing.gf-portrait .tl-lane{margin-top:calc(env(safe-area-inset-top,0px) + 56px)}   /* below the 目的 chip */
 body.gf-phone.gf-landscape #say{max-width:var(--gf-say-w,60vw)!important;font-size:14px;line-height:1.55}
 body.gf-phone.gf-landscape #t-buttons{display:flex!important;flex-direction:column-reverse;align-items:flex-end;gap:8px}   /* landscape: the action buttons stand in a column at the right edge, the bottom middle stays free */
-body.gf-phone.gf-landscape #t-buttons{flex-wrap:wrap-reverse;align-content:flex-start;max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px)}   /* 1.21.1: a low screen (667x375, 844x340 with the address bar) wraps the column into a second one to its left instead of running up under the menu button (P31: #t-right over #t-menu) */
+body.gf-phone.gf-landscape #t-buttons{flex-wrap:wrap-reverse;align-content:flex-start;max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px)}
+body.gf-phone.gf-landscape #t-buttons{max-height:min(calc(100dvh - 150px),var(--gf-tb-maxh,100dvh))}   /* 1.26.2: and never up into the top-right HUD stack (#hud-right: a game's 体力 / 武器 panels): phone-play measures the room below it (--gf-tb-maxh); the column wraps into more columns instead (第零処理区, check-hud-overlap at 812x375) */   /* 1.21.1: a low screen (667x375, 844x340 with the address bar) wraps the column into a second one to its left instead of running up under the menu button (P31: #t-right over #t-menu) */
 body.gf-phone.gf-landscape #touch{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
 body.gf-phone.gf-landscape .gf-reader{padding:max(8px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
 /* 1.21.0 one message at a time (水無瀬病院 ドット版 一人称, iPhone landscape: 「通知が多すぎます」 - the 目的 chip, a control-hint card, the tap
    label and the thought line all at once, over each other). Priority: the thought / dialogue line > a notice or hint > the goal flash. */
 body.gf-phone.gf-saying #gf-goal-chip,body.gf-phone.gf-saying:not(.gf-goal-open) #hud-left,body.gf-phone.gf-saying .tl-lane>.tl-item:not(.tl-read),body.gf-phone.gf-saying .gf-ch,body.gf-phone.gf-saying #prompt{visibility:hidden!important}
+body.gf-phone.gf-saying #t-right #prompt,body.gf-phone.gf-hinting #t-right #prompt{display:none!important}   /* 1.26.5: a hidden prompt in the button column takes no room (八尺 P31: the column's box under the thought line at 390x844) */
 body.gf-phone.gf-hinting:not(.gf-goal-open) #hud-left{display:none!important}
 body.gf-phone.gf-hinting #prompt{visibility:hidden!important}
 body.gf-phone .tl-lane>.tl-item:not(.tl-read):not(.tl-lookcard){white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-height:2.9em;font-size:14px}
 body.gf-phone .tl-lane>.tl-item:not(.tl-read):not(.tl-lookcard) .tl-body{overflow:hidden;text-overflow:ellipsis}
 body.gf-phone .tl-lane>.tl-item:not(.tl-read):not(.tl-lookcard) .tl-body>small{display:inline;margin-right:.6em}
-body.gf-phone.gf-playing #hs-tc,body.gf-phone.gf-playing .tl-lane{margin-left:calc(env(safe-area-inset-left,0px) + 118px);margin-right:calc(env(safe-area-inset-right,0px) + 64px)}
+/* 1.26.2: the lane keeps clear of the 目的 chip through hud-slots.js (the chip is one of the top stacks there); the old margins here moved the placed lane a second time, onto the top-right HUD (第零処理区: compass over 体力 at 390x844) */
 /* a control hint on a phone: a badge beside its lit button (the card itself only when there is no button for it, one line) */
 body.gf-phone .gf-ch.gf-ch-badged{display:none!important}
 body.gf-phone .gf-ch{font-size:14px;padding:6px 10px;gap:8px}
@@ -116,11 +121,28 @@ export function installPhonePlay(ctx, { manifest = {}, bus, pm, ui } = {}) {
   if (pm && pm.registerItem) safe(() => pm.registerItem({ id: 'fullscreen', label: '全画面', hidden: () => !api.on || standalone, run: () => { fullscreen(); } }));
 
   const api = ctx.phone = { on: false, portrait: false, fullscreen, canFullscreen, standalone, openGoal, flashGoal };
+  let lastKey = '';
   const apply = () => {
     const on = force || isPhoneSize(innerWidth, innerHeight, ctx.isTouch);
     api.on = on; api.portrait = innerHeight > innerWidth;
     B.classList.toggle('gf-phone', on); B.classList.toggle('gf-portrait', on && api.portrait); B.classList.toggle('gf-landscape', on && !api.portrait);
     B.classList.toggle('gf-playing', !!(ctx.state && ctx.state.started && !ctx.state.ended));
+    // the chip appears / goes with these: the lane is placed again (hud-slots.js counts the chip as a top stack)
+    const key = B.className.match(/gf-(phone|portrait|landscape|playing)/g)?.join() || ''; if (key !== lastKey) { lastKey = key; safe(scheduleHudLayout); }
+    // landscape: the button column ends below the top-right HUD stack and the menu button (--gf-tb-maxh; the CSS wraps it into more columns).
+    // 1.26.5: the other parts of the column (#t-right: the 端末 icon, a game's own br parts such as 八尺's 灯り) take their share first
+    const tb = document.getElementById('t-buttons'), hr = document.getElementById('hud-right'), tr = document.getElementById('t-right'), menu = document.getElementById('t-menu');
+    const seen = (k) => { const r = k.getBoundingClientRect(), s = getComputedStyle(k); return r.width > 1 && r.height > 1 && s.display !== 'none' && s.visibility !== 'hidden'; };
+    if (on && !api.portrait && tb) {
+      let top = 0; if (hr) for (const k of hr.children) if (seen(k)) top = Math.max(top, k.getBoundingClientRect().bottom);
+      if (menu && !(tr && tr.contains(menu)) && seen(menu)) top = Math.max(top, menu.getBoundingClientRect().bottom);
+      let bot = tb.getBoundingClientRect().bottom;
+      if (tr && tb.parentElement === tr) {
+        const gap = parseFloat(getComputedStyle(tr).rowGap) || 0; bot = tr.getBoundingClientRect().bottom;
+        for (const k of tr.children) { if (k === tb || !seen(k)) continue; const ps = getComputedStyle(k).position; if (ps === 'fixed' || ps === 'absolute') continue; bot -= k.getBoundingClientRect().height + gap; }
+      }
+      if (top > 0 && bot > top) B.style.setProperty('--gf-tb-maxh', `${Math.max(100, Math.floor(bot - top - 8))}px`); else B.style.removeProperty('--gf-tb-maxh');
+    } else B.style.removeProperty('--gf-tb-maxh');
     if (!on) openGoal(false);
     // landscape: the say band fits between the stick (left) and the buttons (right), centred
     if (on && !api.portrait) {
