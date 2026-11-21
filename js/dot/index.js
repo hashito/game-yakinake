@@ -40,7 +40,7 @@ const STATION_MOUNT = { S_TOOL: { y: 0, back: 0.2 }, S_RADIO: { y: 1.0, back: 0.
 const PROPS = [
   ['H_ROKA', 'wheelchair', 7.5, 7.2, 0.6], ['H_ROKA', 'iv-fallen', 15.5, 5.6, 1.2], ['H_ROKA', 'gurney', 25.8, 6.8, 0], ['H_SHO', 'iv-fallen', 22, 4.2, 0.4],
   ['H_HAN', 'cone', 31.6, 2.2, 0], ['S_URA', 'cone', 40, 1.2, 0], ['S_URA', 'street-lamp', 46.4, 0.6, Math.PI], ['S_URA', 'street-lamp', 34, 12.4, 0],
-  ['S_ODORI', 'street-lamp', 50, 5.6, Math.PI], ['S_ODORI', 'street-lamp', 62, -3.6, 0], ['S_ODORI', 'cone', 68, 4.4, 0], ['S_ODORI', 'pole', 56, 5.6, 0],
+  ['S_ODORI', 'street-lamp', 50, 5.6, Math.PI], ['S_ODORI', 'street-lamp', 62, -3.6, 0], ['S_ODORI', 'street-lamp', 70, 5.6, Math.PI], ['S_ODORI', 'street-lamp', 56, -3.6, 0], ['S_SHOTEN', 'street-lamp', 65, 16.4, 0], ['O_PLAZA', 'street-lamp', 146, 23, 0], ['S_ODORI', 'cone', 68, 4.4, 0], ['S_ODORI', 'pole', 56, 5.6, 0],
   ['S_MART', 'barricade', 62, 6.6, 0], ['S_SHOTEN', 'street-lamp', 54, 16.4, 0], ['S_SHOTEN', 'street-lamp', 76, 16.4, 0], ['S_SHOTEN', 'cone', 81.8, 17, 0],
   ['S_HIROBA', 'sandbags', 94, 10, Math.PI / 2], ['S_HIROBA', 'street-lamp', 84, 7, 0], ['S_HIROBA', 'cone', 87, 20, 0],
   ['P_LOBBY', 'sandbags', 96.2, 10, -Math.PI / 2], ['P_URA', 'street-lamp', 128.4, 11, -Math.PI / 2], ['O_PLAZA', 'street-lamp', 130, 23, 0], ['O_PLAZA', 'cone', 136, 16, 0],
@@ -142,11 +142,76 @@ export default async function dotLayer(ext, { manifest, data }) {
       const o = W.interactables.find((x) => x.name === `station:${sid}`) || W.group.getObjectByName(`station:${sid}`);
       if (o && o.isMesh && o.material) { o.material = o.material.clone(); o.material.visible = false; }
     }
+    // ---- the street at night: a sky over the open blocks, asphalt and paving, road markings, the pools of the sodium lamps ----
+    const nearestTex = (cv) => { const tx = new THREE.CanvasTexture(cv); tx.magFilter = THREE.NearestFilter; tx.minFilter = THREE.NearestFilter; tx.colorSpace = THREE.SRGBColorSpace; tx.userData.dot = true; return tx; };
+    const rnd = (() => { let z = 7; return () => ((z = (z * 16807) % 2147483647) / 2147483647); })();
+    // the sky: a dome round the player, stars above, the town's dark roofs and a few lit windows at the horizon, the glow of the fires
+    const sky = (() => {
+      const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 256; const q = cv.getContext('2d');
+      const gr = q.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, '#04060c'); gr.addColorStop(0.36, '#0a0e1c'); gr.addColorStop(0.47, '#1c1a2a'); gr.addColorStop(0.5, '#3a2420'); gr.addColorStop(0.53, '#0a0a0e'); gr.addColorStop(1, '#060608');
+      q.fillStyle = gr; q.fillRect(0, 0, 1024, 256);
+      for (let i = 0; i < 180; i++) { q.fillStyle = rnd() < 0.15 ? '#d8d0b0' : '#4a5270'; q.fillRect(Math.floor(rnd() * 1024), Math.floor(rnd() * 96), 1, 1); }
+      for (let i = 0; i < 5; i++) { const x = Math.floor(rnd() * 1024); q.fillStyle = 'rgba(240,120,40,0.35)'; q.fillRect(x - 24, 110, 48, 14); q.fillStyle = 'rgba(255,170,70,0.5)'; q.fillRect(x - 8, 116, 16, 8); }
+      let x = 0;
+      while (x < 1024) {
+        const w = 8 + Math.floor(rnd() * 30), h = 4 + Math.floor(rnd() * 22);
+        q.fillStyle = rnd() < 0.5 ? '#07080c' : '#0b0d14'; q.fillRect(x, 130 - h, w, h + 126);
+        for (let k = 0; k < (w * h) / 30; k++) if (rnd() < 0.3) { q.fillStyle = rnd() < 0.7 ? '#c89048' : '#8098b0'; q.fillRect(x + 1 + Math.floor(rnd() * (w - 2)), 131 - h + Math.floor(rnd() * h), 1, 1); }
+        x += w;
+      }
+      const tx = nearestTex(cv); tx.wrapS = THREE.RepeatWrapping;
+      const m = new THREE.Mesh(new THREE.SphereGeometry(52, 32, 16), new THREE.MeshBasicMaterial({ map: tx, side: THREE.BackSide, fog: false, depthWrite: false }));
+      m.material.userData.dot = 'sky'; m.name = 'dot-night-sky'; m.renderOrder = -10; m.visible = false; m.frustumCulled = false; scene.add(m);
+      return m;
+    })();
+    const SKY_FOG = new THREE.Color(0x1c1820);
+    // the ground: asphalt for the roads and car parks, paving for the arcade (a dot tile each)
+    const groundTile = (kind) => {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 32; const q = cv.getContext('2d');
+      if (kind === 'paving') {
+        for (let y = 0; y < 32; y += 8) for (let x = 0; x < 32; x += 8) { q.fillStyle = ((x + y) / 8) % 2 ? '#4a3a36' : '#3a3634'; q.fillRect(x, y, 8, 8); q.fillStyle = '#22201e'; q.fillRect(x, y, 8, 1); q.fillRect(x, y, 1, 8); }
+      } else {
+        q.fillStyle = '#26282c'; q.fillRect(0, 0, 32, 32);
+        for (let i = 0; i < 90; i++) { q.fillStyle = rnd() < 0.5 ? '#30333a' : '#1c1e22'; q.fillRect(Math.floor(rnd() * 32), Math.floor(rnd() * 32), 1, 1); }
+        q.fillStyle = '#18191c'; let cx = 4, cy = 20; for (let i = 0; i < 9; i++) { q.fillRect(cx, cy, 1, 1); cx += 1; cy += rnd() < 0.5 ? 1 : 0; }
+      }
+      const tx = nearestTex(cv); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; return tx;
+    };
+    const ASPHALT = groundTile('asphalt'), PAVING = groundTile('paving');
+    const STREETS = ['S_URA', 'S_ODORI', 'S_SHOTEN', 'S_HIROBA', 'P_URA', 'O_PLAZA'];
+    // (the kit's texture loader sets the floors again once its pictures arrive: the street floors are put back every two seconds)
+    const streetFloors = () => { for (const id of STREETS) {
+      const fl = scene.getObjectByName(`floor:${id}`), R = roomOf(id); if (!fl || !fl.material || fl.material.name === 'yk-street') continue;
+      const pave = id === 'S_SHOTEN', tx = (pave ? PAVING : ASPHALT).clone(); tx.needsUpdate = true; tx.userData.dot = true; tx.repeat.set(R.w / (pave ? 2 : 3), R.d / (pave ? 2 : 3));
+      fl.material = new THREE.MeshLambertMaterial({ map: tx }); fl.material.userData.dot = 'tile'; fl.material.name = 'yk-street';
+    } };
+    streetFloors(); setInterval(streetFloors, 2000);
+    // road markings: a dashed centre line and a crossing on the wide street, bays in the car parks
+    const paint = new THREE.MeshLambertMaterial({ color: 0xd8d4c4 }); paint.userData.dot = 'flat';
+    const paintY = new THREE.MeshLambertMaterial({ color: 0xd8a830 }); paintY.userData.dot = 'flat';
+    const stripe = (x, z, w, d, m = paint, room = 'S_ODORI') => { const st = new THREE.Mesh(new THREE.PlaneGeometry(w, d), m); st.rotation.x = -Math.PI / 2; st.position.set(x, fy(room) + 0.015, z); st.name = 'dot-road-paint'; W.group.add(st); };
+    for (let x = 52; x < 71; x += 3) stripe(x, 1, 1.6, 0.14, paintY);
+    for (let z = -3; z < 6; z += 0.9) stripe(48.6, z, 1.8, 0.45);
+    for (let x = 35; x < 46; x += 2.6) stripe(x, 4.2, 0.1, 2.4, paint, 'S_URA');
+    for (let z = 2; z < 20; z += 2.6) stripe(125.8, z, 2.4, 0.1, paint, 'P_URA');
+    // a lamp: the glowing head and the pool of orange light under it (the three nearest lamps light for real)
+    const poolTex = (() => {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 64; const q = cv.getContext('2d');
+      const B = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+      for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) { const d = Math.hypot(x - 31.5, y - 31.5) / 32, a = Math.max(0, 1 - d) ** 1.4; if (a * 16 > B[(y & 3) * 4 + (x & 3)]) { q.fillStyle = a > 0.6 ? 'rgba(255,180,100,0.32)' : 'rgba(230,140,60,0.22)'; q.fillRect(x, y, 1, 1); } }
+      return nearestTex(cv);
+    })();
+    const headMat = new THREE.MeshBasicMaterial({ color: 0xffc070 }); headMat.userData.dot = 'flat';
+    const poolMat = new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.8 }); poolMat.userData.dot = 'flat';
+    function lampDress(x, y, z) {
+      const hd = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.3), headMat); hd.position.set(x, y + 4.05, z); hd.name = 'dot-lamp-head'; W.group.add(hd);
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), poolMat); pl.rotation.x = -Math.PI / 2; pl.position.set(x, y + 0.03, z); pl.name = 'dot-lamp-pool'; pl.renderOrder = 2; W.group.add(pl);
+    }
     // ---- the mood props ----
     for (const [room, k, x, z, face = 0, s = 1] of PROPS) {
       if (!index[k]) { D.props.push([k, 'missing']); continue; }
       const m = part(k, s); m.rotation.y = face; m.position.set(x, fy(room), z); W.group.add(m); D.props.push([k, room]);
-      if (k === 'street-lamp') lamps.push(new THREE.Vector3(x, fy(room) + 4.2, z));
+      if (k === 'street-lamp') { lamps.push(new THREE.Vector3(x, fy(room) + 4.2, z)); lampDress(x, fy(room), z); }
     }
     // the street lamps that still burn: three sodium lights follow the three lamps nearest the player (cheap on a phone)
     const lampLights = [0, 1, 2].map(() => { const l = new THREE.PointLight(0xffa850, 0, 16, 1.2); l.name = 'dot-street-lamp'; scene.add(l); return l; });
@@ -175,6 +240,7 @@ export default async function dotLayer(ext, { manifest, data }) {
     const beacon = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: true, fog: false })); beacon.scale.setScalar(0.22); beacon.name = 'dot-goal-beacon'; beacon.visible = false; scene.add(beacon);
     const goalLight = new THREE.PointLight(0xffd890, 0, 3.2, 1.5); goalLight.name = 'dot-goal-light'; scene.add(goalLight);
     let T = 0, goalT = 0, goal = null, blockT = 0, lightWant = null;
+    let outside = false;
     const DAWN = new THREE.Color(0x6a4a52);
     // the helipad: a painted H in a circle on the roof (a pixel decal)
     {
@@ -194,6 +260,7 @@ export default async function dotLayer(ext, { manifest, data }) {
     };
     worldUpdate = (dt) => {
         T += dt;
+        if (sky.visible) sky.position.copy(ctx.camera.position);
         const c = ctx.camera.position; near.position.set(c.x, c.y - 0.2, c.z); near.intensity = ctx.lightOn === false ? 1 : 3;
         // the floor of light by block: outside, the sodium lamps and the fires light the street; the roof is the coming dawn
         blockT -= dt;
@@ -203,8 +270,9 @@ export default async function dotLayer(ext, { manifest, data }) {
           const want = /^O_ROOF/.test(id) ? LIGHT.roof : /^(S_URA|S_ODORI|S_SHOTEN|S_HIROBA|O_PLAZA|P_URA)$/.test(id) ? LIGHT.street : /^S_/.test(id) ? LIGHT.tower : /^P_/.test(id) ? LIGHT.police : /^O_/.test(id) ? LIGHT.tower : LIGHT.hospital;
           lightWant = want;
           // the roof is open to the sky: the dawn shows behind it (the stage look keeps the night elsewhere)
-          if (want === LIGHT.roof) { scene.background = DAWN; if (scene.fog) scene.fog.color.copy(DAWN); }
-          else if (scene.background === DAWN) { scene.background = null; ctx.stageLook && ctx.stageLook.apply(); }
+          if (want === LIGHT.roof) { sky.visible = false; scene.background = DAWN; if (scene.fog) scene.fog.color.copy(DAWN); }
+          else if (want === LIGHT.street) { sky.visible = true; if (scene.background === DAWN) scene.background = null; if (scene.fog) scene.fog.color.copy(SKY_FOG); outside = true; }
+          else if (scene.background === DAWN || outside) { sky.visible = false; outside = false; scene.background = null; ctx.stageLook && ctx.stageLook.apply(); }
         }
         if (lamps.length && blockT >= 0.49) {
           const near3 = lamps.map((v) => [v, v.distanceToSquared(c)]).sort((a, b) => a[1] - b[1]).slice(0, 3);

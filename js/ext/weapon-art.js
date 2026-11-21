@@ -1,32 +1,43 @@
-// The weapon in the hand, drawn as pixel art on a small canvas (96 x 64, shown scaled up with crisp pixels at the lower right).
-// Each weapon is a list of rectangles [x, y, w, h, colour] in the canvas's pixels, the hand (sleeve of the white coat) under it.
-const SKIN = '#c89a7a', SKIN_D = '#9a7058', COAT = '#e4e2da', COAT_D = '#a8a69e', STEEL = '#9aa2aa', STEEL_D = '#5a6068', DARK = '#24262a', WOOD = '#7a4a28', WOOD_D = '#4e2e18', RED = '#b8262a', YEL = '#ffe08a';
-const HAND = [[60, 44, 22, 20, COAT], [60, 44, 22, 3, COAT_D], [62, 38, 14, 10, SKIN], [62, 46, 14, 2, SKIN_D]];
-const ART = {
-  hands: [[56, 36, 16, 12, SKIN], [56, 46, 16, 3, SKIN_D], [52, 46, 26, 18, COAT], [52, 46, 26, 3, COAT_D]],
-  scalpel: [[66, 30, 3, 14, STEEL_D], [67, 18, 2, 13, STEEL], [66, 16, 2, 3, '#d8e0e8'], ...HAND],
-  pipe: [[64, 4, 6, 46, STEEL_D], [65, 4, 2, 46, STEEL], [63, 2, 8, 3, DARK], ...HAND],
-  axe: [[66, 14, 5, 40, WOOD], [67, 14, 2, 40, WOOD_D], [54, 6, 16, 12, RED], [50, 8, 6, 8, STEEL], [48, 9, 3, 6, '#d8e0e8'], ...HAND],
-  nailgun: [[44, 26, 34, 12, '#d0a020'], [44, 26, 34, 3, '#f0c040'], [36, 29, 9, 6, DARK], [64, 36, 10, 14, DARK], [52, 38, 12, 8, '#d0a020'], ...HAND],
-  pistol: [[44, 30, 30, 9, DARK], [44, 30, 30, 2, STEEL_D], [64, 37, 9, 14, DARK], [40, 32, 5, 4, STEEL_D], ...HAND],
-  shotgun: [[14, 30, 58, 6, STEEL_D], [14, 30, 58, 2, STEEL], [30, 36, 22, 5, WOOD], [66, 34, 22, 10, WOOD], [66, 42, 22, 3, WOOD_D], ...HAND],
-  rifle: [[6, 28, 66, 5, DARK], [6, 28, 66, 1, STEEL_D], [36, 22, 22, 6, DARK], [38, 23, 18, 3, '#3a5a7a'], [62, 32, 30, 10, WOOD], [62, 40, 30, 3, WOOD_D], ...HAND],
-};
-const MUZZLE = { nailgun: [34, 32], pistol: [38, 34], shotgun: [12, 33], rifle: [4, 30] };
+// The weapon in the hand: dot pictures seen from behind the shoulder (assets/fp/<id>.png, tools/dot/fpweapons.py, 160 x 96 px),
+// drawn on a small canvas that the CSS enlarges with crisp pixels at the lower right. A shot kicks the weapon up and back (more for
+// the heavier guns) and puts a muzzle flash on the muzzle point of assets/fp/fp.json; a strike swings it from the right down to the left.
+const FP = new URL('../../assets/fp/', import.meta.url).href;
+const IDS = ['hands', 'scalpel', 'pipe', 'axe', 'nailgun', 'pistol', 'shotgun', 'rifle'];
+const pics = new Map();
+let meta = { weapons: {} };
+fetch(`${FP}fp.json`).then((r) => r.json()).then((m) => { meta = m; }).catch(() => {});
+for (const id of IDS) { const im = new Image(); im.src = `${FP}${id}.png`; im.onload = () => { pics.set(id, im); }; }
+// how far each gun kicks (1 = the pistol) and how big its flash is
+export const KICK = { nailgun: 0.4, pistol: 1, rifle: 1.5, shotgun: 2.2 };
+const FLASH = { nailgun: 0.5, pistol: 1, rifle: 1.3, shotgun: 1.8 };
+const YEL = '#ffe08a', WHITE = '#fff8e0', ORANGE = '#ff9a3a';
 
 export function drawWeapon(cv, id, o = {}) {
-  const key = `${id}|${o.swing.toFixed(2)}|${o.kick.toFixed(2)}|${o.flash ? 1 : 0}`;
+  const im = pics.get(id) || pics.get('hands');
+  const s = o.swing || 0, k = o.kick || 0, f = o.flash ? 1 : 0;
+  const key = `${id}|${!!im}|${s.toFixed(2)}|${k.toFixed(2)}|${f}`;
   if (cv._key === key) return;
   cv._key = key;
   const g = cv.getContext('2d');
+  g.imageSmoothingEnabled = false;
   g.clearRect(0, 0, cv.width, cv.height);
-  const art = ART[id] || ART.hands;
+  if (!im) return;
+  const kk = k * (KICK[id] || 1);
   g.save();
-  // a strike swings the weapon from the right down to the left; a shot kicks it up and back
-  const s = o.swing || 0, k = o.kick || 0;
-  g.translate(Math.round(-s * 26 + k * 3), Math.round(s * (s > 0.5 ? 10 : -6) - k * 5 + k * 0));
-  if (s > 0) { g.translate(70, 50); g.rotate(-s * 0.7); g.translate(-70, -50); }
-  for (const [x, y, w, h, c] of art) { g.fillStyle = c; g.fillRect(x, y, w, h); }
-  if (o.flash && MUZZLE[id]) { const [mx, my] = MUZZLE[id]; g.fillStyle = YEL; g.fillRect(mx - 6, my - 3, 7, 6); g.fillStyle = '#fff6d0'; g.fillRect(mx - 3, my - 1, 3, 2); g.fillStyle = '#ff9a3a'; g.fillRect(mx - 9, my - 1, 3, 2); }
+  // the kick: up and back toward the shoulder, the muzzle tipping up; the swing: a turn about the wrist from the right to the left
+  g.translate(Math.round(kk * 5 - s * 40), Math.round(kk * 7 + (s > 0.5 ? (1 - s) * 22 : s * 22)));
+  if (kk > 0) { g.translate(116, 80); g.rotate(-kk * 0.06); g.translate(-116, -80); }
+  if (s > 0) { g.translate(116, 84); g.rotate(-s * 0.9); g.translate(-116, -84); }
+  g.drawImage(im, 0, 0);
+  const m = meta.weapons && meta.weapons[id] && meta.weapons[id].muzzle;
+  if (f && m) {
+    // a star of hard pixels, three colours, sized by the gun
+    const [mx, my] = m, z = FLASH[id] || 1, r = Math.round(9 * z), q = Math.round(4 * z);
+    const ray = (dx, dy, len, w, c) => { g.fillStyle = c; for (let i = 0; i < len; i++) g.fillRect(Math.round(mx + dx * i - w / 2), Math.round(my + dy * i - w / 2), w, w); };
+    for (const [dx, dy] of [[0, -1], [-0.8, -0.6], [0.8, -0.6], [-1, 0.1], [1, 0.1]]) ray(dx, dy, r, 3, ORANGE);
+    for (const [dx, dy] of [[-0.4, -0.9], [0.4, -0.9], [-0.9, -0.3], [0.9, -0.3]]) ray(dx, dy, Math.round(r * 0.7), 2, YEL);
+    g.fillStyle = YEL; g.fillRect(mx - q, my - q, q * 2, q * 2);
+    g.fillStyle = WHITE; g.fillRect(mx - Math.ceil(q / 2), my - Math.ceil(q / 2), q, q);
+  }
   g.restore();
 }

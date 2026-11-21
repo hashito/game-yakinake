@@ -1,0 +1,42 @@
+{
+ "w": 160,
+ "h": 96,
+ "weapons": {
+  "hands": {
+   "muzzle": null
+  },
+  "scalpel": {
+   "muzzle": null
+  },
+  "pipe": {
+   "muzzle": null
+  },
+  "axe": {
+   "muzzle": null
+  },
+  "nailgun": {
+   "muzzle": [
+    79,
+    37
+   ]
+  },
+  "pistol": {
+   "muzzle": [
+    97,
+    31
+   ]
+  },
+  "shotgun": {
+   "muzzle": [
+    78,
+    14
+   ]
+  },
+  "rifle": {
+   "muzzle": [
+    81,
+    8
+   ]
+  }
+ }
+}

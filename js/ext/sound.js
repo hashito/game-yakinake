@@ -35,11 +35,21 @@ export function installSound(ext, G) {
     const t = a.currentTime, o = a.createOscillator(), g = a.createGain(); o.type = 'square'; o.frequency.value = f;
     g.gain.setValueAtTime(gain * vol(), t); g.gain.exponentialRampToValueAtTime(0.0008, t + dur); o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.02);
   }
+  // the weight of a shot: a low thump that drops in pitch, through a shaper (the crack of the powder) and a short echo of the room
+  function thump(f0 = 140, f1 = 40, dur = 0.3, gain = 0.9) {
+    const a = ensure(); if (!a) return;
+    const t = a.currentTime, o = a.createOscillator(), g = a.createGain(), sh = a.createWaveShaper();
+    const curve = new Float32Array(256); for (let i = 0; i < 256; i++) { const x = i / 128 - 1; curve[i] = Math.tanh(x * 3.2); } sh.curve = curve;
+    o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(gain * vol(), t); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+    o.connect(sh); sh.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.05);
+  }
+  const echo = (dur, gain) => setTimeout(() => burst({ dur, f: 700, sweep: 0.3, gain, attack: 0.02 }), 90);
   const SYN = {
-    pistol: () => { burst({ dur: 0.35, f: 2600, sweep: 0.15, gain: 0.9 }); burst({ dur: 0.9, f: 400, sweep: 0.4, gain: 0.35, attack: 0.01 }); },
-    shotgun: () => { burst({ dur: 0.5, f: 1800, sweep: 0.12, gain: 1.0 }); burst({ dur: 1.3, f: 260, sweep: 0.5, gain: 0.5, attack: 0.01 }); },
-    rifle: () => { burst({ dur: 0.45, f: 3400, sweep: 0.1, gain: 1.0 }); burst({ dur: 1.6, f: 300, sweep: 0.4, gain: 0.45, attack: 0.01 }); },
-    nailgun: () => { burst({ dur: 0.08, f: 3000, type: 'bandpass', q: 2, gain: 0.5 }); click(900, 0.05, 0.25); },
+    pistol: () => { burst({ dur: 0.3, f: 3200, sweep: 0.15, gain: 1.0 }); thump(150, 42, 0.28, 1.0); burst({ dur: 0.9, f: 400, sweep: 0.4, gain: 0.4, attack: 0.01 }); echo(0.7, 0.18); },
+    shotgun: () => { burst({ dur: 0.45, f: 2400, sweep: 0.12, gain: 1.0 }); thump(110, 30, 0.5, 1.3); burst({ dur: 1.4, f: 260, sweep: 0.5, gain: 0.6, attack: 0.01 }); echo(1.1, 0.25); },
+    rifle: () => { burst({ dur: 0.4, f: 4000, sweep: 0.1, gain: 1.0 }); thump(130, 34, 0.42, 1.2); burst({ dur: 1.6, f: 300, sweep: 0.4, gain: 0.5, attack: 0.01 }); echo(1.3, 0.24); },
+    nailgun: () => { burst({ dur: 0.08, f: 3000, type: 'bandpass', q: 2, gain: 0.55 }); click(900, 0.05, 0.25); thump(220, 90, 0.08, 0.5); },
     empty: () => click(3200, 0.02, 0.2),
     reload: () => { click(1400, 0.04, 0.25); setTimeout(() => click(1800, 0.04, 0.22), 180); },
     reloaded: () => { click(1100, 0.05, 0.3); setTimeout(() => click(2200, 0.03, 0.25), 90); },

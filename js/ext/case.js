@@ -108,62 +108,110 @@ export function installCase(ext, G) {
   });
 
   // ---------------------------------------------------------------- the window
-  const CELL = () => (Math.min(innerWidth, innerHeight * 1.6) < 560 ? 34 : 44);
-  let host = null;
+  // The grid fills the window: the cell size comes from the room the window has (pictures large when there is room), the chosen
+  // thing's picture, name, words and buttons stand beside it (under it on an upright phone). A held thing shows where it would go
+  // (a ghost, green when it fits, red when not); 回転 turns it ([R] or the wheel too).
+  let host = null, cs = 40;
+  const side = () => !!host && host.clientWidth >= 520;
+  function cellSize(cols, rows) {
+    const w = host ? host.clientWidth : innerWidth - 40, short = innerHeight < 480;
+    const sideW = side() ? Math.max(190, Math.min(300, w * 0.32)) : 0;
+    const availW = w - sideW - (sideW ? 18 : 0) - 28;
+    // the height left under the window's top, less the help line, the grid's name and the window's own bottom padding
+    const top = host ? host.getBoundingClientRect().top : 120;
+    const availH = side() ? innerHeight - top - (short ? 74 : 90) : Math.max(160, (innerHeight - top - 260) * 0.7);
+    return Math.max(22, Math.min(84, Math.floor(Math.min(availW / cols, availH / rows))));
+  }
   C.open = (o = {}) => {
     if (!ctx || ctx.wm.isOpen && ctx.wm.current === 'case') return;
     C.atStore = !!o.store;
-    ctx.wm.open('case', { title: o.store ? '保管箱とケース' : `ケース（${bagDim().name}）`, size: 'l', render: (el) => { host = el; draw(); }, onClose: () => { C.held = null; C.sel = null; host = null; G.emit && G.emit('case:change'); } });
+    ctx.wm.open('case', { title: o.store ? '保管箱とケース' : `ケース（${bagDim().name}）`, size: 'l', render: (el) => { host = el; draw(); requestAnimationFrame(draw); }, onClose: () => { C.held = null; C.sel = null; host = null; G.emit && G.emit('case:change'); } });
   };
   ext.on('input:key', (k) => {
     if (!ctx || !ctx.state.started) return;
     if (k.code === 'KeyB' || k.code === 'KeyI' || k.code === 'Tab') { k.handled = true; k.event && k.event.preventDefault && k.event.preventDefault(); C.open(); }
   });
-  document.addEventListener('keydown', (e) => { if (host && (e.code === 'KeyR') && C.held) { C.held.rot = C.held.rot ? 0 : 1; draw(); e.preventDefault(); } });
+  const turnHeld = () => { if (C.held) { C.held.rot = C.held.rot ? 0 : 1; draw(); return true; } return false; };
+  document.addEventListener('keydown', (e) => { if (host && e.code === 'KeyR' && turnHeld()) e.preventDefault(); });
+  addEventListener('wheel', (e) => { if (host && C.held && e.target.closest && e.target.closest('.yk-case')) { turnHeld(); e.preventDefault(); } }, { passive: false });
+  addEventListener('resize', () => { if (host) draw(); });
 
   // the item's pixel picture (assets/icons, tools/dot/icons.py): drawn the long way; turned when the item stands
   const ICON = new URL('../../assets/icons/', import.meta.url).href;
-  function iconHtml(id, w, h, cs) {
+  function iconHtml(id, w, h, size) {
     if (id === 'hands') return '';
-    const W = w * cs - 4, H = h * cs - 4, turn = h > w;
+    const W = w * size - 6, H = h * size - 6, turn = h > w;
     const st = turn ? `width:${H}px;height:${W}px;transform:translate(-50%,-50%) rotate(90deg)` : `width:${W}px;height:${H}px;transform:translate(-50%,-50%)`;
     return `<img class="yk-ic" src="${ICON}${id}.png" alt="" style="${st}">`;
   }
   function gridHtml(list, W, H, which) {
-    const cs = CELL();
     let h = `<div class="yk-grid" data-which="${which}" style="width:${W * cs}px;height:${H * cs}px;--cs:${cs}px">`;
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) h += `<i class="yk-cell" data-x="${x}" data-y="${y}" style="left:${x * cs}px;top:${y * cs}px"></i>`;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) h += `<i class="yk-cell" style="left:${x * cs}px;top:${y * cs}px"></i>`;
     for (const it of list) {
       const [w, hh] = dims(it), c = CATALOG[it.id];
-      const eq = G.equip === it.uid ? ' yk-eq' : '';
-      const sel = C.sel && C.sel.uid === it.uid ? ' yk-sel' : '';
+      const eq = G.equip === it.uid ? ' yk-eq' : '', sel = C.sel && C.sel.uid === it.uid ? ' yk-sel' : '', held = C.held === it ? ' yk-held' : '';
       const gun = c.gun ? `<b class="yk-ammo">${it.loaded}/${c.gun.mag}</b>` : it.n > 1 ? `<b class="yk-ammo">×${it.n}</b>` : '';
-      h += `<button class="yk-it yk-k-${c.kind}${eq}${sel}" data-uid="${it.uid}" style="left:${it.x * cs + 2}px;top:${it.y * cs + 2}px;width:${w * cs - 4}px;height:${hh * cs - 4}px" aria-label="${esc(c.name)}">${iconHtml(it.id, w, hh, cs)}${w * hh === 1 ? '' : `<span>${esc(c.name)}</span>`}${gun}</button>`;
+      h += `<button class="yk-it yk-k-${c.kind}${eq}${sel}${held}" data-uid="${it.uid}" style="left:${it.x * cs + 2}px;top:${it.y * cs + 2}px;width:${w * cs - 4}px;height:${hh * cs - 4}px" aria-label="${esc(c.name)}">${iconHtml(it.id, w, hh, cs)}${gun}</button>`;
     }
-    return h + '</div>';
+    return h + '<div class="yk-ghost" hidden></div></div>';
   }
   function draw() {
     if (!host) return;
-    const B = bagDim(), sel = C.sel, c = sel && CATALOG[sel.id];
+    const B = bagDim(), sel = C.held || C.sel, c = sel && CATALOG[sel.id];
+    cs = C.atStore ? cellSize(B.w + STORE.w + 1, Math.max(B.h, STORE.h) + 0.6) : cellSize(B.w, B.h + 0.5);
     const partner = sel && C.items.find((o) => o !== sel && comboOf(o.id, sel.id));
-    const buttons = sel ? [
+    const acts = sel ? [
       c.kind === 'weapon' ? `<button data-act="equip" class="${G.equip === sel.uid ? 'on' : ''}">${G.equip === sel.uid ? '構えている' : '構える'}</button>` : '',
       c.kind === 'med' ? '<button data-act="use">使う</button>' : '',
       partner ? `<button data-act="combo">${esc(CATALOG[partner.id].name)}と組み合わせる</button>` : '',
-      '<button data-act="rot">回す</button>',
       C.atStore ? `<button data-act="move">${C.store.includes(sel) ? 'ケースへ' : '保管箱へ'}</button>` : '<button data-act="drop">ここに置いていく</button>',
     ].join('') : '';
-    const gore = G.gore || 'full';
-    host.innerHTML = `<div class="yk-case">
-      <p class="yk-help">${C.held ? `「${esc(CATALOG[C.held.id].name)}」を持っている。置きたい枡を押す。${ctx.isTouch ? '' : '[R]か'}「回す」で向きを変える。` : '物を押すと持ち上がる。置きたい枡を押すと置ける。'}</p>
-      <div class="yk-grids"><div><h4>${esc(B.name)}（${B.w}×${B.h}）</h4>${gridHtml(C.items, B.w, B.h, 'bag')}</div>
-      ${C.atStore ? `<div><h4>保管箱（${STORE.w}×${STORE.h}）</h4>${gridHtml(C.store, STORE.w, STORE.h, 'store')}</div>` : ''}</div>
-      <div class="yk-info">${sel ? `<b>${esc(c.name)}</b>　${esc(c.desc || '')}${c.gun ? `（弾：${esc(CATALOG[c.gun.ammo].name)}　残り ${C.count(c.gun.ammo)}）` : ''}` : `体力 ${Math.round(G.hp)} / 100${G.equip && C.byUid(G.equip) ? `　構えている物：${esc(CATALOG[C.byUid(G.equip).id].name)}` : ''}`}</div>
-      <div class="yk-acts">${buttons}</div>
-      <div class="yk-gore">血の表現：${['full', 'low', 'off'].map((g) => `<button data-gore="${g}" class="${gore === g ? 'on' : ''}">${{ full: 'あり', low: '控えめ', off: 'なし' }[g]}</button>`).join('')}</div>
+    const [sw, sh] = sel ? dims({ ...sel, rot: 0 }) : [1, 1];
+    const big = sel ? Math.min(side() ? 64 : 48, Math.floor((side() ? 230 : 300) / Math.max(sw, sh))) : 0;
+    const help = C.held ? `「${esc(CATALOG[C.held.id].name)}」を持っている。置きたい所を押す。` : '物を押すと持ち上がる。置きたい所を押すと置ける。';
+    const info = sel
+      ? `<div class="yk-pic yk-k-${c.kind}" style="width:${sw * big + 8}px;height:${sh * big + 8}px">${iconHtml(sel.id, sw, sh, big)}</div>
+          <p class="yk-name"><b>${esc(c.name)}</b><small>${sw}×${sh}${c.gun ? `　弾 ${sel.loaded}/${c.gun.mag}（${esc(CATALOG[c.gun.ammo].name)} 残り ${C.count(c.gun.ammo)}）` : sel.n > 1 ? `　×${sel.n}` : ''}</small></p>
+          <p class="yk-desc">${esc(c.desc || '')}</p>`
+      : `<p class="yk-name"><b>体力 ${Math.round(G.hp)} / 100</b><small>${G.equip && C.byUid(G.equip) ? `構えている物：${esc(CATALOG[C.byUid(G.equip).id].name)}` : '素手'}</small></p><p class="yk-desc">物を押すと、ここに名前と使い道が出る。</p>`;
+    host.innerHTML = `<div class="yk-case${side() ? ' yk-wide' : ''}">
+      <div class="yk-cmain"><p class="yk-help">${help}</p>
+        <div class="yk-grids"><div><h4>${esc(B.name)}（${B.w}×${B.h}）</h4>${gridHtml(C.items, B.w, B.h, 'bag')}</div>
+        ${C.atStore ? `<div><h4>保管箱（${STORE.w}×${STORE.h}）</h4>${gridHtml(C.store, STORE.w, STORE.h, 'store')}</div>` : ''}</div></div>
+      <div class="yk-cside">${info}
+        <div class="yk-acts"><button data-act="rot" class="yk-rot"${sel ? '' : ' disabled'}>回転${ctx.isTouch ? '' : '（R）'}</button>${acts}</div>
+      </div>
     </div>`;
     const listOf = (w) => (w === 'store' ? C.store : C.items);
     const dimOf = (w) => (w === 'store' ? STORE : B);
+    const spot = (g, e) => {   // the cells the held thing would take under the pointer
+      const r = g.getBoundingClientRect(), [w, h] = dims(C.held), D = dimOf(g.dataset.which);
+      const x = Math.round((e.clientX - r.left) / cs - w / 2), y = Math.round((e.clientY - r.top) / cs - h / 2);
+      const cx = Math.max(0, Math.min(D.w - w, x)), cy = Math.max(0, Math.min(D.h - h, y));
+      return { cx, cy, w, h, ok: fits(listOf(g.dataset.which), D.w, D.h, C.held, cx, cy, C.held.rot, C.held) };
+    };
+    const ghost = (g, p) => {
+      for (const q of host.querySelectorAll('.yk-ghost')) q.hidden = true;
+      if (!g || !p) return;
+      const el = g.querySelector('.yk-ghost'); el.hidden = false;
+      Object.assign(el.style, { left: `${p.cx * cs}px`, top: `${p.cy * cs}px`, width: `${p.w * cs}px`, height: `${p.h * cs}px` });
+      el.classList.toggle('bad', !p.ok);
+    };
+    if (C.held) {
+      const g = host.querySelector(`.yk-grid[data-which="${C.heldFrom || 'bag'}"]`), [w, h] = dims(C.held), D = dimOf(C.heldFrom || 'bag');
+      if (g) ghost(g, { cx: Math.min(C.held.x, D.w - w), cy: Math.min(C.held.y, D.h - h), w, h, ok: fits(listOf(C.heldFrom || 'bag'), D.w, D.h, C.held, Math.min(C.held.x, D.w - w), Math.min(C.held.y, D.h - h), C.held.rot, C.held) });
+    }
+    function tryPlaceOn(g, e) {
+      const p = spot(g, e), L = listOf(g.dataset.which);
+      if (!p.ok) { ghost(g, p); ctx.ui.say('そこには入らない。回すか、ほかの物を動かす。', 3, { urgent: true }); return; }
+      const from = listOf(C.heldFrom);
+      if (from !== L) { from.splice(from.indexOf(C.held), 1); L.push(C.held); if (L === C.store && G.equip === C.held.uid) G.equip = null; }
+      C.held.x = p.cx; C.held.y = p.cy; C.held = null; ctx.sound && ctx.sound('pickup'); G.emit && G.emit('case:change'); draw();
+    }
+    host.querySelectorAll('.yk-grid').forEach((g) => {
+      g.addEventListener('pointermove', (e) => { if (C.held) ghost(g, spot(g, e)); });
+      g.addEventListener('click', (e) => { if (C.held) tryPlaceOn(g, e); });
+    });
     host.querySelectorAll('.yk-it').forEach((b) => b.addEventListener('click', (e) => {
       e.stopPropagation();
       const uid = +b.dataset.uid, it = C.items.find((i) => i.uid === uid) || C.store.find((i) => i.uid === uid);
@@ -171,23 +219,15 @@ export function installCase(ext, G) {
       if (C.held === it) { C.held = null; draw(); return; }
       C.sel = it; C.held = it; C.heldFrom = b.closest('.yk-grid').dataset.which; draw();
     }));
-    host.querySelectorAll('.yk-grid').forEach((g) => g.addEventListener('click', (e) => { if (C.held) tryPlaceOn(g, e); }));
-    function tryPlaceOn(g, e) {
-      const r = g.getBoundingClientRect(), cs = CELL(), which = g.dataset.which;
-      const [w, h] = dims(C.held);
-      const x = Math.round((e.clientX - r.left) / cs - w / 2), y = Math.round((e.clientY - r.top) / cs - h / 2);
-      const L = listOf(which), D = dimOf(which);
-      const cx = Math.max(0, Math.min(D.w - w, x)), cy = Math.max(0, Math.min(D.h - h, y));
-      if (!fits(L, D.w, D.h, C.held, cx, cy, C.held.rot, C.held)) { ctx.ui.say('そこには入らない。回すか、ほかの物を動かす。', 3, { urgent: true }); return; }
-      const from = listOf(C.heldFrom);
-      if (from !== L) { from.splice(from.indexOf(C.held), 1); L.push(C.held); if (L === C.store && G.equip === C.held.uid) G.equip = null; }
-      C.held.x = cx; C.held.y = cy; C.held = null; ctx.sound && ctx.sound('pickup'); G.emit && G.emit('case:change'); draw();
-    }
     host.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', (e) => {
-      e.stopPropagation(); const a = b.dataset.act, it = C.sel; if (!it) return;
+      e.stopPropagation(); const a = b.dataset.act, it = C.held || C.sel; if (!it) return;
       if (a === 'equip') { if (C.store.includes(it)) return ctx.ui.say('保管箱の中の物は構えられない。', 3); G.equipUid(it.uid); }
       else if (a === 'use') { G.heal(it); }
-      else if (a === 'rot') { const L = C.store.includes(it) ? C.store : C.items, D = C.store.includes(it) ? STORE : B; if (fits(L, D.w, D.h, it, it.x, it.y, it.rot ? 0 : 1, it)) it.rot = it.rot ? 0 : 1; else if (C.held === it) it.rot = it.rot ? 0 : 1; else ctx.ui.say('ここでは回せない。持ち上げてから回す。', 3); }
+      else if (a === 'rot') {
+        const inStore = C.store.includes(it), L = inStore ? C.store : C.items, D = inStore ? STORE : B;
+        if (C.held === it || fits(L, D.w, D.h, it, it.x, it.y, it.rot ? 0 : 1, it)) it.rot = it.rot ? 0 : 1;
+        else { C.held = it; C.heldFrom = inStore ? 'store' : 'bag'; it.rot = it.rot ? 0 : 1; ctx.ui.say('ここでは回せない。回したまま持っているので、入る所を押す。', 3); }
+      }
       else if (a === 'combo') {
         const p = C.items.find((o) => o !== it && comboOf(o.id, it.id)), cb = comboOf(p.id, it.id);
         for (const x of [it, p]) { x.n -= 1; if (x.n <= 0) C.items.splice(C.items.indexOf(x), 1); }
@@ -204,9 +244,20 @@ export function installCase(ext, G) {
       }
       G.emit && G.emit('case:change'); draw();
     }));
-    host.querySelectorAll('[data-gore]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); G.setGore(b.dataset.gore); draw(); }));
   }
   C.redraw = draw;
+
+  // the blood setting lives in the menu's 設定 (not in the case)
+  ext.registerUi('pause', {
+    renderSettings: (el) => {
+      const row = document.createElement('div'); row.className = 'pm-row yk-gore-row';
+      const paint = () => {
+        row.innerHTML = `<span><b>血の表現</b><small>ゾンビを撃ったときの血と、取れた腕や脚の見え方。</small></span><span class="yk-gore">${['full', 'low', 'off'].map((g) => `<button type="button" data-gore="${g}" class="${(G.gore || 'full') === g ? 'on' : ''}">${{ full: 'あり', low: '控えめ', off: 'なし' }[g]}</button>`).join('')}</span>`;
+        row.querySelectorAll('[data-gore]').forEach((b) => { b.onclick = (e) => { e.preventDefault(); G.setGore(b.dataset.gore); paint(); }; });
+      };
+      paint(); el.append(row);
+    },
+  });
 
   // the save: the case, the storage box, the loot taken
   ext.registerPersist('yk-case', {

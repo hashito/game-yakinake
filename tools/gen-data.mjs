@@ -82,13 +82,10 @@ const tasks = [
   T('T_POWER', 'L1', 'H_DEN', 'S_BREAKER', '非常用の配電盤で、病棟の電気を戻す', '電気の錠が落ちて、病棟の扉が開かない。**灯りが戻れば**、ナースステーションへ行ける。', '配電室の**西の壁**の盤。', '西の壁の配電盤の前に立つ', '盤を操作する', { needs: ['T_TOOLBOX'],
     minigame: { type: 'switch-panel', cfg: { title: '非常用の配電盤', help: 'スイッチを押すと、となりの回路も一緒に切り替わる。全部の灯りをつける。', n: 4, presses: 4, seed: 11, look: 'lamp' } } }),
   // L2
-  T('T_CHISATO', 'L2', 'H_NS', 'S_CHISATO', 'ナースステーションの宮下さんと話す', '病棟で**生きている人**は、ほかにいるのか。外で何が起きているのか。', '廊下の北、**ナースステーション**のカウンターの奥。', 'カウンターの奥の宮下さんを見る', '話す', {
-    minigame: { type: 'footprint-track', cfg: { title: 'ナースステーションの床', help: '床の血だまりを踏んだ足跡が、いくつも続いている。ナースサンダルの足跡だけを、ペンライトで追う。', clue: 'slipper', clueText: 'ナースサンダル：かかとのない、つっかけの跡', branches: 3, seed: 14, floor: 'dust', end: 'wall' } } }),
+  T('T_CHISATO', 'L2', 'H_NS', 'S_CHISATO', 'ナースステーションの宮下さんと話す', '病棟で**生きている人**は、ほかにいるのか。外で何が起きているのか。', '廊下の北、**ナースステーション**のカウンターの奥。', 'カウンターの奥の宮下さんを見る', '話す'),
   T('T_RADIO', 'L2', 'H_NS', 'S_RADIO', '防災無線の受信機で、市の放送を聞き直す', 'ヘリが来る**時刻と場所**を、はっきり聞くため。', 'ナースステーションの**北の壁**の受信機。', '北の壁の受信機の前に立つ', '受信機を合わせる', { needs: ['T_CHISATO'],
     minigame: { type: 'tune-radio', cfg: { title: '防災無線の受信機', help: 'つまみを回して、雑音の奥の声を探す。声がはっきりしたら、少し止める。', target: 0.71, width: 0.04, hold: 1.2 } } }),
-  T('T_NOTE', 'L2', 'H_KEI', 'S_NOTE', '警備主任の机で、破られたメモをつなぎ合わせる', '霊安室と搬入口を開けるカードは、**警備室の金庫**の中。番号は、主任が破ったメモに書いてある。', '廊下の南、**警備室**の奥の机。', '奥の机の前に立つ', '紙片をつなぐ', { needs: ['T_CHISATO'],
-    minigame: { type: 'torn-paper', cfg: { title: '破られたメモ', help: '紙片を台紙へ運び、回して向きを合わせる。罫線の違う紙がまざっている。', text: '金庫　右へ32\n左へ15\n右へ71\n（カードは中段）', cols: 3, rows: 2, decoys: 2, seed: 6, paper: { title: '警備主任のメモ' } } } }),
-  T('T_SAFE', 'L2', 'H_KEI', 'S_SAFE', '聴診器で、警備室の金庫を開ける', '金庫のダイヤルは、正しい数でかすかに鳴る。**聴診器**なら聞こえる。', '警備室の**北東の隅**の金庫。', '北東の隅の金庫の前に立つ', 'ダイヤルを回す', { needs: ['T_NOTE'],
+  T('T_SAFE', 'L2', 'H_KEI', 'S_SAFE', '聴診器で、警備室の金庫を開ける', '霊安室と搬入口を開けるカードは、**警備室の金庫**の中。ダイヤルは、正しい数でかすかに鳴る。**聴診器**なら聞こえる。', '警備室の**北東の隅**の金庫。', '北東の隅の金庫の前に立つ', 'ダイヤルを回す', { needs: ['T_CHISATO'],
     minigame: { type: 'safe-listen', cfg: { title: '警備室の金庫', help: '聴診器を当てて、ダイヤルを回す。カチッと鳴って揺れたら止める。右・左・右。', code: [32, 15, 71], dirs: [1, -1, 1], seed: 8 } } }),
   T('T_INSULIN', 'L2', 'H_YAKU', 'S_DRUGS', '薬剤部で、戸川さんのインスリンを探す', '病室の戸川さんは糖尿病。**朝までに打たないと**、意識がなくなる（寄り道）。', '廊下の南、**薬剤部**の奥の棚。', '奥の薬品棚の前に立つ', '棚を探す', { optional: true, needs: ['T_CHISATO'],
     minigame: { type: 'sort-items', cfg: { title: '薬品棚', help: '散らばった薬を、正しい棚へ戻す。インスリンは冷蔵の棚。', bins: [{ id: 'cold', label: '冷蔵' }, { id: 'room', label: '常温' }, { id: 'lock', label: '鍵付き（劇薬）' }],
@@ -371,17 +368,30 @@ for (const [k, lines] of Object.entries(talk)) lines.forEach((l, i) => { l.id = 
 // ------------------------------------------------------------------ monsters: none from the kit (the zombies are js/ext/zombies.js)
 const monsters = { early: { stages: 1 }, hints: { run: '走れ！', turn: '曲がれ！', hide: '隠れろ！' }, monsters: [] };
 
-const releaseNotes = { version: VERSION, notes: [{ version: VERSION, date: '2026-11-21', title: 'β版の公開', items: [
+const releaseNotes = { version: VERSION, notes: [{ version: '1.1.0', date: '2026-11-22', title: 'ケース・武器・夜の街', items: [
+  { type: 'change', text: 'ケースを大きくしました。升目が画面いっぱいに広がり、持った物の影が「入る（緑）／入らない（赤）」で見えます。回転ボタンと、物の名前・説明を横に表示。' },
+  { type: 'change', text: '鍵やカード、薬を拾ったときの絵を、物の写真をドットにしたものに替えました。書類と調べた物にも絵が付きます。' },
+  { type: 'change', text: 'お知らせは一つずつ、短く出て消えるようにしました。' },
+  { type: 'new', text: '手に持った武器をドット絵で描き直し、撃つと反動で跳ね上がり、銃口が光ります。銃ごとに音の重さも違います。' },
+  { type: 'change', text: '大通り・商店街・駐車場を、夜空と街灯の下の道にしました（アスファルト、白線、止まった車）。' },
+  { type: 'new', text: '人は棚やカウンターの陰に隠れながら戦います。屋上の守りは三つの波で来ます。選んだ道によって、権藤さん・片桐さん・白坂さんたちが屋上に上がってきます。' },
+  { type: 'change', text: '病院の始まりを短くしました（ナースステーションの足跡たどりと、破られたメモつなぎを省きました）。血の表現の設定は、一時停止の設定へ移しました。' },
+] }, { version: '1.0.0', date: '2026-11-21', title: 'β版の公開', items: [
   { type: 'new', text: '夜勤明けの街、β版を公開しました。病院から屋上のヘリまで、約90分。結末は四つ。' },
   { type: 'new', text: '箱から武器を出し、升目のケースに回して詰める。安全な部屋の当直日誌に書くと、そこから続けられます。' },
   { type: 'new', text: '血の表現は、設定で「あり／控えめ／なし」を選べます。' },
 ] }] };
 
 const ROOM_OF = { PENLIGHT: ['H_TOU', 'L1'], STETHO: ['H_TOU', 'L1'], PHS: ['H_TOU', 'L1'] };
-for (const it of items) { const t = tasks.find((x) => x.id === it.given); const [room, stage] = ROOM_OF[it.id] || [t.room, t.stage]; Object.assign(it, { photo: it.photo || (fs.existsSync(path.join(ROOT, 'assets/icons', `${it.id}.png`)) ? `assets/icons/${it.id}.png` : ''), room, stage }); }
+for (const it of items) { const t = tasks.find((x) => x.id === it.given); const [room, stage] = ROOM_OF[it.id] || [t.room, t.stage]; Object.assign(it, { photo: it.photo || (fs.existsSync(path.join(ROOT, 'assets/photos', `item-${it.id}.webp`)) ? `assets/photos/item-${it.id}.webp` : fs.existsSync(path.join(ROOT, 'assets/icons', `${it.id}.png`)) ? `assets/icons/${it.id}.png` : ''), room, stage }); }
 out('stages.json', stages);
 out('tasks.json', tasks);
 out('items.json', items);
+// the pictures of the papers and of the things to look at (tools/media.json doc-* / th-*), once they are made
+const PIC = { N_HANDOVER: 'doc-handover', N_TODAY: 'doc-today', N_CULT: 'doc-cult', N_GENMANUAL: 'doc-genmanual', N_POLICELOG: 'doc-policelog', N_ROSTER: 'doc-roster',
+  TH_SHO_GLASS: 'th-glass', TH_TOU_CLOCK: 'th-clock', TH_DEN_SIGN: 'th-sign', TH_BYO_BED: 'th-bed', TH_HAN_TRACK: 'th-track', TH_URA_AMBU: 'th-ambu', TH_ODORI_BUS: 'th-bus',
+  TH_ODORI_CAR: 'th-car', TH_SHOTEN_CHAIN: 'th-chain', TH_KOMIN_ALTAR: 'th-altar', TH_P_BARS: 'th-bars', TH_FIREDOOR: 'th-firedoor', TH_O_WINDOW: 'th-window', TH_ROOF_H: 'th-roofh' };
+for (const x of [...docs, ...things]) { const k = PIC[x.id]; if (k && !x.photo && fs.existsSync(path.join(ROOT, `assets/photos/${k}.webp`))) x.photo = `assets/photos/${k}.webp`; }
 out('docs.json', docs);
 out('things.json', things);
 out('endings.json', endings);

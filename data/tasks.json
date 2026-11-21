@@ -114,20 +114,7 @@
     "text": "[E] で話す",
     "done": "task"
    }
-  ],
-  "minigame": {
-   "type": "footprint-track",
-   "cfg": {
-    "title": "ナースステーションの床",
-    "help": "床の血だまりを踏んだ足跡が、いくつも続いている。ナースサンダルの足跡だけを、ペンライトで追う。",
-    "clue": "slipper",
-    "clueText": "ナースサンダル：かかとのない、つっかけの跡",
-    "branches": 3,
-    "seed": 14,
-    "floor": "dust",
-    "end": "wall"
-   }
-  }
+  ]
  },
  {
   "id": "T_RADIO",
@@ -168,55 +155,12 @@
   }
  },
  {
-  "id": "T_NOTE",
-  "title": "警備主任の机で、破られたメモをつなぎ合わせる",
-  "stage": "L2",
-  "room": "H_KEI",
-  "station": "S_NOTE",
-  "meaning": "霊安室と搬入口を開けるカードは、**警備室の金庫**の中。番号は、主任が破ったメモに書いてある。",
-  "hint": "廊下の南、**警備室**の奥の机。",
-  "steps": [
-   {
-    "text": "警備室へ",
-    "done": "room",
-    "room": "H_KEI"
-   },
-   {
-    "text": "奥の机の前に立つ",
-    "done": "look",
-    "emphasis": "station:S_NOTE"
-   },
-   {
-    "text": "[E] で紙片をつなぐ",
-    "done": "task"
-   }
-  ],
-  "needs": [
-   "T_CHISATO"
-  ],
-  "minigame": {
-   "type": "torn-paper",
-   "cfg": {
-    "title": "破られたメモ",
-    "help": "紙片を台紙へ運び、回して向きを合わせる。罫線の違う紙がまざっている。",
-    "text": "金庫　右へ32\n左へ15\n右へ71\n（カードは中段）",
-    "cols": 3,
-    "rows": 2,
-    "decoys": 2,
-    "seed": 6,
-    "paper": {
-     "title": "警備主任のメモ"
-    }
-   }
-  }
- },
- {
   "id": "T_SAFE",
   "title": "聴診器で、警備室の金庫を開ける",
   "stage": "L2",
   "room": "H_KEI",
   "station": "S_SAFE",
-  "meaning": "金庫のダイヤルは、正しい数でかすかに鳴る。**聴診器**なら聞こえる。",
+  "meaning": "霊安室と搬入口を開けるカードは、**警備室の金庫**の中。ダイヤルは、正しい数でかすかに鳴る。**聴診器**なら聞こえる。",
   "hint": "警備室の**北東の隅**の金庫。",
   "steps": [
    {
@@ -235,7 +179,7 @@
    }
   ],
   "needs": [
-   "T_NOTE"
+   "T_CHISATO"
   ],
   "minigame": {
    "type": "safe-listen",

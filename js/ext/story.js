@@ -34,9 +34,9 @@ export function installStory(ext, G) {
 
   // ---------------------------------------------------------------- tasks
   const after = (id, fn) => ext.registerTask(id, { onDone: (c) => { try { fn(c); } catch (e) { console.error(e); } } });
-  ext.registerTask('T_CART', { run: async () => { G.case.give(BOXES.T_CART); const s = G.case.items.find((i) => i.id === 'scalpel'); if (s) G.equipUid(s.uid); ctx.ui.say(ctx.isTouch ? 'メスを持った。「殴る」で振る。左上の武器の欄を押すと持ち替え。ケースは「ケース」。' : 'メスを持った。左クリックで振る。ケースは[B]、持ち替えは[Q]。', 7); await ctx.mapTip(); return true; } });
-  ext.registerTask('T_TOOLBOX', { run: async () => { G.case.give(BOXES.T_TOOLBOX); const p = G.case.items.find((i) => i.id === 'pipe'); if (p) G.equipUid(p.uid); return true; } });
-  ext.registerTask('T_CASE', { canStart: () => (has('KEYRING') ? true : '鍵がかかっている。霊安室の机に、鍵束があるはず。'), run: async () => { G.case.give(BOXES.T_CASE); const n = G.case.items.find((i) => i.id === 'nailgun'); if (n) G.equipUid(n.uid); ctx.ui.say(ctx.isTouch ? '釘打ち機。音が小さい。撃つと、釘が減る。切れたら自動で込める（弾の数を押しても装填）。' : '釘打ち機。音が小さい。撃つと、釘が減る。[R]で装填。', 6); return true; } });
+  ext.registerTask('T_CART', { run: async () => { G.case.give(BOXES.T_CART); const s = G.case.items.find((i) => i.id === 'scalpel'); if (s) G.equipUid(s.uid, { quiet: true }); ctx.ui.say(ctx.isTouch ? 'メスを持った。「殴る」で振る。左上の武器の欄を押すと持ち替え。ケースは「ケース」。' : 'メスを持った。左クリックで振る。ケースは[B]、持ち替えは[Q]。', 7); await ctx.mapTip(); return true; } });
+  ext.registerTask('T_TOOLBOX', { run: async () => { G.case.give(BOXES.T_TOOLBOX); const p = G.case.items.find((i) => i.id === 'pipe'); if (p) G.equipUid(p.uid, { quiet: true }); return true; } });
+  ext.registerTask('T_CASE', { canStart: () => (has('KEYRING') ? true : '鍵がかかっている。霊安室の机に、鍵束があるはず。'), run: async () => { G.case.give(BOXES.T_CASE); const n = G.case.items.find((i) => i.id === 'nailgun'); if (n) G.equipUid(n.uid, { quiet: true }); ctx.ui.say(ctx.isTouch ? '釘打ち機。音が小さい。撃つと、釘が減る。切れたら自動で込める（弾の数を押しても装填）。' : '釘打ち機。音が小さい。撃つと、釘が減る。[R]で装填。', 6); return true; } });
   ext.registerTask('T_AXE', { canStart: () => (has('FIREKEY') ? true : '南京錠がかかっている。鍵は、消防団の人が持っているはず。'), run: async () => { G.case.give(BOXES.T_AXE); return true; } });
   after('T_FUEL', () => G.case.give(BOXES.T_FUEL));
   after('T_SHOKO', () => { ctx.ui.say('写真の奥、ロッカーの前に、誰か立っている。……写っている札は、二十三番。', 6); G.case.give(BOXES.T_SHOKO); });
@@ -46,7 +46,7 @@ export function installStory(ext, G) {
   } });
 
   // talk tasks
-  ext.registerTask('T_CHISATO', { run: async (c, task) => { if (!(await ctx.runMinigame(task))) return false; await talk('chisato'); return true; } });
+  ext.registerTask('T_CHISATO', { run: async () => { await talk('chisato'); return true; } });
   after('T_RADIO', () => talk('radio_done'));
   after('T_SAFE', () => talk('safe_done'));
   ext.registerTask('T_GENZO', { run: async (c, task) => { if (!(await ctx.runMinigame(task))) return false; await talk('genzo'); ctx.state.inv.splice(ctx.state.inv.indexOf('INSULIN'), 1); return true; } });
@@ -108,7 +108,7 @@ export function installStory(ext, G) {
     const v = joined ? await choose('私', '約束は、半分ずつ。', [{ id: 'share', label: '約束どおり、半分を持っていく', primary: true }, { id: 'all', label: '全部持っていく' }]) : 'all';
     if (v === 'share') { G.case.give(RACK.share); await talk('rack_share'); flag('rack', 'share'); }
     else { G.case.give(RACK.all); if (joined) { await talk('rack_all'); flag('betrayed'); } flag('rack', 'all'); }
-    const p = G.case.items.find((i) => i.id === 'pistol'); if (p) G.equipUid(p.uid);
+    const p = G.case.items.find((i) => i.id === 'pistol'); if (p) G.equipUid(p.uid, { quiet: true });
     return true;
   } });
   after('T_TAPE', () => talk('tape_done'));
@@ -136,9 +136,11 @@ export function installStory(ext, G) {
   ext.registerTask('T_FORCE', { canStart: () => (G.flags.hayase === 'gave' && !has('ROOFKEY') ? true : '屋上の鍵がある。鍵で開ければいい。') });
 
   // ---------------------------------------------------------------- the roof: the last stand, the helicopter, the endings
-  const roof = { on: false, t: 0, spawned: 0, next: 2, ids: [] };
-  roof.reset = () => { for (const L of G.liveZombies()) if (String(L.def.id).startsWith('Z_RF')) { L.z.dispose(); } roof.t = 0; roof.spawned = 0; roof.next = 3; };
-  ext.registerTask('T_HOLD', { run: async () => { await talk('heli'); roof.on = false; for (const L of G.liveZombies()) if (String(L.def.id).startsWith('Z_RF') && L.alive) L.z.kill(); return true; } });
+  const roof = { on: false, t: 0, spawned: 0, next: 2, ids: [], wave: -1, inWave: 0, allies: null, shotT: 0 };
+  roof.reset = () => { for (const L of G.liveZombies()) if (String(L.def.id).startsWith('Z_RF')) { L.z.dispose(); } roof.t = 0; roof.spawned = 0; roof.next = 3; roof.wave = -1; roof.inWave = 0; roof.giant = false; };
+  ext.registerTask('T_HOLD', { run: async () => { await talk('heli'); roof.on = false;
+    // the hold is over: 権藤 and 仁科 go back down to the daughter
+    if (roof.allies && roof.allies.has('gondo')) { G.showPerson('gondo', false); G.showPerson('nishina', false); ctx.ui.toast('権藤さんたちは、娘さんのところへ戻っていった。'); } for (const L of G.liveZombies()) if (String(L.def.id).startsWith('Z_RF') && L.alive) L.z.kill(); return true; } });
   ext.registerTask('T_HELI', { run: async () => {
     let end = 'E2';
     if (G.flags.alliance === 'joined' && !G.flags.betrayed) {
@@ -153,20 +155,74 @@ export function installStory(ext, G) {
     ctx.setFlag(`end:${end}`);
     return true;
   } });
+  // The hold comes in three waves with a breath between them (a notice at each), and who comes up to help depends on the choices:
+  // 権藤 and 仁科 after the trade at the mart (they hold the first wave and go back down to the daughter), 片桐 and 森 when the
+  // promise of the rack was kept (the second wave), and 白坂 with 宮下 and 戸川 when the wife was seen to as a doctor (the last
+  // wave, as in E1). The ones with guns shoot the nearest of the risen now and then.
+  const WAVES = [
+    { from: 0, to: 28, every: 5, n: 5, say: '第一波。階段から、上がってくる。' },
+    { from: 40, to: 76, every: 3.4, n: 9, say: '第二波。さっきより、数が多い。' },
+    { from: 88, to: 115, every: 2.8, n: 9, giant: true, say: '最後の波。大きな足音が、混じっている。' },
+  ];
+  const LULL = '途切れた。今のうちに、弾を込める。';
+  const ALLY = {
+    gondo: { at: [140.6, 7.6], wave: 0, gun: 'shotgun', reach: 6, every: 7, say: '権藤さんと仁科さんが、猟銃を持って上がってきた。「借りは返す」' },
+    nishina: { at: [139.8, 5.6], wave: 0 },
+    katagiri: { at: [141.2, 12.6], wave: 1, gun: 'pistol', reach: 9, every: 5.5, say: '片桐さんと森くんが、階段の扉から来た。「約束どおり、追いかけてきた」' },
+    mori: { at: [140.2, 13.4], wave: 1, gun: 'pistol', reach: 9, every: 6.5 },
+    shirasaka: { at: [133.4, 11.6], wave: 2, say: '白坂さんが、戸川さんの肩を支えて上がってきた。宮下さんも一緒だ。' },
+    genzo: { at: [132.6, 12.2], wave: 2 },
+    chisato: { at: [134.2, 12.4], wave: 2 },
+  };
+  function allies() {
+    const f = G.flags, kept = f.alliance === 'joined' && !f.betrayed;
+    const on = new Set();
+    if (f.mart === 'trade') { on.add('gondo'); on.add('nishina'); }
+    if (kept) { on.add('katagiri'); on.add('mori'); }
+    if (kept && f.cult === 'talked') { on.add('shirasaka'); on.add('genzo'); on.add('chisato'); }
+    return on;
+  }
+  function allyArrive(w) {
+    let said = null;
+    for (const id of roof.allies) {
+      const A = ALLY[id]; if (A.wave !== w) continue;
+      G.placePerson(id, 'O_ROOF', A.at[0], A.at[1], A.gun ? Math.PI / 2 : Math.PI * 0.75);
+      if (A.say) said = A.say;
+      if (A.gun) roof.guns.set(id, A.every * 0.5);
+    }
+    if (said) setTimeout(() => ctx.ui.toast(said), 3200);
+  }
   ext.registerSystem('yk-roof', {
     update(dt) {
       if (!ctx || !ctx.state.started || ctx.state.ended) return;
       const inRoof = ctx.floor === 4 && G.roomAtP(ctx.camera.position.x, ctx.camera.position.z, 4);
       if (!inRoof || ctx.state.tasks.includes('T_HOLD') || !ctx.state.tasks.includes('T_RIFLE')) return;
-      if (!roof.on) { roof.on = true; roof.t = 0; talk('roof'); ctx.phase('roof', { at: { x: 137, z: 10, yaw: 0, floor: 4 } }); }
+      if (!roof.on) { roof.on = true; roof.t = 0; roof.wave = -1; roof.allies = allies(); roof.guns = new Map(); talk('roof'); ctx.phase('roof', { at: { x: 137, z: 10, yaw: 0, floor: 4 } }); }
       if (ctx.blocked && ctx.blocked()) return;
       roof.t += dt; roof.next -= dt;
-      const alive = G.liveZombies().filter((L) => String(L.def.id).startsWith('Z_RF') && L.alive).length;
-      if (roof.next <= 0 && alive < (ctx.isTouch ? 6 : 8) && roof.t < 115) {
-        roof.next = roof.t > 60 ? 4 : 6;
-        const k = roof.spawned++, p = roof.t > 85 && !roof.giant ? 'giant' : ROOF_WAVE[k % (ROOF_WAVE.length - 1)];
+      const live = G.liveZombies().filter((L) => String(L.def.id).startsWith('Z_RF') && L.alive);
+      // the waves
+      const w = WAVES.findIndex((W) => roof.t >= W.from && roof.t < W.to), W = WAVES[w];
+      if (w >= 0 && w !== roof.wave) { roof.wave = w; roof.inWave = 0; roof.next = 1.5; ctx.ui.toast(W.say); allyArrive(w); }
+      if (w < 0 && roof.wave >= 0 && !roof.lull && live.length === 0 && roof.t < 115) { roof.lull = true; ctx.ui.toast(LULL); }
+      if (w >= 0) roof.lull = false;
+      if (W && roof.next <= 0 && roof.inWave < W.n && live.length < (ctx.isTouch ? 6 : 8)) {
+        roof.next = W.every; roof.inWave++;
+        const k = roof.spawned++, p = W.giant && !roof.giant ? 'giant' : ROOF_WAVE[k % (ROOF_WAVE.length - 1)];
         if (p === 'giant') roof.giant = true;
         G.extraZombie({ id: `Z_RF${k}`, room: 'O_ROOF', x: 143.6 - (k % 3) * 0.5, z: 10.5 + ((k % 2) - 0.5) * 0.8, p, yaw: -Math.PI / 2 });
+      }
+      // the ones with guns help: the nearest of the risen within reach, now and then (never the giant: that one is the player's)
+      for (const [id, t] of roof.guns) {
+        const nt = t - dt; roof.guns.set(id, nt); if (nt > 0) continue;
+        const A = ALLY[id], me = G.person(id); if (!me) continue;
+        roof.guns.set(id, A.every * (0.8 + Math.random() * 0.4));
+        const o = me.f.root.position;
+        const tgt = live.filter((L) => L.def.p !== 'giant' && Math.hypot(L.z.pos[0] - o.x, L.z.pos[2] - o.z) < A.reach)
+          .sort((a, b) => Math.hypot(a.z.pos[0] - o.x, a.z.pos[2] - o.z) - Math.hypot(b.z.pos[0] - o.x, b.z.pos[2] - o.z))[0];
+        if (!tgt) continue;
+        me.f.root.rotation.y = Math.atan2(tgt.z.pos[0] - o.x, tgt.z.pos[2] - o.z);
+        G.personAct(id); G.sfx3d(A.gun, o); tgt.z.kill();
       }
     },
   });

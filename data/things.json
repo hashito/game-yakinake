@@ -11,7 +11,8 @@
   "text": [
    "ガラスの向こうで、白衣の誰かが、床の人にかがみこんでいる。音を立てずに、離れる。"
   ],
-  "feeling": "近づかない。今は。"
+  "feeling": "近づかない。今は。",
+  "photo": "assets/photos/th-glass.webp"
  },
  {
   "id": "TH_TOU_CLOCK",
@@ -25,7 +26,8 @@
   "text": [
    "午前二時十分。電池の時計だけが動いている。"
   ],
-  "feeling": "五時半まで、三時間二十分。"
+  "feeling": "五時半まで、三時間二十分。",
+  "photo": "assets/photos/th-clock.webp"
  },
  {
   "id": "TH_DEN_SIGN",
@@ -39,7 +41,8 @@
   "text": [
    "「非常用配電盤：回路は隣と連動します」。"
   ],
-  "feeling": "一つ押すと、となりも変わる。"
+  "feeling": "一つ押すと、となりも変わる。",
+  "photo": "assets/photos/th-sign.webp"
  },
  {
   "id": "TH_BYO_BED",
@@ -53,7 +56,8 @@
   "text": [
    "シーツに血がついている。点滴の管が、引きちぎられている。"
   ],
-  "feeling": "ここの人は、どこへ行った。"
+  "feeling": "ここの人は、どこへ行った。",
+  "photo": "assets/photos/th-bed.webp"
  },
  {
   "id": "TH_HAN_TRACK",
@@ -67,7 +71,8 @@
   "text": [
    "血のついた足跡が、シャッターの前で行ったり来たりしている。"
   ],
-  "feeling": "外へ出られなかった誰かがいた。"
+  "feeling": "外へ出られなかった誰かがいた。",
+  "photo": "assets/photos/th-track.webp"
  },
  {
   "id": "TH_URA_AMBU",
@@ -81,7 +86,8 @@
   "text": [
    "後ろの扉が開いたまま。担架は空で、血の手形が内側についている。"
   ],
-  "feeling": "運ばれてきた人が、運んできた人を噛んだ。"
+  "feeling": "運ばれてきた人が、運んできた人を噛んだ。",
+  "photo": "assets/photos/th-ambu.webp"
  },
  {
   "id": "TH_ODORI_BUS",
@@ -95,7 +101,8 @@
   "text": [
    "市営バスが横倒しになって、大通りの東をふさいでいる。窓の中で、何かが動いている。"
   ],
-  "feeling": "大通りは、ここで行き止まり。"
+  "feeling": "大通りは、ここで行き止まり。",
+  "photo": "assets/photos/th-bus.webp"
  },
  {
   "id": "TH_ODORI_CAR",
@@ -109,7 +116,8 @@
   "text": [
    "エンジンはかかったまま。運転席は空で、シートベルトが切られている。"
   ],
-  "feeling": "誰も、車では逃げられなかった。"
+  "feeling": "誰も、車では逃げられなかった。",
+  "photo": "assets/photos/th-car.webp"
  },
  {
   "id": "TH_SHOTEN_CHAIN",
@@ -123,7 +131,8 @@
   "text": [
    "電柱に鎖が巻かれている。先は、縄の向こうのゾンビの首輪につながっている。"
   ],
-  "feeling": "首輪には、名前を書いた札。"
+  "feeling": "首輪には、名前を書いた札。",
+  "photo": "assets/photos/th-chain.webp"
  },
  {
   "id": "TH_KOMIN_ALTAR",
@@ -137,7 +146,8 @@
   "text": [
    "ろうそくと花。写真が十枚ほど並んでいる。どの写真の人も、首に札をかけて外にいる。"
   ],
-  "feeling": "家族の写真だ。"
+  "feeling": "家族の写真だ。",
+  "photo": "assets/photos/th-altar.webp"
  },
  {
   "id": "TH_P_BARS",
@@ -151,7 +161,8 @@
   "text": [
    "奥の房で、制服の誰かが鉄格子を噛んでいる。名札は「署長」。"
   ],
-  "feeling": "電気の錠が落ちたら、出てくる。"
+  "feeling": "電気の錠が落ちたら、出てくる。",
+  "photo": "assets/photos/th-bars.webp"
  },
  {
   "id": "TH_FIREDOOR",
@@ -165,7 +176,8 @@
   "text": [
    "階段の上の防火扉が、熱で歪んでいる。押しても引いても、びくともしない。"
   ],
-  "feeling": "エレベーターで上がるしかない。"
+  "feeling": "エレベーターで上がるしかない。",
+  "photo": "assets/photos/th-firedoor.webp"
  },
  {
   "id": "TH_O_WINDOW",
@@ -179,7 +191,8 @@
   "text": [
    "港の向こうで、石油タンクが燃えている。病院の屋上が、小さく見える。"
   ],
-  "feeling": "あそこから、歩いてきた。"
+  "feeling": "あそこから、歩いてきた。",
+  "photo": "assets/photos/th-window.webp"
  },
  {
   "id": "TH_ROOF_H",
@@ -193,6 +206,7 @@
   "text": [
    "濡れたコンクリートに、白いＨ。東の空が、少し明るい。"
   ],
-  "feeling": "もうすぐだ。"
+  "feeling": "もうすぐだ。",
+  "photo": "assets/photos/th-roofh.webp"
  }
 ]

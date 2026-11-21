@@ -131,6 +131,162 @@
    "key": "mg-desk",
    "size": "1344x768",
    "prompt": "top-down view into an open steel desk drawer in a hospital morgue office at night, a ring of old keys at lower left, a duty roster clipboard at upper right, pens, a stamp pad, scattered papers, dark, a penlight beam"
+  },
+  {
+   "key": "doc-handover",
+   "size": "1344x768",
+   "prompt": "a nurse station handover clipboard sheet on a dim hospital counter at night, handwritten lines too small to read, a dropped pen, a faint smear of blood on the corner, penlight beam"
+  },
+  {
+   "key": "doc-today",
+   "size": "1344x768",
+   "prompt": "a duty roster sheet pinned to a cork board in a hospital morgue office, three name tags, a steel drawer cabinet blurred behind, cold fluorescent light, illegible handwriting"
+  },
+  {
+   "key": "doc-cult",
+   "size": "1344x768",
+   "prompt": "close view of a plain blank cream paper sheet with one large orange circle with rays drawn on it, empty paper, no letters, no characters, no text, pinned to a wooden notice board in a dark community hall at night, candle wax drips, prayer beads hanging"
+  },
+  {
+   "key": "doc-genmanual",
+   "size": "1344x768",
+   "prompt": "a laminated instruction card zip-tied to the side of a yellow emergency diesel generator in a police station basement, valves and switches, flashlight beam, illegible print"
+  },
+  {
+   "key": "doc-policelog",
+   "size": "1344x768",
+   "prompt": "an open police duty log binder on a cluttered desk in a dark police station office, one page torn out, a radio and a cold coffee cup, illegible handwriting"
+  },
+  {
+   "key": "doc-roster",
+   "size": "1344x768",
+   "prompt": "a staff roster clipboard on the console of a building disaster control centre, monitors dark, emergency red light, one name crossed out, illegible print"
+  },
+  {
+   "key": "th-glass",
+   "size": "1344x768",
+   "prompt": "a frosted glass door of a hospital treatment room seen from the corridor at night, behind the glass a blurred figure in a white coat crouching over someone on the floor, horror"
+  },
+  {
+   "key": "th-clock",
+   "size": "1344x768",
+   "prompt": "a plain round wall clock in a hospital on-call room showing ten past two, battery clock, dark room, faint light from a window"
+  },
+  {
+   "key": "th-sign",
+   "size": "1344x768",
+   "prompt": "a grey emergency electrical distribution panel in a dark hospital electrical room, a plain yellow and black striped hazard plate with a lightning bolt symbol only, no writing, flashlight beam, cables"
+  },
+  {
+   "key": "th-bed",
+   "size": "1344x768",
+   "prompt": "an empty hospital bed with blood stained sheets and a torn IV line hanging, ward room at night, curtain half open"
+  },
+  {
+   "key": "th-track",
+   "size": "1344x768",
+   "prompt": "bloody footprints on a grey concrete loading dock floor in front of a closed metal rolling shutter, the prints pace back and forth, nobody in the picture, night, flashlight beam"
+  },
+  {
+   "key": "th-ambu",
+   "size": "1344x768",
+   "prompt": "the open rear doors of a Japanese ambulance at night, empty stretcher inside, a bloody handprint on the inside wall, orange street light"
+  },
+  {
+   "key": "th-bus",
+   "size": "1344x768",
+   "prompt": "a city bus overturned and lying on its side across a wide city street at night, its roof facing the camera, wheels in the air, broken windows, orange sodium street lights, debris"
+  },
+  {
+   "key": "th-car",
+   "size": "1344x768",
+   "prompt": "a stalled small car in a city street at night with the driver door open, headlights on, an empty driver seat with a cut seatbelt, exhaust in the cold air"
+  },
+  {
+   "key": "th-chain",
+   "size": "1344x768",
+   "prompt": "a heavy chain wrapped around a concrete utility pole in a shopping arcade at night, the chain leads to a rope barrier, a dark figure at the far end"
+  },
+  {
+   "key": "th-altar",
+   "size": "1344x768",
+   "prompt": "a makeshift altar in a community hall with candles and flowers and about ten framed portrait photos in a row, prayer cards, night, candlelight"
+  },
+  {
+   "key": "th-bars",
+   "size": "1344x768",
+   "prompt": "the steel bars of a police station holding cell at night, in the back cell a uniformed figure with its mouth on the bars, dim emergency light, horror"
+  },
+  {
+   "key": "th-firedoor",
+   "size": "1344x768",
+   "prompt": "a grey steel fire door at the top of an office building staircase warped by heat, soot on the walls, emergency exit light"
+  },
+  {
+   "key": "th-window",
+   "size": "1344x768",
+   "prompt": "the view from an office tower window at night over a harbour, an oil storage tank burning on the far side, a small hospital roof in the distance, reflections on the glass"
+  },
+  {
+   "key": "th-roofh",
+   "size": "1344x768",
+   "prompt": "a white letter H painted on wet concrete of a rooftop helipad at dawn, the eastern sky slightly bright, puddles"
+  },
+  {
+   "key": "item-PENLIGHT",
+   "size": "1024x768",
+   "prompt": "a slim medical penlight with a pocket clip, a single object close up, top three-quarter view, centred, on a dark worn surface, dramatic small light, sharp focus, product shot"
+  },
+  {
+   "key": "item-STETHO",
+   "size": "1024x768",
+   "prompt": "a stethoscope coiled with its chest piece and earpieces, a single object close up, top three-quarter view, centred, on a dark worn surface, dramatic small light, sharp focus, product shot"
+  },
+  {
+   "key": "item-PHS",
+   "size": "1024x768",
+   "prompt": "an old Japanese hospital PHS handset phone with a short antenna, dark screen, a single object close up, top three-quarter view, centred, on a dark worn surface, dramatic small light, sharp focus, product shot"
+  },
+  {
+   "key": "item-KEYCARD",
+   "size": "1024x768",
+   "prompt": "a plastic security ID key card with a blank photo square and a lanyard clip, blue stripe, a single object close up, top three-quarter view, centred, on a dark worn surface, dramatic small light, sharp focus, product shot"
+  },
+  {
+   "key": "item-KEYRING",
+   "size": "1024x768",
+   "prompt": "a ring of five small old keys with two paper tags, a single object close up, top three-quarter view, centred, on a dark worn surface, dramatic small light, sharp focus, product shot"
+  },
+  {
+   "key": "item-INSULIN",
+   "size": "1024x768",
+   "prompt": "an insulin pen injector with a cap, cold condensation, a single object close up, top three-quarter view, centred, on a dark worn surface, dramatic small light, sharp focus, product shot"
+  },
+  {
+   "key": "item-ANTIBIO",
+   "size": "1024x768",
+   "prompt": "a small white cardboard box of antibiotic tablets with a blister pack half out, a single object close up, top three-quarter view, centred, on a dark worn surface, dramatic small light, sharp focus, product shot"
+  },
+  {
+   "key": "item-FIREKEY",
+   "size": "1024x768",
+   "prompt": "an old iron padlock key with a red wooden tag on a string, a single object close up, top three-quarter view, centred, on a dark worn surface, dramatic small light, sharp focus, product shot"
+  },
+  {
+   "key": "item-LIFTKEY",
+   "size": "1024x768",
+   "prompt": "a heavy steel elevator control key with a square shank, engraved, a single object close up, top three-quarter view, centred, on a dark worn surface, dramatic small light, sharp focus, product shot"
+  },
+  {
+   "key": "item-ROOFKEY",
+   "size": "1024x768",
+   "prompt": "an old brass key lying in a small open wooden puzzle box, a single object close up, top three-quarter view, centred, on a dark worn surface, dramatic small light, sharp focus, product shot"
   }
- ]
+ ],
+ "seeds": {
+  "doc-cult": 19,
+  "th-sign": 7,
+  "th-bus": 7,
+  "th-track": 7
+ }
 }

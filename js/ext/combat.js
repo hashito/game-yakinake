@@ -4,7 +4,11 @@
 //   { kind, pos: Vector3, raycast(ray) -> { part, dist, point } | null, hit(ray|part, dmg, o) -> result, alive }
 import * as THREE from 'three';
 import { CATALOG } from './case-data.js';
-import { drawWeapon } from './weapon-art.js';
+import { drawWeapon, KICK } from './weapon-art.js';
+import { KINDS } from '../kit/toast-lane.js';
+
+// few notices (UI rule): one at a time at the top, short, then gone
+KINDS.toast.ttl = 2600; KINDS.card.ttl = 3000; KINDS['quest-note'].ttl = 3400;
 
 const PART_SAY = { head: '頭：撃てば止まる', chest: '胴：倒れにくい', pelvis: '腰：上と下に分かれる', upperArmL: '腕：つかめなくなる', upperArmR: '腕：つかめなくなる', foreArmL: '腕：つかめなくなる', foreArmR: '腕：つかめなくなる', thighL: '脚：倒れて這う', thighR: '脚：倒れて這う', shinL: '脚：倒れて這う', shinR: '脚：倒れて這う' };
 
@@ -15,10 +19,11 @@ export function installCombat(ext, G) {
   G.gore = (() => { try { return localStorage.getItem('yk-gore') || 'full'; } catch (e) { return 'full'; } })();
   G.setGore = (g) => { G.gore = g; try { localStorage.setItem('yk-gore', g); } catch (e) { /* private mode */ } G.emit('gore', g); };
   const ray = new THREE.Raycaster();
+  let muzzle = null;
   let cool = 0, reloading = 0, swing = 0, kick = 0, flashT = 0, grab = null, hurtFlash = 0, regen = 0;
   const heldNow = () => { const it = G.equip && G.case.byUid(G.equip); return it ? { it, c: CATALOG[it.id] } : { it: null, c: CATALOG.hands }; };
   G.held = heldNow;
-  G.equipUid = (uid) => { G.equip = uid; reloading = 0; const h = heldNow(); if (ctx && h.it) ctx.ui.toast(`構えた：${h.c.name}`); G.emit('equip'); hud(); };
+  G.equipUid = (uid, o = {}) => { G.equip = uid; reloading = 0; const h = heldNow(); if (ctx && h.it && !o.quiet) ctx.ui.toast(`構えた：${h.c.name}`); G.emit('equip'); hud(); };
   G.heal = (it) => {
     const c = CATALOG[it.id]; if (!c.heal) return false;
     if (G.hp >= 100) { ctx.ui.say('今は、手当ての必要はない。', 3); return false; }
@@ -35,7 +40,7 @@ export function installCombat(ext, G) {
   // ---------------------------------------------------------------- HUD: body, weapon, ammo; the weapon in the hand; the part under the sights
   const el = document.createElement('div'); el.id = 'yk-status'; el.className = 'yk-status';
   el.innerHTML = '<div class="yk-hp"><i></i></div><div class="yk-w"><b class="yk-wn"></b><span class="yk-wa"></span></div>';
-  const view = document.createElement('canvas'); view.id = 'yk-weapon'; view.width = 96; view.height = 64; view.className = 'yk-weapon';
+  const view = document.createElement('canvas'); view.id = 'yk-weapon'; view.width = 160; view.height = 96; view.className = 'yk-weapon';
   const partTag = document.createElement('div'); partTag.id = 'yk-part'; partTag.className = 'yk-part';
   const blood = document.createElement('div'); blood.id = 'yk-blood'; blood.className = 'yk-blood';
   const grabTag = document.createElement('div'); grabTag.id = 'yk-grab'; grabTag.className = 'yk-grab';
@@ -50,6 +55,8 @@ export function installCombat(ext, G) {
   G.hud = hud;
   ext.on('game:ready', (c) => {
     ctx = c;
+    if (ctx.lane && ctx.lane.model) ctx.lane.model.setMax(1);
+    muzzle = new THREE.PointLight(0xffc070, 0, 14, 1.6); muzzle.name = 'yk-muzzle'; ctx.scene.add(muzzle);
     document.body.append(view, partTag, blood, grabTag);
     if (ctx.isTouch) {   // a phone has no 装填 / 持ち替え / 手当て buttons (the right column stays short): the status panel takes them
       el.classList.add('yk-tap');
@@ -130,7 +137,10 @@ export function installCombat(ext, G) {
   function shoot() {
     const h = heldNow(), g = h.c.gun;
     if (h.it.loaded <= 0) { G.sfx('empty'); cool = 0.25; if (G.case.count(g.ammo)) reload(); else ctx.ui.say(`弾がない。${CATALOG[g.ammo].name}を探すか、${ctx.isTouch ? '「殴る」' : '[V]'}で殴る。`, 3, { urgent: true }); return; }
-    h.it.loaded -= 1; cool = g.rate; kick = 1; flashT = 0.06;
+    h.it.loaded -= 1; cool = g.rate; kick = 1; flashT = 0.07;
+    // the recoil: the view climbs a little (the heavier the gun, the more) and the room lights up for a frame or two
+    if (ctx.fp) ctx.fp.pitch = Math.min(1.2, (ctx.fp.pitch || 0) + 0.018 * (KICK[h.it.id] || 1));
+    if (muzzle) { muzzle.position.copy(ctx.camera.position); muzzle.intensity = 26 * (KICK[h.it.id] || 1); }
     G.sfx(h.it.id); G.noise(ctx.camera.position, g.noise);
     const base = aimRay().clone(), n = g.pellets || 1;
     let anyHit = false;
@@ -183,6 +193,7 @@ export function installCombat(ext, G) {
       if (!ctx || !ctx.state.started || ctx.state.ended) return;
       const busy = ctx.blocked && ctx.blocked();
       cool -= dt; flashT -= dt;
+      if (muzzle && muzzle.intensity > 0) muzzle.intensity = flashT > 0 ? muzzle.intensity : Math.max(0, muzzle.intensity - dt * 400);
       swing = Math.max(0, swing - dt * 3); kick = Math.max(0, kick - dt * 6);
       hurtFlash = Math.max(0, hurtFlash - dt * 1.6); blood.style.opacity = String(Math.min(0.85, hurtFlash * 0.7 + (G.hp < 35 ? 0.25 + Math.sin(performance.now() / 300) * 0.08 : 0)));
       if (reloading > 0) { reloading -= dt; if (reloading <= 0) { const h = heldNow(); if (h.c.gun) { const need = h.c.gun.mag - h.it.loaded; h.it.loaded += G.case.take(h.c.gun.ammo, need); G.sfx('reloaded'); } } }
