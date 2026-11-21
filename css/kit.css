@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: css/kit.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 10af67dd: css/kit.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: shared styles for first-person browser games (windows, HUD, buttons, touch controls,
    status chips, steppers, kanban, app-like software screens, tabs, stamps, share buttons; at the end
    progression pg-*, sim UI nt-/tb-/dl-/ch-*, journal jr-* / stream veil st-* / hiding hd-*, chat cx-*).
@@ -3505,6 +3505,96 @@ body.gf-warming .wm-layer, body.gf-warming .rn-wrap, body.gf-warming #mg, body.g
 .mgx-breath-btn { min-height: 60px; min-width: 240px; touch-action: none; user-select: none; }
 .mgx-breath.holding .mgx-breath-btn { transform: scale(0.97); box-shadow: inset 0 3px 8px rgba(0,0,0,0.35); }  /* pair-ok */
 @media (prefers-reduced-motion: reduce) { .mgx-mark-pick.no { animation: none; } }
+
+/* standard 1.24.0: the hands-on stage of the ten new library mini games (js/mg-stage.js): a view (canvas / SVG) and a side of controls that fit
+   a phone without scrolling (portrait: the side under the view; a low landscape phone: the side on the right). Solved: the side folds away for 次へ. */
+@media (min-width: 500px) and (min-height: 500px) { .mgx.mgx--st { width: min(660px, calc(100vw - 24px)); } }
+@media (min-width: 900px) and (min-height: 500px) { .mgx.mgx--st { width: min(780px, calc(100vw - 24px)); } }
+.mgx--st .mgx-help { margin: 4px 0 8px; }
+.mgx--st .mgx-msg { margin: 6px 0 0; min-height: 2.7em; line-height: 1.35; }
+.mgx-st { --st-h: clamp(160px, calc(100dvh - 420px), 340px); display: grid; gap: 10px; }
+.mgx-st [hidden] { display: none !important; }
+.mgx-st-view { position: relative; height: var(--st-h); border-radius: 8px; overflow: hidden; background: #0d0b0a; }  /* pair-ok: the stage is art */
+.mgx-st-view > canvas, .mgx-st-view > svg { display: block; width: 100%; height: 100%; touch-action: none; user-select: none; -webkit-user-select: none; }
+.mgx-st-view:focus-visible, .mgx-st-view > canvas:focus-visible, .mgx-st-view > svg:focus-visible { outline: 3px solid var(--gf-accent, #3a7a5a); outline-offset: -3px; }
+.mgx-st-side { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-content: flex-start; align-items: center; }
+.mgx-st-side .btn { min-height: 48px; min-width: 64px; margin: 0; touch-action: none; user-select: none; -webkit-user-select: none; }
+.mgx-st-side .btn.held, .mgx-st-side .btn.on { box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.35), 0 0 0 2px var(--gf-accent, #3a7a5a); }  /* pair-ok */
+.mgx-st-line { flex: 1 1 100%; height: 2.9em; margin: 0; overflow: hidden; line-height: 1.45; font-size: 0.92em; color: var(--gf-text); text-align: center; font-variant-numeric: tabular-nums; }
+.mgx-st-row { display: flex; gap: 8px; flex: 1 1 100%; justify-content: center; flex-wrap: wrap; }
+@media (min-width: 900px) and (min-height: 500px) { .mgx-st { grid-template-columns: minmax(0, 1fr) 230px; --st-h: clamp(220px, calc(100dvh - 300px), 380px); } .mgx--solved .mgx-st { --st-h: clamp(200px, calc(100dvh - 360px), 380px); } }
+.mgx--solved .mgx-st-side { display: none; }
+.mgx--solved .mgx-st { grid-template-columns: 1fr !important; }
+@media (max-height: 500px) and (min-width: 600px) {
+  .mgx.mgx--st { padding: 10px 16px; }
+  .mgx--st .mgx-help { font-size: 0.86em; line-height: 1.45; margin: 2px 0 6px; }
+  .mgx--st .mgx-msg { min-height: 1.4em; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mgx-st { grid-template-columns: minmax(0, 1fr) minmax(200px, 36%); --st-h: calc(100dvh - 170px); }
+  .mgx--solved .mgx-st { --st-h: calc(100dvh - 232px); }
+  .mgx-st-line { height: 4.35em; font-size: 0.86em; }
+}
+@media (max-height: 360px) and (min-width: 600px) { .mgx--st .mgx-head .btn { min-height: 44px; padding-block: 4px; } }
+.mgx-dr-rock { min-width: 120px; }
+.mgx-dr-pull { min-width: 140px; }
+.mgx-tp-all { min-width: 132px; }
+/* switchboard: an HTML board (lamps, jacks) with the cords drawn over it in SVG */
+.mgx-sb .mgx-st-view { background: linear-gradient(#3a2a1e, #2a1e16); }  /* pair-ok: a wooden board */
+.mgx-sb-board { position: relative; height: 100%; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; padding: 8px; box-sizing: border-box; }
+.mgx-sb-in, .mgx-sb-out { display: grid; gap: 6px; flex: 1 1 auto; max-height: 120px; grid-auto-rows: 1fr; }
+.mgx-sb-out { max-height: 200px; }
+.mgx-sb-in { grid-template-columns: repeat(6, 1fr); }
+.mgx-sb-out { grid-template-columns: repeat(4, 1fr); }
+@media (min-aspect-ratio: 3/2) { .mgx-sb-out { grid-template-columns: repeat(8, 1fr); } }
+.mgx .mgx-sb-jack { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 46px; min-width: 0; margin: 0; padding: 4px; border-radius: 6px; background: #1c1410; color: #f0e0c0; border: 1px solid #6a5038; font-weight: 700; touch-action: manipulation; }  /* pair-ok: brass plates on dark wood */
+.mgx .mgx-sb-jack:hover:not(:disabled) { background: #2a1e16; }  /* pair-ok */
+.mgx-sb-lamp { --p: 1; width: 18px; height: 18px; border-radius: 50%; background: #3a2a1e; box-shadow: inset 0 0 0 2px #6a5038; flex: none; }  /* pair-ok: an unlit lamp */
+.mgx-sb-injack.lit .mgx-sb-lamp { background: conic-gradient(#ffb43a calc(var(--p) * 360deg), #7a4a18 0); box-shadow: 0 0 10px #ffb43a; animation: mgx-sb-blink 0.9s steps(2) infinite; }  /* pair-ok: a ringing lamp and its patience */
+.mgx-sb-injack.held { outline: 3px solid #ffd890; outline-offset: -3px; }  /* pair-ok */
+.mgx-sb-injack.held .mgx-sb-lamp { animation: none; }
+.mgx-sb-injack.ghost span { text-decoration: line-through; color: #b09880; }  /* pair-ok: a line taped over */
+.mgx-sb-injack.ghost.lit .mgx-sb-lamp { background: #ff4a3a; box-shadow: 0 0 12px #ff4a3a; }  /* pair-ok */
+@keyframes mgx-sb-blink { 50% { filter: brightness(0.55); } }
+.mgx-sb-hole { width: 14px; height: 14px; border-radius: 50%; background: #050403; box-shadow: 0 0 0 3px #b08a4a; flex: none; }  /* pair-ok: a brass jack */
+.mgx-sb-cap { margin: 0; height: 2.8em; overflow: hidden; line-height: 1.4; font-size: 0.9em; color: #f8ecd8; background: rgba(0, 0, 0, 0.35); border-radius: 6px; padding: 2px 8px; }  /* pair-ok: light words on the dark board */
+.mgx-sb-cords { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.mgx-sb-cords path { fill: none; stroke: #c83a2a; stroke-width: 4px; stroke-linecap: round; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }  /* pair-ok */
+.mgx-sb-cords path.ghost { stroke: #e8e0d0; }  /* pair-ok */
+.mgx-sb-dirbox { flex: 1 1 100%; font-size: 0.86em; color: var(--gf-text); }
+.mgx-sb-dirbox b { color: var(--gf-heading, var(--gf-text)); }
+.mgx-sb-dir { list-style: none; margin: 2px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; }
+.mgx-sb-dir li { display: flex; justify-content: space-between; gap: 6px; padding: 1px 6px; margin: 0; border: 0; border-radius: 4px; background: none; color: var(--gf-text); }
+.mgx-sb-dir li em { font-style: normal; font-variant-numeric: tabular-nums; color: var(--gf-text); font-weight: 700; }
+.mgx-sb-dir li.gone span { text-decoration: line-through; }
+.mgx-sb-dir li.hint { background: var(--gf-surface-2); outline: 2px solid var(--gf-accent, #3a7a5a); }
+@media (max-height: 500px) and (min-width: 600px) { .mgx-sb .mgx-sb-dir { grid-template-columns: 1fr; } .mgx-sb-dir li { padding: 0 6px; line-height: 1.3; } .mgx .mgx-sb-jack { min-height: 44px; } .mgx-sb-cap { height: 1.45em; white-space: nowrap; text-overflow: ellipsis; } }
+@media (max-height: 360px) and (min-width: 600px) { .mgx-sb-dirbox { font-size: 0.78em; } }
+/* puzzle-box */
+.mgx-pb .mgx-st-view { background: radial-gradient(ellipse at 50% 60%, #3a2c22, #16100c 75%); }  /* pair-ok */
+.mgx-pb-face { stroke: #1a100a; stroke-width: 0.02; }  /* pair-ok */
+.mgx-pb-gap { fill: #0a0604; stroke: #000; stroke-width: 0.01; }  /* pair-ok */
+.mgx-pb-panel { cursor: pointer; outline: none; }
+.mgx-pb-panel polygon { stroke: #24160c; stroke-width: 0.025; }  /* pair-ok */
+.mgx-pb-grain line { stroke: rgba(30, 18, 8, 0.35); stroke-width: 0.012; }  /* pair-ok */
+.mgx-pb-panel:focus-visible polygon, .mgx-pb-panel:hover polygon { stroke: #ffd890; stroke-width: 0.05; }  /* pair-ok */
+.mgx-pb-panel.hint polygon { stroke: #ffb44a; stroke-width: 0.06; filter: drop-shadow(0 0 0.06px #ffb44a); }  /* pair-ok */
+.mgx-pb-panel.wig { animation: mgx-pb-wig 0.36s; }
+@keyframes mgx-pb-wig { 25% { transform: translate(0.03px, 0); } 75% { transform: translate(-0.03px, 0); } }
+.mgx-pb-inside { font-size: 0.32px; fill: #f0e0b8; text-anchor: middle; dominant-baseline: middle; font-weight: 700; }  /* pair-ok */
+/* knot-untangle */
+.mgx-kn-svg { cursor: grab; }
+.mgx-kn-cord { transition: stroke 0.2s; }
+.mgx-kn-pin.worst { animation: mgx-kn-glow 1s ease-in-out infinite; }
+@keyframes mgx-kn-glow { 50% { opacity: 0.55; } }
+/* footprint-track: the clue card */
+.mgx-fp-clue { display: flex; align-items: center; gap: 10px; flex: 1 1 100%; justify-content: center; color: var(--gf-text); font-size: 0.9em; }
+.mgx-fp-clue canvas { width: 72px; height: 36px; border-radius: 4px; border: 1px solid var(--gf-border-strong, #b8b0a0); }
+@media (max-height: 500px) and (min-width: 600px) { .mgx-fp-clue canvas { width: 56px; height: 28px; } }
+.mgx-fp-go { min-width: 180px; }
+.mgx-rb-pick .btn { min-width: 120px; font-size: 1.05em; }
+/* the reading panel at the end of steam-letter / torn-paper (js/mg-read.js) */
+.mgx--reading .mgx-help { display: none; }
+.mgx-read { height: clamp(220px, calc(100dvh - 300px), 520px); display: flex; justify-content: center; align-items: flex-start; padding: 8px 4px; box-sizing: border-box; }
+@media (max-height: 500px) and (min-width: 600px) { .mgx-read { height: calc(100dvh - 180px); padding: 2px; } }
 
 /* ---- mini game widgets (js/mg-widgets.js: from 撤去通知 / 浦川): the panel colours are the --gf-mg tokens ---- */
 .mg-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 8px 0; }

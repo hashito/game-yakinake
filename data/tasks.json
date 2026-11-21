@@ -1,66 +1,1327 @@
 [
-  {
-    "id": "T1",
-    "title": "勤怠端末で出勤をつける",
-    "stage": "L1",
-    "room": "R1",
-    "station": "S1",
-    "meaning": "今夜の勤務が始まったことを、記録に残すため。",
-    "hint": "端末は、机の並ぶ奥の壁にあるはず。",
-    "minigame": {
-      "type": "dial",
-      "cfg": {
-        "title": "勤怠端末：時刻つまみ",
-        "target": 110,
-        "label": "1:50",
-        "help": "つまみを回して、印に針を合わせる"
-      }
-    },
-    "steps": [
-      {
-        "text": "事務室の奥の端末へ歩く",
-        "body": "光っている端末が、作業の場所。",
-        "done": "look",
-        "emphasis": "station:S1"
-      },
-      {
-        "text": "[E]で端末を操作する",
-        "body": "小さな遊びを一つ終えると、出勤がつく。",
-        "done": "task"
-      }
-    ]
-  },
-  {
-    "id": "T2",
-    "title": "制御盤で出入口を開ける",
-    "stage": "L2",
-    "room": "R2",
-    "station": "S2",
-    "meaning": "外へ出られるように、出入口の錠を外すため。",
-    "needs": [
-      "T1"
-    ],
-    "hint": "廊下の奥、ロビーの壁に盤がある。",
-    "minigame": {
-      "type": "sequence",
-      "cfg": {
-        "title": "制御盤：点灯の順番",
-        "n": 4,
-        "symbols": 4,
-        "help": "上に出た順に、ボタンを押す"
-      }
-    },
-    "steps": [
-      {
-        "text": "廊下の奥、ロビーの盤へ",
-        "body": "ロビーに入ったら、光っている盤を見る。",
-        "done": "look",
-        "emphasis": "station:S2"
-      },
-      {
-        "text": "[E]で盤を操作する",
-        "done": "task"
-      }
-    ]
+ {
+  "id": "T_CART",
+  "title": "救急カートを開けて、身を守る物を出す",
+  "stage": "L1",
+  "room": "H_TOU",
+  "station": "S_CART",
+  "meaning": "素手で廊下へ出ないため。救急カートには、**メス**と包帯がある。",
+  "hint": "当直室の**扉の左**、赤い救急カート。",
+  "steps": [
+   {
+    "text": "当直室へ",
+    "done": "room",
+    "room": "H_TOU"
+   },
+   {
+    "text": "赤い救急カートの前に立つ",
+    "done": "look",
+    "emphasis": "station:S_CART"
+   },
+   {
+    "text": "[E] でカートを開ける",
+    "done": "task"
+   }
+  ]
+ },
+ {
+  "id": "T_TOOLBOX",
+  "title": "配電室の工具箱から、鉄パイプを出す",
+  "stage": "L1",
+  "room": "H_DEN",
+  "station": "S_TOOL",
+  "meaning": "廊下の先に何かがいる。メスより長い物がいる。",
+  "hint": "廊下の向かい、**配電室**の奥の棚の下。",
+  "steps": [
+   {
+    "text": "配電室へ",
+    "done": "room",
+    "room": "H_DEN"
+   },
+   {
+    "text": "棚の下の工具箱の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_TOOL"
+   },
+   {
+    "text": "[E] で工具箱を開ける",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_CART"
+  ]
+ },
+ {
+  "id": "T_POWER",
+  "title": "非常用の配電盤で、病棟の電気を戻す",
+  "stage": "L1",
+  "room": "H_DEN",
+  "station": "S_BREAKER",
+  "meaning": "電気の錠が落ちて、病棟の扉が開かない。灯りが戻れば、ナースステーションへ行ける。",
+  "hint": "配電室の**西の壁**の盤。",
+  "steps": [
+   {
+    "text": "配電室へ",
+    "done": "room",
+    "room": "H_DEN"
+   },
+   {
+    "text": "西の壁の配電盤の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_BREAKER"
+   },
+   {
+    "text": "[E] で盤を操作する",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_TOOLBOX"
+  ],
+  "minigame": {
+   "type": "switch-panel",
+   "cfg": {
+    "title": "非常用の配電盤",
+    "help": "スイッチを押すと、となりの回路も一緒に切り替わる。全部の灯りをつける。",
+    "n": 4,
+    "presses": 4,
+    "seed": 11,
+    "look": "lamp"
+   }
   }
+ },
+ {
+  "id": "T_CHISATO",
+  "title": "ナースステーションの宮下さんと話す",
+  "stage": "L2",
+  "room": "H_NS",
+  "station": "S_CHISATO",
+  "meaning": "病棟で生きている人は、ほかにいるのか。外で何が起きているのか。",
+  "hint": "廊下の北、**ナースステーション**のカウンターの奥。",
+  "steps": [
+   {
+    "text": "ナースステーションへ",
+    "done": "room",
+    "room": "H_NS"
+   },
+   {
+    "text": "カウンターの奥の宮下さんを見る",
+    "done": "look",
+    "emphasis": "station:S_CHISATO"
+   },
+   {
+    "text": "[E] で話す",
+    "done": "task"
+   }
+  ]
+ },
+ {
+  "id": "T_RADIO",
+  "title": "防災無線の受信機で、市の放送を聞き直す",
+  "stage": "L2",
+  "room": "H_NS",
+  "station": "S_RADIO",
+  "meaning": "ヘリが来る時刻と場所を、はっきり聞くため。",
+  "hint": "ナースステーションの**北の壁**の受信機。",
+  "steps": [
+   {
+    "text": "ナースステーションへ",
+    "done": "room",
+    "room": "H_NS"
+   },
+   {
+    "text": "北の壁の受信機の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_RADIO"
+   },
+   {
+    "text": "[E] で受信機を合わせる",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_CHISATO"
+  ],
+  "minigame": {
+   "type": "tune-radio",
+   "cfg": {
+    "title": "防災無線の受信機",
+    "help": "つまみを回して、雑音の奥の声を探す。声がはっきりしたら、少し止める。",
+    "target": 0.71,
+    "width": 0.04,
+    "hold": 1.2
+   }
+  }
+ },
+ {
+  "id": "T_NOTE",
+  "title": "警備主任の机で、破られたメモをつなぎ合わせる",
+  "stage": "L2",
+  "room": "H_KEI",
+  "station": "S_NOTE",
+  "meaning": "霊安室と搬入口を開けるカードは、警備室の金庫の中。番号は、主任が破ったメモに書いてある。",
+  "hint": "廊下の南、**警備室**の奥の机。",
+  "steps": [
+   {
+    "text": "警備室へ",
+    "done": "room",
+    "room": "H_KEI"
+   },
+   {
+    "text": "奥の机の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_NOTE"
+   },
+   {
+    "text": "[E] で紙片をつなぐ",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_CHISATO"
+  ],
+  "minigame": {
+   "type": "torn-paper",
+   "cfg": {
+    "title": "破られたメモ",
+    "help": "紙片を台紙へ運び、回して向きを合わせる。罫線の違う紙がまざっている。",
+    "text": "金庫　右へ32\n左へ15\n右へ71\n（カードは中段）",
+    "cols": 3,
+    "rows": 2,
+    "decoys": 2,
+    "seed": 6,
+    "paper": {
+     "title": "警備主任のメモ"
+    }
+   }
+  }
+ },
+ {
+  "id": "T_SAFE",
+  "title": "聴診器で、警備室の金庫を開ける",
+  "stage": "L2",
+  "room": "H_KEI",
+  "station": "S_SAFE",
+  "meaning": "金庫のダイヤルは、正しい数でかすかに鳴る。聴診器なら聞こえる。",
+  "hint": "警備室の**北東の隅**の金庫。",
+  "steps": [
+   {
+    "text": "警備室へ",
+    "done": "room",
+    "room": "H_KEI"
+   },
+   {
+    "text": "北東の隅の金庫の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_SAFE"
+   },
+   {
+    "text": "[E] でダイヤルを回す",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_NOTE"
+  ],
+  "minigame": {
+   "type": "safe-listen",
+   "cfg": {
+    "title": "警備室の金庫",
+    "help": "聴診器を当てて、ダイヤルを回す。カチッと鳴って揺れたら止める。右・左・右。",
+    "code": [
+     32,
+     15,
+     71
+    ],
+    "dirs": [
+     1,
+     -1,
+     1
+    ],
+    "seed": 8
+   }
+  }
+ },
+ {
+  "id": "T_INSULIN",
+  "title": "薬剤部で、戸川さんのインスリンを探す",
+  "stage": "L2",
+  "room": "H_YAKU",
+  "station": "S_DRUGS",
+  "meaning": "病室の戸川さんは糖尿病。朝までに打たないと、意識がなくなる（寄り道）。",
+  "hint": "廊下の南、**薬剤部**の奥の棚。",
+  "steps": [
+   {
+    "text": "薬剤部へ",
+    "done": "room",
+    "room": "H_YAKU"
+   },
+   {
+    "text": "奥の薬品棚の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_DRUGS"
+   },
+   {
+    "text": "[E] で棚を探す",
+    "done": "task"
+   }
+  ],
+  "optional": true,
+  "needs": [
+   "T_CHISATO"
+  ],
+  "minigame": {
+   "type": "sort-items",
+   "cfg": {
+    "title": "薬品棚",
+    "help": "散らばった薬を、正しい棚へ戻す。インスリンは冷蔵の棚。",
+    "bins": [
+     {
+      "id": "cold",
+      "label": "冷蔵"
+     },
+     {
+      "id": "room",
+      "label": "常温"
+     },
+     {
+      "id": "lock",
+      "label": "鍵付き（劇薬）"
+     }
+    ],
+    "items": [
+     {
+      "id": "ins",
+      "label": "インスリン",
+      "bin": "cold",
+      "why": "インスリンは冷やしておく薬。"
+     },
+     {
+      "id": "abx",
+      "label": "抗生物質",
+      "bin": "room",
+      "why": "抗生物質の錠剤は、常温でいい。"
+     },
+     {
+      "id": "mor",
+      "label": "鎮痛剤（麻薬）",
+      "bin": "lock",
+      "why": "麻薬は、鍵付きの棚にしまう決まり。"
+     },
+     {
+      "id": "vac",
+      "label": "ワクチン",
+      "bin": "cold",
+      "why": "ワクチンも冷蔵。"
+     },
+     {
+      "id": "gauze",
+      "label": "ガーゼ",
+      "bin": "room",
+      "why": "ガーゼは常温の棚。"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "T_GENZO",
+  "title": "病室の戸川さんに、インスリンを届ける",
+  "stage": "L2",
+  "room": "H_BYO",
+  "station": "S_GENZO",
+  "meaning": "戸川さんは元消防団。何か知っているかもしれない（寄り道）。",
+  "hint": "廊下の北、**四人部屋の病室**の奥のベッド。",
+  "steps": [
+   {
+    "text": "四人部屋の病室へ",
+    "done": "room",
+    "room": "H_BYO"
+   },
+   {
+    "text": "奥のベッドの戸川さんを見る",
+    "done": "look",
+    "emphasis": "station:S_GENZO"
+   },
+   {
+    "text": "[E] で話す",
+    "done": "task"
+   }
+  ],
+  "optional": true,
+  "needs": [
+   "T_INSULIN"
+  ]
+ },
+ {
+  "id": "T_REI",
+  "title": "霊安室の机で、搬入口の鍵束を探す",
+  "stage": "L3",
+  "room": "H_REI",
+  "station": "S_MDESK",
+  "meaning": "シャッターの鍵は、霊安室の当番の机にある。",
+  "hint": "廊下の東の南、**霊安室**の奥の机。",
+  "steps": [
+   {
+    "text": "霊安室へ",
+    "done": "room",
+    "room": "H_REI"
+   },
+   {
+    "text": "奥の机の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_MDESK"
+   },
+   {
+    "text": "[E] で机を探す",
+    "done": "task"
+   }
+  ],
+  "minigame": {
+   "type": "search-dark",
+   "cfg": {
+    "title": "霊安室の机",
+    "help": "ペンライトで机の中を照らして、鍵束と、印のついた物を全部見つける。",
+    "image": "assets/photos/mg-desk.webp",
+    "marks": [
+     {
+      "x": 0.24,
+      "y": 0.62,
+      "label": "鍵束"
+     },
+     {
+      "x": 0.7,
+      "y": 0.35,
+      "label": "当番表"
+     },
+     {
+      "x": 0.55,
+      "y": 0.8,
+      "label": "懐中電灯の電池"
+     }
+    ],
+    "r": 0.22
+   }
+  }
+ },
+ {
+  "id": "T_CASE",
+  "title": "施設課の工具ケースを、鍵束の鍵で開ける",
+  "stage": "L3",
+  "room": "H_REI",
+  "station": "S_FCASE",
+  "meaning": "霊安室の扉の修理に来た施設課の人が、ケースを置いていった。中に**釘打ち機**がある。",
+  "hint": "霊安室の**西の奥**の黒いケース。",
+  "steps": [
+   {
+    "text": "霊安室へ",
+    "done": "room",
+    "room": "H_REI"
+   },
+   {
+    "text": "西の奥のケースの前に立つ",
+    "done": "look",
+    "emphasis": "station:S_FCASE"
+   },
+   {
+    "text": "[E] でケースを開ける",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_REI"
+  ]
+ },
+ {
+  "id": "T_SHUTTER",
+  "title": "搬入口のシャッターを、手回しで上げる",
+  "stage": "L3",
+  "room": "H_HAN",
+  "station": "S_SHUTTER",
+  "meaning": "病院の外へ出る道は、ここだけ。上げる音で、外のゾンビが寄ってくる。",
+  "hint": "廊下の東の端の扉から**搬入口**へ。東の壁のハンドル。",
+  "steps": [
+   {
+    "text": "搬入口へ",
+    "done": "room",
+    "room": "H_HAN"
+   },
+   {
+    "text": "東の壁のハンドルの前に立つ",
+    "done": "look",
+    "emphasis": "station:S_SHUTTER"
+   },
+   {
+    "text": "[E] でハンドルを回す",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_REI"
+  ],
+  "minigame": {
+   "type": "pump-gauge",
+   "cfg": {
+    "title": "シャッターの巻き上げ",
+    "help": "押して巻き上げ、重さの針を緑の帯に保つ。強すぎると、ハンドルが空回りする。",
+    "lo": 0.5,
+    "hi": 0.74,
+    "sec": 3,
+    "look": "pump"
+   }
+  }
+ },
+ {
+  "id": "T_GONDO",
+  "title": "丸福マートの権藤と、話をつける",
+  "stage": "L4",
+  "room": "S_MART",
+  "station": "S_GONDO",
+  "meaning": "商店街へ抜ける道は、マートの中を通るしかない。店長の権藤が通さない。",
+  "hint": "大通りの南、**丸福マート**のレジの前。",
+  "steps": [
+   {
+    "text": "丸福マートへ",
+    "done": "room",
+    "room": "S_MART"
+   },
+   {
+    "text": "レジの前の権藤を見る",
+    "done": "look",
+    "emphasis": "station:S_GONDO"
+   },
+   {
+    "text": "[E] で話す",
+    "done": "task"
+   }
+  ]
+ },
+ {
+  "id": "T_MARTLOCK",
+  "title": "権藤の目を盗んで、搬入口の南京錠を開ける",
+  "stage": "L4",
+  "room": "S_MART",
+  "station": "S_MARTLOCK",
+  "meaning": "話がつかないなら、奥の搬入口から抜ける（忍び込む）。",
+  "hint": "マートの**南東の奥**、搬入口の戸。",
+  "steps": [
+   {
+    "text": "丸福マートへ",
+    "done": "room",
+    "room": "S_MART"
+   },
+   {
+    "text": "南東の奥の南京錠の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_MARTLOCK"
+   },
+   {
+    "text": "[E] で錠を開ける",
+    "done": "task"
+   }
+  ],
+  "optional": true,
+  "needs": [
+   "T_GONDO"
+  ],
+  "minigame": {
+   "type": "lock-pick",
+   "cfg": {
+    "title": "搬入口の南京錠",
+    "help": "押している間ピンが上がる。手応えで光ったら離す。音を立てないように。",
+    "pins": 4,
+    "seed": 3
+   }
+  }
+ },
+ {
+  "id": "T_PACK",
+  "title": "山とキャンプの店で、大きな登山リュックに持ち替える",
+  "stage": "L4",
+  "room": "S_YAMA",
+  "station": "S_PACK",
+  "meaning": "往診かばんは小さい。大きなリュックなら、銃も弾も入る（寄り道）。",
+  "hint": "商店街の西の端、**山とキャンプの店**の西の棚。",
+  "steps": [
+   {
+    "text": "山とキャンプの店へ",
+    "done": "room",
+    "room": "S_YAMA"
+   },
+   {
+    "text": "西の棚のリュックの前に立つ",
+    "done": "look",
+    "emphasis": "station:S_PACK"
+   },
+   {
+    "text": "[E] でリュックを取る",
+    "done": "task"
+   }
+  ],
+  "optional": true
+ },
+ {
+  "id": "T_FUEL",
+  "title": "燃料の鍵付きの棚を開ける",
+  "stage": "L4",
+  "room": "S_YAMA",
+  "station": "S_CAGE",
+  "meaning": "火薬と空の薬莢があれば、散弾を作れる（寄り道）。",
+  "hint": "山とキャンプの店の**南東の隅**の棚。",
+  "steps": [
+   {
+    "text": "山とキャンプの店へ",
+    "done": "room",
+    "room": "S_YAMA"
+   },
+   {
+    "text": "南東の隅の棚の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_CAGE"
+   },
+   {
+    "text": "[E] で錠を開ける",
+    "done": "task"
+   }
+  ],
+  "optional": true,
+  "minigame": {
+   "type": "lock-pick",
+   "cfg": {
+    "title": "燃料の棚の錠",
+    "help": "押している間ピンが上がる。手応えで光ったら離す。",
+    "pins": 3,
+    "seed": 7
+   }
+  }
+ },
+ {
+  "id": "T_AXE",
+  "title": "消防団の道具箱から、斧を出す",
+  "stage": "L4",
+  "room": "S_SHOBO",
+  "station": "S_AXE",
+  "meaning": "戸川さんの鍵で、消防団の倉庫に入れる（寄り道）。",
+  "hint": "商店街の南、**消防団の倉庫**の奥。",
+  "steps": [
+   {
+    "text": "消防団の倉庫へ",
+    "done": "room",
+    "room": "S_SHOBO"
+   },
+   {
+    "text": "奥の道具箱の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_AXE"
+   },
+   {
+    "text": "[E] で道具箱を開ける",
+    "done": "task"
+   }
+  ],
+  "optional": true
+ },
+ {
+  "id": "T_CULT",
+  "title": "公民館の白坂と話す",
+  "stage": "L4",
+  "room": "S_KOMIN",
+  "station": "S_SHIRA",
+  "meaning": "商店街の出口の縄と、鎖につながれたゾンビは、公民館の「黎明の会」がやった。",
+  "hint": "商店街の南、**公民館**の奥。",
+  "steps": [
+   {
+    "text": "公民館へ",
+    "done": "room",
+    "room": "S_KOMIN"
+   },
+   {
+    "text": "奥の白坂を見る",
+    "done": "look",
+    "emphasis": "station:S_SHIRA"
+   },
+   {
+    "text": "[E] で話す",
+    "done": "task"
+   }
+  ]
+ },
+ {
+  "id": "T_ROPE",
+  "title": "商店街の出口の縄をほどく",
+  "stage": "L4",
+  "room": "S_SHOTEN",
+  "station": "S_ROPE",
+  "meaning": "縄をほどけば、警察署の前の広場へ出られる。",
+  "hint": "商店街の**東の端**。",
+  "steps": [
+   {
+    "text": "商店街へ",
+    "done": "room",
+    "room": "S_SHOTEN"
+   },
+   {
+    "text": "東の端の縄の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_ROPE"
+   },
+   {
+    "text": "[E] で縄をほどく",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_CULT"
+  ],
+  "minigame": {
+   "type": "knot-untangle",
+   "cfg": {
+    "title": "参道の縄",
+    "help": "杭を動かして、どの縄も交わらないようにする。",
+    "n": 8,
+    "seed": 4,
+    "look": "thread"
+   }
+  }
+ },
+ {
+  "id": "T_KATA",
+  "title": "休憩室の片桐さんと話す",
+  "stage": "L5",
+  "room": "P_KYU",
+  "station": "S_KATA",
+  "meaning": "署の生き残りをまとめているのは、片桐巡査部長。",
+  "hint": "署のロビーの**北の戸**から休憩室へ。",
+  "steps": [
+   {
+    "text": "休憩室へ",
+    "done": "room",
+    "room": "P_KYU"
+   },
+   {
+    "text": "休憩室の片桐さんを見る",
+    "done": "look",
+    "emphasis": "station:S_KATA"
+   },
+   {
+    "text": "[E] で話す",
+    "done": "task"
+   }
+  ]
+ },
+ {
+  "id": "T_GEN",
+  "title": "非常用発電機を動かす",
+  "stage": "L5",
+  "room": "P_HATSU",
+  "station": "S_GEN",
+  "meaning": "電気がないと、通信室の錠も無線も動かない。",
+  "hint": "署の廊下の南、**発電機室**の奥。",
+  "steps": [
+   {
+    "text": "発電機室へ",
+    "done": "room",
+    "room": "P_HATSU"
+   },
+   {
+    "text": "奥の発電機の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_GEN"
+   },
+   {
+    "text": "[E] で発電機を動かす",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_KATA"
+  ],
+  "minigame": {
+   "type": "turn-dials",
+   "cfg": {
+    "title": "非常用発電機",
+    "help": "壁の手順書どおりに、三つのつまみの向きをそろえる。",
+    "labels": [
+     "燃料コック",
+     "チョーク",
+     "切替"
+    ],
+    "answer": [
+     1,
+     2,
+     0
+    ],
+    "hint": "手順書：燃料は「開（→）」、チョークは「閉（↓）」、切替は「発電（↑）」。"
+   }
+  }
+ },
+ {
+  "id": "T_SHIRYO",
+  "title": "資料室で、当直の記録の書き跡をこすり出す",
+  "stage": "L5",
+  "room": "P_SHI",
+  "station": "S_RECORD",
+  "meaning": "武器庫の番号は、署長しか知らない。署長が書いた紙は破られたが、下の紙に跡が残っている。",
+  "hint": "署の廊下の北、**資料室**の奥の棚。",
+  "steps": [
+   {
+    "text": "資料室へ",
+    "done": "room",
+    "room": "P_SHI"
+   },
+   {
+    "text": "奥の棚の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_RECORD"
+   },
+   {
+    "text": "[E] で鉛筆でこする",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_KATA"
+  ],
+  "minigame": {
+   "type": "rubbing",
+   "cfg": {
+    "title": "当直の記録の下の紙",
+    "help": "鉛筆でこすると、書いた跡が白く浮かぶ。強すぎると全部黒くなる。",
+    "text": "武器庫\n四〇七二",
+    "surface": "wood",
+    "vertical": true,
+    "choices": [
+     "四〇七二",
+     "四〇二七",
+     "七〇四二"
+    ],
+    "answer": "四〇七二",
+    "seed": 9
+   }
+  }
+ },
+ {
+  "id": "T_BUKI",
+  "title": "武器庫の番号錠を開ける",
+  "stage": "L5",
+  "room": "P_ROKA",
+  "station": "S_ARMORY",
+  "meaning": "武器庫を開けて、銃を分ける。片桐さんとの約束。",
+  "hint": "署の廊下の**南の扉**。",
+  "steps": [
+   {
+    "text": "署の廊下へ",
+    "done": "room",
+    "room": "P_ROKA"
+   },
+   {
+    "text": "武器庫の扉の番号錠を見る",
+    "done": "look",
+    "emphasis": "station:S_ARMORY"
+   },
+   {
+    "text": "[E] で番号を合わせる",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_SHIRYO"
+  ],
+  "minigame": {
+   "type": "code-drums",
+   "cfg": {
+    "title": "武器庫の番号錠",
+    "help": "こすり出した番号に、ドラムをそろえる。",
+    "code": "4072",
+    "labels": [
+     "一",
+     "二",
+     "三",
+     "四"
+    ],
+    "button": "開ける",
+    "hint": "資料室でこすり出した番号。"
+   }
+  }
+ },
+ {
+  "id": "T_RACK",
+  "title": "銃の保管庫で、銃を分ける",
+  "stage": "L5",
+  "room": "P_BUKI",
+  "station": "S_RACK",
+  "meaning": "約束は「半分ずつ」。全部持ち出すこともできる。",
+  "hint": "**武器庫**の奥。",
+  "steps": [
+   {
+    "text": "武器庫へ",
+    "done": "room",
+    "room": "P_BUKI"
+   },
+   {
+    "text": "奥の保管庫の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_RACK"
+   },
+   {
+    "text": "[E] で保管庫を開ける",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_BUKI"
+  ]
+ },
+ {
+  "id": "T_TSU",
+  "title": "通信室の交換台で、ビルにつなぐ",
+  "stage": "L5",
+  "room": "P_TSU",
+  "station": "S_BOARD",
+  "meaning": "ビルの防災センターに、生きている人がいるか確かめる。",
+  "hint": "署の廊下の北東、**通信室**の東の壁。",
+  "steps": [
+   {
+    "text": "通信室へ",
+    "done": "room",
+    "room": "P_TSU"
+   },
+   {
+    "text": "東の壁の交換台の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_BOARD"
+   },
+   {
+    "text": "[E] で交換台を使う",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_GEN"
+  ],
+  "minigame": {
+   "type": "switchboard",
+   "cfg": {
+    "title": "署の交換台",
+    "help": "光った回線を押して用件を聞き、電話帳で番号を探して、コードを差しこむ。",
+    "directory": [
+     {
+      "no": "11",
+      "name": "臨港セントラルビル 防災センター"
+     },
+     {
+      "no": "12",
+      "name": "灯ヶ浦市民病院 夜間受付"
+     },
+     {
+      "no": "13",
+      "name": "県防災航空隊"
+     },
+     {
+      "no": "14",
+      "name": "港湾事務所"
+     },
+     {
+      "no": "15",
+      "name": "丸福マート",
+      "gone": true
+     }
+    ],
+    "calls": [
+     {
+      "line": 0,
+      "say": "県の航空隊です。屋上の様子が知りたい。ビルにつないでくれ。",
+      "to": "11"
+     },
+     {
+      "line": 2,
+      "say": "病院の夜間受付は、まだ誰かいますか？",
+      "to": "12"
+     },
+     {
+      "line": 4,
+      "say": "港湾事務所です。航空隊に、港の火事のことを。",
+      "to": "13"
+     }
+    ],
+    "ghost": false,
+    "seed": 3
+   }
+  }
+ },
+ {
+  "id": "T_TAPE",
+  "title": "留守番の録音機で、ヘリの無線をつなぎ直す",
+  "stage": "L5",
+  "room": "P_TSU",
+  "station": "S_TAPE",
+  "meaning": "交換台を通った航空隊の無線が、録音機に残っている。テープは切れている。",
+  "hint": "通信室の**北西の机**の録音機。",
+  "steps": [
+   {
+    "text": "通信室へ",
+    "done": "room",
+    "room": "P_TSU"
+   },
+   {
+    "text": "北西の机の録音機の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_TAPE"
+   },
+   {
+    "text": "[E] でテープをつなぐ",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_TSU"
+  ],
+  "minigame": {
+   "type": "tape-splice",
+   "cfg": {
+    "title": "留守番の録音機",
+    "help": "切れ端を一片ずつ聞き、並べ替え・裏返して、つないで聞く。",
+    "pieces": [
+     {
+      "text": "こちら、うみかぜ。"
+     },
+     {
+      "text": "五時半に、臨港セントラルビルの屋上へ降りる。"
+     },
+     {
+      "text": "待てるのは、十分だけだ。"
+     },
+     {
+      "text": "屋上の扉は、内側から開けておいてくれ。"
+     },
+     {
+      "text": "定員は八名。"
+     }
+    ],
+    "seed": 5
+   }
+  }
+ },
+ {
+  "id": "T_SHOKO",
+  "title": "証拠品保管庫の暗いロッカーを探す",
+  "stage": "L5",
+  "room": "P_SHOKO",
+  "station": "S_EVID",
+  "meaning": "押収品の中に、銃と弾があるはず（寄り道）。",
+  "hint": "署の廊下の南東、**証拠品保管庫**。",
+  "steps": [
+   {
+    "text": "証拠品保管庫へ",
+    "done": "room",
+    "room": "P_SHOKO"
+   },
+   {
+    "text": "奥のロッカーの前に立つ",
+    "done": "look",
+    "emphasis": "station:S_EVID"
+   },
+   {
+    "text": "[E] でロッカーを照らす",
+    "done": "task"
+   }
+  ],
+  "optional": true,
+  "needs": [
+   "T_GEN"
+  ],
+  "minigame": {
+   "type": "search-dark",
+   "cfg": {
+    "title": "押収品のロッカー",
+    "help": "ペンライトで照らして、札のついた押収品を全部見つける。",
+    "image": "assets/photos/mg-locker.webp",
+    "marks": [
+     {
+      "x": 0.3,
+      "y": 0.4,
+      "label": "散弾銃"
+     },
+     {
+      "x": 0.68,
+      "y": 0.7,
+      "label": "散弾の箱"
+     },
+     {
+      "x": 0.52,
+      "y": 0.22,
+      "label": "押収品の札"
+     }
+    ],
+    "r": 0.22
+   }
+  }
+ },
+ {
+  "id": "T_ODOOR",
+  "title": "止まった自動ドアを、こじ開ける",
+  "stage": "L6",
+  "room": "O_PLAZA",
+  "station": "S_ODOOR",
+  "meaning": "臨港セントラルビルに入る。屋上まで五階。",
+  "hint": "署の裏の駐車場を南へ、**ビルの前の広場**の北。",
+  "steps": [
+   {
+    "text": "ビル前の広場へ",
+    "done": "room",
+    "room": "O_PLAZA"
+   },
+   {
+    "text": "止まった自動ドアの前に立つ",
+    "done": "look",
+    "emphasis": "station:S_ODOOR"
+   },
+   {
+    "text": "[E] でドアをこじ開ける",
+    "done": "task"
+   }
+  ],
+  "needs": [],
+  "minigame": {
+   "type": "timing",
+   "cfg": {
+    "title": "止まった自動ドア",
+    "help": "パイプを隙間に差しこむ。揺れる印が的の上に来たときに押す。"
+   }
+  }
+ },
+ {
+  "id": "T_NOGUCHI",
+  "title": "防災センターの野口さんの脚の傷を縫う",
+  "stage": "L7",
+  "room": "O_BOSAI",
+  "station": "S_NOGUCHI",
+  "meaning": "割れたガラスで脚を切っている。このままでは歩けない。",
+  "hint": "ビルのロビーの**北東の戸**から防災センターへ。",
+  "steps": [
+   {
+    "text": "防災センターへ",
+    "done": "room",
+    "room": "O_BOSAI"
+   },
+   {
+    "text": "防災センターの野口さんを見る",
+    "done": "look",
+    "emphasis": "station:S_NOGUCHI"
+   },
+   {
+    "text": "[E] で傷を縫う",
+    "done": "task"
+   }
+  ],
+  "minigame": {
+   "type": "steady-hand",
+   "cfg": {
+    "title": "脚の傷を縫う",
+    "help": "針先を、動く輪の中に保ち続ける。外れても少し戻るだけ。",
+    "sec": 5,
+    "r": 0.17,
+    "speed": 0.9,
+    "look": "lens"
+   }
+  }
+ },
+ {
+  "id": "T_SERVER",
+  "title": "サーバー室の冷却をつなぎ直して、エレベーターの電源を戻す",
+  "stage": "L7",
+  "room": "O_SRV",
+  "station": "S_SERVER",
+  "meaning": "サーバー室が熱で止まり、ビルの非常電源が落ちている。冷却が戻れば、エレベーターが動く。",
+  "hint": "非常階段で2階へ。2階の**北東の戸**からサーバー室へ。",
+  "steps": [
+   {
+    "text": "サーバー室へ",
+    "done": "room",
+    "room": "O_SRV"
+   },
+   {
+    "text": "奥の冷却盤の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_SERVER"
+   },
+   {
+    "text": "[E] で冷却の管をつなぐ",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_NOGUCHI"
+  ],
+  "minigame": {
+   "type": "rotate-pipes",
+   "cfg": {
+    "title": "冷却盤",
+    "help": "管を押して回し、入口から出口まで一本につなぐ。",
+    "w": 4,
+    "h": 3,
+    "seed": 11
+   }
+  }
+ },
+ {
+  "id": "T_HAYASE",
+  "title": "厨房に立てこもる男と話す",
+  "stage": "L7",
+  "room": "O_SHOK",
+  "station": "S_HAYASE",
+  "meaning": "3階の厨房から、男の声がする。",
+  "hint": "エレベーターで3階へ。社員食堂の**北東の戸**。",
+  "steps": [
+   {
+    "text": "3階の社員食堂へ",
+    "done": "room",
+    "room": "O_SHOK"
+   },
+   {
+    "text": "厨房の戸の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_HAYASE"
+   },
+   {
+    "text": "[E] で話す",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_SERVER"
+  ]
+ },
+ {
+  "id": "T_RIFLE",
+  "title": "会長室の秘密箱を開けて、屋上の鍵を出す",
+  "stage": "L7",
+  "room": "O_KAICHO",
+  "station": "S_RIFLE",
+  "meaning": "野口さんの話では、屋上の鍵は会長の秘密箱の中。",
+  "hint": "非常階段で4階へ。役員フロアの**北東の戸**から会長室へ。",
+  "steps": [
+   {
+    "text": "会長室へ",
+    "done": "room",
+    "room": "O_KAICHO"
+   },
+   {
+    "text": "会長室の秘密箱の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_RIFLE"
+   },
+   {
+    "text": "[E] で箱を開ける",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_HAYASE"
+  ],
+  "minigame": {
+   "type": "puzzle-box",
+   "cfg": {
+    "title": "会長の秘密箱",
+    "help": "寄木の板を、決まった順に滑らせる。箱を回して、裏の板も見る。",
+    "steps": 6,
+    "seed": 7,
+    "inside": "屋上の鍵"
+   }
+  }
+ },
+ {
+  "id": "T_FORCE",
+  "title": "屋上への扉の錠を、こじ開ける",
+  "stage": "L7",
+  "room": "O_KAI4",
+  "station": "S_FORCE",
+  "meaning": "早瀬が屋上の鍵を持ち逃げした。錠を壊すしかない。",
+  "hint": "非常階段で**塔屋**へ。屋上への扉。",
+  "steps": [
+   {
+    "text": "屋上の塔屋へ",
+    "done": "room",
+    "room": "O_KAI4"
+   },
+   {
+    "text": "屋上への扉の錠を見る",
+    "done": "look",
+    "emphasis": "station:S_FORCE"
+   },
+   {
+    "text": "[E] で錠をこじ開ける",
+    "done": "task"
+   }
+  ],
+  "optional": true,
+  "needs": [
+   "T_RIFLE"
+  ],
+  "minigame": {
+   "type": "timing",
+   "cfg": {
+    "title": "屋上への扉の錠",
+    "help": "パイプを掛け金に差しこむ。揺れる印が的の上に来たときに押す。"
+   }
+  }
+ },
+ {
+  "id": "T_HOLD",
+  "title": "ヘリが降りるまで、屋上を守る",
+  "stage": "L8",
+  "room": "O_ROOF",
+  "station": "S_HELI",
+  "meaning": "ヘリの音に、ビルじゅうのゾンビが階段を上がってくる。",
+  "hint": "**屋上ヘリポート**の真ん中、Ｈの印。",
+  "steps": [
+   {
+    "text": "屋上ヘリポートへ",
+    "done": "room",
+    "room": "O_ROOF"
+   },
+   {
+    "text": "Ｈの印の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_HELI"
+   },
+   {
+    "text": "[E] でヘリを待つ",
+    "done": "task"
+   }
+  ],
+  "timer": {
+   "seconds": 120,
+   "label": "ヘリまで"
+  }
+ },
+ {
+  "id": "T_HELI",
+  "title": "ヘリに乗る",
+  "stage": "L8",
+  "room": "O_ROOF",
+  "station": "S_HELI",
+  "meaning": "夜が明けた。",
+  "hint": "**屋上ヘリポート**のＨの印。",
+  "steps": [
+   {
+    "text": "屋上ヘリポートへ",
+    "done": "room",
+    "room": "O_ROOF"
+   },
+   {
+    "text": "ヘリを見る",
+    "done": "look",
+    "emphasis": "station:S_HELI"
+   },
+   {
+    "text": "[E] で乗る",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_HOLD"
+  ]
+ }
 ]

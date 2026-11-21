@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/panel-fit.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 10af67dd: js/panel-fit.js — edit in game-kit and run tools/kit-sync.js */
 // Fit a panel's content into its box without scrolling (standard 1.21.1, 水無瀬病院 ドット版 on an iPhone held sideways with the address bar
 // showing, 844x340: 「ズレてます」 and the document text hidden under its picture). The user's rule: shrink the PICTURE first, then the text;
 // scrolling is only the fallback for an unusually long text. Used by the document window (game-core), the talk window (talk-ui) and the
@@ -25,6 +25,7 @@ export function fitPanel(box, steps, o = {}) {
   if (g && !over()) {
     let v = out.at[g.prop] ?? g.from, n = 0; const up = Math.abs(g.step);
     while (v + up <= g.max + 1e-6 && n++ < 200) { g.el.style.setProperty(g.prop, `${+(v + up).toFixed(4)}${g.unit || ''}`); if (over()) { g.el.style.setProperty(g.prop, `${v}${g.unit || ''}`); break; } v = +(v + up).toFixed(4); }
+    if (v < g.max) { g.el.style.setProperty(g.prop, `${g.max}${g.unit || ''}`); if (over()) g.el.style.setProperty(g.prop, `${v}${g.unit || ''}`); else v = g.max; }   // 1.22.5: the last part step up to max itself (74 % when 75 % fits)
     out.at[g.prop] = v;
   }
   out.fits = !over();

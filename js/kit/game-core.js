@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 10af67dd: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -77,9 +77,9 @@ import { installTimedShot } from './timed-shot.js';
 import { VoiceQueue } from './voice-queue.js';
 import { installNpcAudit } from './npc-audit.js';
 
-export const CORE_VERSION = '1.23.0';
+export const CORE_VERSION = '1.25.1';
 // the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
-export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board'];
+export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board', 'darkroom-develop', 'tape-splice', 'switchboard', 'steam-letter', 'puzzle-box', 'rubbing', 'knot-untangle', 'torn-paper', 'safe-listen', 'footprint-track'];
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(typeof location !== 'undefined' ? location.search : '');
 const safe = (fn, d = null) => { try { return fn(); } catch { return d; } };

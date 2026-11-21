@@ -1,11 +1,26 @@
 {
   "id": "yakinake",
   "title": "夜勤明けの街",
-  "subtitle": "3D一人称ゲームの標準ひな形",
-  "version": "0.1.0",
+  "subtitle": "屋上のヘリまで、生きて歩け",
+  "version": "0.9.0",
   "standard": "1.23",
   "theme": "dark-industrial hospital-cold",
-  "preset": "office",
+  "preset": {
+    "base": "horror",
+    "fog": {
+      "type": "exp2",
+      "color": 726038,
+      "density": 0.05
+    },
+    "far": 60,
+    "background": 329738,
+    "hemi": {
+      "sky": 2767428,
+      "ground": 921618,
+      "intensity": 0.35
+    },
+    "exposure": 0.95
+  },
   "modules": [
     "game-core",
     "ext",
@@ -32,13 +47,33 @@
     "step-guide",
     "analytics"
   ],
-  "minigames": [],
+  "minigames": [
+    "switch-panel",
+    "tune-radio",
+    "torn-paper",
+    "safe-listen",
+    "sort-items",
+    "search-dark",
+    "pump-gauge",
+    "lock-pick",
+    "knot-untangle",
+    "turn-dials",
+    "rubbing",
+    "code-drums",
+    "switchboard",
+    "tape-splice",
+    "timing",
+    "steady-hand",
+    "rotate-pipes",
+    "puzzle-box"
+  ],
   "entry": {
     "html": "index.html",
     "main": "js/main.js"
   },
   "ext": [
-    "js/ext/index.js"
+    "js/ext/index.js",
+    "js/dot/index.js"
   ],
   "data": {
     "plan": "data/plan.json",
@@ -50,13 +85,21 @@
     "releaseNotes": "data/release-notes.json",
     "monsters": "data/monsters.json",
     "things": "data/things.json",
-    "terminals": "data/terminals.json",
     "talk": "data/talk.json"
   },
   "media": {
     "dir": "assets"
   },
-  "fx": "old-tv",
+  "fx": {
+    "preset": "horror",
+    "noise": 0,
+    "scanlines": 0,
+    "vignette": 1,
+    "saturation": 0.7,
+    "glitch": false,
+    "dangerTint": true,
+    "mist": false
+  },
   "recipes": {
     "props": true,
     "textures": "assets/textures/"
@@ -65,10 +108,132 @@
   "things": true,
   "controls": {
     "crouch": true,
-    "flashlight": true
+    "fov": 72,
+    "far": 60,
+    "runButton": true,
+    "flashlight": {
+      "color": 15266047,
+      "intensity": 12,
+      "distance": 16,
+      "angle": 0.7
+    },
+    "touch": [
+      {
+        "k": "KeyE",
+        "label": "操作",
+        "cls": "big"
+      },
+      {
+        "k": "Fire",
+        "label": "撃つ",
+        "id": "yk-fire",
+        "cls": "hold big"
+      },
+      {
+        "k": "KeyV",
+        "label": "殴る",
+        "id": "yk-melee"
+      },
+      {
+        "k": "KeyR",
+        "label": "装填",
+        "id": "yk-reload"
+      },
+      {
+        "k": "KeyQ",
+        "label": "持ち替え",
+        "id": "yk-swap"
+      },
+      {
+        "k": "KeyH",
+        "label": "手当て",
+        "id": "yk-heal"
+      },
+      {
+        "k": "KeyB",
+        "label": "ケース",
+        "id": "yk-case"
+      }
+    ]
   },
   "style": "pixel",
   "pixel": {
     "world": "texture"
+  },
+  "dotPost": "soft",
+  "portraits": {
+    "宮下": "assets/photos/face-chisato.webp",
+    "戸川": "assets/photos/face-genzo.webp",
+    "権藤": "assets/photos/face-gondo.webp",
+    "仁科": "assets/photos/face-nishina.webp",
+    "白坂": "assets/photos/face-shirasaka.webp",
+    "妙子": "assets/photos/face-taeko.webp",
+    "片桐": "assets/photos/face-katagiri.webp",
+    "森": "assets/photos/face-mori.webp",
+    "野口": "assets/photos/face-noguchi.webp",
+    "早瀬": "assets/photos/face-hayase.webp",
+    "無線": "assets/photos/face-radio.webp",
+    "市の放送": "assets/photos/face-radio.webp"
+  },
+  "deaths": {
+    "default": {
+      "text": "噛まれた。",
+      "sub": "最後に当直日誌に書いた所（または最後に終えた作業）から、やり直す。",
+      "retry": "やり直す",
+      "photo": "assets/photos/death.webp"
+    },
+    "bitten": {
+      "text": "噛みつかれて、体が持たなかった。",
+      "sub": "つかまれたら［V］（殴る）で振りほどく。体力は、ケースの包帯や救急箱（［H］で手当て）で戻る。脚を撃てば這い、頭を撃てば止まる。銃の音は、遠くのゾンビも呼ぶ。",
+      "retry": "やり直す",
+      "photo": "assets/photos/death.webp"
+    },
+    "spit": {
+      "text": "吐きかけられた体液で、息ができなくなった。",
+      "sub": "吐くゾンビは、離れた所から狙ってくる。物陰から、頭を撃つ。",
+      "retry": "やり直す",
+      "photo": "assets/photos/death.webp"
+    },
+    "burst": {
+      "text": "膨れたゾンビが、目の前で破裂した。",
+      "sub": "膨れたゾンビは、死ぬと破裂する。離れた所から撃つ。",
+      "retry": "やり直す",
+      "photo": "assets/photos/death.webp"
+    },
+    "human": {
+      "text": "殴り倒された。",
+      "sub": "人と戦うと、相手も本気で来る。体力が減ったら、下がって手当てする。相手は追いつめられると降参する。",
+      "retry": "やり直す",
+      "photo": "assets/photos/death.webp"
+    },
+    "roof": {
+      "text": "屋上が、群れに呑まれた。",
+      "sub": "ヘリが降りるまで、階段の扉から上がってくるゾンビを止める。弾が足りなければ、扉の前で殴る。",
+      "retry": "やり直す",
+      "photo": "assets/photos/death.webp"
+    }
+  },
+  "titleImage": "assets/photos/title.webp",
+  "hud": {
+    "quietFor": 60,
+    "dimInDanger": true
+  },
+  "approach": {
+    "vignette": true,
+    "heartbeat": true,
+    "shake": true,
+    "dizzy": false,
+    "presence": null
+  },
+  "share": {
+    "tags": [
+      "夜勤明けの街",
+      "ゾンビゲーム"
+    ]
+  },
+  "thoughtVoices": "assets/voice/thoughts.json",
+  "docStyle": "paper",
+  "sprites": {
+    "res": 2
   }
 }

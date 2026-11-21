@@ -1,29 +1,11 @@
 {
-  "early": {
-    "stages": 1
-  },
-  "hints": {
-    "run": "走れ！",
-    "turn": "曲がれ！",
-    "hide": "隠れろ！"
-  },
-  "monsters": [
-    {
-      "id": "lurker",
-      "look": "dark-red-mist",
-      "phases": [
-        {
-          "preset": "early",
-          "untilStage": "L2"
-        },
-        {
-          "preset": "normal"
-        }
-      ],
-      "spawn": {
-        "room": "C2"
-      },
-      "route": "auto"
-    }
-  ]
+ "early": {
+  "stages": 1
+ },
+ "hints": {
+  "run": "走れ！",
+  "turn": "曲がれ！",
+  "hide": "隠れろ！"
+ },
+ "monsters": []
 }

@@ -1,13 +1,113 @@
 [
-  {
-    "id": "I1",
-    "name": "社員証",
-    "photo": "",
-    "desc": "首から下げる、青い紐の社員証。写真の顔は少し疲れている。",
-    "why": "扉の制御盤で、本人確認に使う。",
-    "feeling": "この顔で、今夜も出勤か。",
-    "room": "R1",
-    "stage": "L1",
-    "kind": "card"
-  }
+ {
+  "id": "PENLIGHT",
+  "name": "ペンライト",
+  "start": true,
+  "desc": "胸ポケットの、瞳孔を見るためのペンライト。",
+  "why": "暗い所を照らす（[F]）。",
+  "feeling": "細い光でも、ないよりいい。",
+  "kind": "flashlight",
+  "photo": "",
+  "room": "H_TOU",
+  "stage": "L1"
+ },
+ {
+  "id": "STETHO",
+  "name": "聴診器",
+  "start": true,
+  "desc": "首にかけたままの聴診器。",
+  "why": "金庫のダイヤルの音を聞くのに使える。",
+  "feeling": "耳に当てると、自分の心臓が速い。",
+  "photo": "",
+  "room": "H_TOU",
+  "stage": "L1"
+ },
+ {
+  "id": "PHS",
+  "name": "当直のPHS",
+  "start": true,
+  "desc": "電池の切れた院内のPHS。",
+  "why": "今は使えない。",
+  "feeling": "最後の着信は、午前一時五分。救急外来から。",
+  "photo": "",
+  "room": "H_TOU",
+  "stage": "L1"
+ },
+ {
+  "id": "KEYCARD",
+  "name": "警備のカード",
+  "given": "T_SAFE",
+  "desc": "「警備　主任」と書かれたカード。",
+  "why": "霊安室と搬入口の扉を開ける。",
+  "feeling": "主任の顔写真は、笑っていた。",
+  "photo": "",
+  "room": "H_KEI",
+  "stage": "L2"
+ },
+ {
+  "id": "KEYRING",
+  "name": "霊安室の鍵束",
+  "given": "T_REI",
+  "desc": "小さな鍵が五本。「シャッター」「施設課」の札。",
+  "why": "搬入口のシャッターと、施設課の工具ケースを開ける。",
+  "feeling": "鍵の札の字は、几帳面だ。",
+  "photo": "",
+  "room": "H_REI",
+  "stage": "L3"
+ },
+ {
+  "id": "INSULIN",
+  "name": "インスリン",
+  "given": "T_INSULIN",
+  "desc": "冷蔵の棚にあった、ペン型のインスリン。",
+  "why": "病室の戸川さんに届ける。",
+  "feeling": "まだ冷たい。",
+  "photo": "",
+  "room": "H_YAKU",
+  "stage": "L2"
+ },
+ {
+  "id": "ANTIBIO",
+  "name": "抗生物質",
+  "given": "T_INSULIN",
+  "desc": "抗生物質の錠剤の箱。",
+  "why": "傷が膿んだときの薬。誰かとの取引に使えるかもしれない。",
+  "feeling": "今の街では、食べ物より貴重かもしれない。",
+  "photo": "",
+  "room": "H_YAKU",
+  "stage": "L2"
+ },
+ {
+  "id": "FIREKEY",
+  "name": "消防団の鍵",
+  "given": "T_GENZO",
+  "desc": "赤い札のついた、古い南京錠の鍵。",
+  "why": "商店街の消防団の倉庫を開ける。",
+  "feeling": "戸川さんの手は、熱かった。",
+  "photo": "",
+  "room": "H_BYO",
+  "stage": "L2"
+ },
+ {
+  "id": "LIFTKEY",
+  "name": "エレベーターの鍵",
+  "given": "T_NOGUCHI",
+  "desc": "「非常運転」と刻まれた鍵。",
+  "why": "ビルのエレベーターを動かす。",
+  "feeling": "野口さんの血がついている。",
+  "photo": "",
+  "room": "O_BOSAI",
+  "stage": "L7"
+ },
+ {
+  "id": "ROOFKEY",
+  "name": "屋上の鍵",
+  "given": "T_RIFLE",
+  "desc": "会長の秘密箱に入っていた、真鍮の鍵。",
+  "why": "塔屋から屋上ヘリポートへの扉を開ける。",
+  "feeling": "これで、外へ出られる。",
+  "photo": "",
+  "room": "O_KAICHO",
+  "stage": "L7"
+ }
 ]

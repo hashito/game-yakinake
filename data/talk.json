@@ -1,13 +1,560 @@
 {
-  "opening": [
-    {
-      "who": "私",
-      "text": "夜勤の初日。事務室で勤怠をつけてから、ロビーの扉を開ける。"
-    },
-    {
-      "who": "先輩",
-      "where": "電話",
-      "text": "盤の操作は、上に出た順にボタンを押すだけ。慌てなくていい。"
-    }
-  ]
+ "opening": [
+  {
+   "who": "私",
+   "text": "当直室のソファで目が覚めた。午前二時十分。病棟の明かりが落ちている。PHSは電池が切れていた。",
+   "id": "opening-1",
+   "img": "assets/photos/op-1.webp",
+   "voice": "assets/voice/opening-1.mp3"
+  },
+  {
+   "who": "市の放送",
+   "text": "灯ヶ浦市から緊急のお知らせです。倒れた人が起き上がり、人を噛む事例が、市内全域で起きています。噛まれた人に、近づかないでください。",
+   "id": "opening-2",
+   "img": "assets/photos/op-2.webp",
+   "voice": "assets/voice/opening-2.mp3"
+  },
+  {
+   "who": "市の放送",
+   "text": "県の防災ヘリ「うみかぜ」が、夜明けの五時半、臨港セントラルビルの屋上ヘリポートに着陸します。動ける方は、屋上へ向かってください。",
+   "id": "opening-3",
+   "img": "assets/photos/op-3.webp",
+   "voice": "assets/voice/opening-3.mp3"
+  },
+  {
+   "who": "私",
+   "text": "臨港セントラルビルは、港の向こう。歩いて四十分。……まず、ここを出る。救急カートに、身を守る物があるはず。",
+   "id": "opening-4",
+   "img": "assets/photos/op-4.webp",
+   "voice": "assets/voice/opening-4.mp3"
+  }
+ ],
+ "first_glass": [
+  {
+   "who": "私",
+   "text": "処置室のガラスの向こう。白衣の誰かが、床の人にかがみこんで……食べている。",
+   "id": "first_glass-1",
+   "voice": "assets/voice/first_glass-1.mp3"
+  },
+  {
+   "who": "私",
+   "text": "こっちに気づいていない。音を立てないで、離れる。",
+   "id": "first_glass-2",
+   "voice": "assets/voice/first_glass-2.mp3"
+  }
+ ],
+ "crawler": [
+  {
+   "who": "私",
+   "text": "廊下の床を、何かが這ってくる。脚がない。……さっきの処置室の人じゃない。",
+   "id": "crawler-1",
+   "voice": "assets/voice/crawler-1.mp3"
+  },
+  {
+   "who": "私",
+   "text": "鉄パイプで、頭を。動きが遅いうちに。",
+   "id": "crawler-2",
+   "voice": "assets/voice/crawler-2.mp3"
+  }
+ ],
+ "chisato": [
+  {
+   "who": "宮下",
+   "text": "先生！ 篠原先生、生きてたんですね。夜勤の主任の宮下です。電気が戻ったから、やっと戸が開けられた。",
+   "id": "chisato-1",
+   "voice": "assets/voice/chisato-1.mp3"
+  },
+  {
+   "who": "宮下",
+   "text": "噛まれた人は、数時間で死にます。それから、また起き上がる。処置室の田辺さんも、そうでした。",
+   "id": "chisato-2",
+   "voice": "assets/voice/chisato-2.mp3"
+  },
+  {
+   "who": "宮下",
+   "text": "病棟で生きてるのは、私と、病室の戸川さんだけ。戸川さんは糖尿病で、インスリンが切れかけてます。",
+   "id": "chisato-3",
+   "voice": "assets/voice/chisato-3.mp3"
+  },
+  {
+   "who": "私",
+   "text": "外へ出る道は？",
+   "id": "chisato-4",
+   "voice": "assets/voice/chisato-4.mp3"
+  },
+  {
+   "who": "宮下",
+   "text": "一階の搬入口のシャッター。でも、霊安室と搬入口の扉は、警備室のカードがないと開かない。カードは警備室の金庫です。",
+   "id": "chisato-5",
+   "voice": "assets/voice/chisato-5.mp3"
+  },
+  {
+   "who": "宮下",
+   "text": "放送を、受信機で聞き直してください。ヘリのこと、もう一度言ってた気がする。",
+   "id": "chisato-6",
+   "voice": "assets/voice/chisato-6.mp3"
+  }
+ ],
+ "radio_done": [
+  {
+   "who": "市の放送",
+   "text": "……繰り返します。うみかぜは、五時半、臨港セントラルビル屋上。待機は十分間。灯ヶ浦警察署が、市民の避難を手伝っています。",
+   "id": "radio_done-1",
+   "voice": "assets/voice/radio_done-1.mp3"
+  },
+  {
+   "who": "私",
+   "text": "警察署は、ビルへの途中にある。まず署へ行く。",
+   "id": "radio_done-2",
+   "voice": "assets/voice/radio_done-2.mp3"
+  }
+ ],
+ "safe_done": [
+  {
+   "who": "宮下",
+   "text": "カード、出ましたね。私はここで戸川さんを看ます。……先生、一緒に行けなくてごめんなさい。",
+   "id": "safe_done-1",
+   "voice": "assets/voice/safe_done-1.mp3"
+  },
+  {
+   "who": "私",
+   "text": "署の人に会えたら、迎えに来てもらう。それまで戸を閉めて。",
+   "id": "safe_done-2",
+   "voice": "assets/voice/safe_done-2.mp3"
+  }
+ ],
+ "genzo": [
+  {
+   "who": "戸川",
+   "text": "先生か。……すまんな、こんな夜に。",
+   "id": "genzo-1",
+   "voice": "assets/voice/genzo-1.mp3"
+  },
+  {
+   "who": "戸川",
+   "text": "わしは元は消防団でな。商店街の消防団の倉庫に、斧がある。これが鍵だ。持っていけ。",
+   "id": "genzo-2",
+   "voice": "assets/voice/genzo-2.mp3"
+  },
+  {
+   "who": "戸川",
+   "text": "音を立てずに戸を破るなら、斧がいちばんだ。",
+   "id": "genzo-3",
+   "voice": "assets/voice/genzo-3.mp3"
+  }
+ ],
+ "morgue_wake": [
+  {
+   "who": "私",
+   "text": "……シーツが、動いた。当番表の三人だ。三人とも、噛まれた人。",
+   "id": "morgue_wake-1",
+   "voice": "assets/voice/morgue_wake-1.mp3"
+  }
+ ],
+ "outside": [
+  {
+   "who": "私",
+   "text": "外の空気。ナトリウム灯の橙色。シャッターの音で、駐車場のゾンビがこっちを向いた。",
+   "id": "outside-1",
+   "voice": "assets/voice/outside-1.mp3"
+  },
+  {
+   "who": "私",
+   "text": "銃は大きな音がする。遠くからも寄ってくる。殴るのは静か。",
+   "id": "outside-2",
+   "voice": "assets/voice/outside-2.mp3"
+  }
+ ],
+ "gondo": [
+  {
+   "who": "権藤",
+   "text": "止まれ！ ここは丸福マートだ。店の物は、全部うちのもんだ。通りたきゃ、それなりの物を出せ。",
+   "id": "gondo-1",
+   "voice": "assets/voice/gondo-1.mp3"
+  },
+  {
+   "who": "仁科",
+   "text": "店長、この人、病院の先生っすよ。白衣着てる。",
+   "id": "gondo-2",
+   "voice": "assets/voice/gondo-2.mp3"
+  },
+  {
+   "who": "権藤",
+   "text": "先生なら、薬を持ってるだろう。抗生物質だ。娘の傷が膿んでる。",
+   "id": "gondo-3",
+   "voice": "assets/voice/gondo-3.mp3"
+  }
+ ],
+ "gondo_trade": [
+  {
+   "who": "権藤",
+   "text": "……本物だな。娘に、飲ませる。奥の戸から、商店街へ出ろ。",
+   "id": "gondo_trade-1",
+   "voice": "assets/voice/gondo_trade-1.mp3"
+  },
+  {
+   "who": "仁科",
+   "text": "先生、ありがとうございます。店長、ほんとは悪い人じゃないんで。",
+   "id": "gondo_trade-2",
+   "voice": "assets/voice/gondo_trade-2.mp3"
+  }
+ ],
+ "gondo_sneak": [
+  {
+   "who": "私",
+   "text": "「分かった、ほかを当たる」と言って、店を出るふりをした。権藤がレジに戻る。……奥の搬入口に、南京錠。音を立てずに開ける。",
+   "id": "gondo_sneak-1",
+   "voice": "assets/voice/gondo_sneak-1.mp3"
+  }
+ ],
+ "gondo_fight": [
+  {
+   "who": "権藤",
+   "text": "三つ数える。一つ。二つ。……やる気か！ 仁科、来い！",
+   "id": "gondo_fight-1",
+   "voice": "assets/voice/gondo_fight-1.mp3"
+  }
+ ],
+ "gondo_give": [
+  {
+   "who": "権藤",
+   "text": "やめろ、もうやめてくれ！ 分かった、通れ。……娘がいるんだ。",
+   "id": "gondo_give-1",
+   "voice": "assets/voice/gondo_give-1.mp3"
+  },
+  {
+   "who": "私",
+   "text": "……奥の戸を開けて。それと、娘さんの傷は、水で洗って。膿んだら、切らないで。",
+   "id": "gondo_give-2",
+   "voice": "assets/voice/gondo_give-2.mp3"
+  }
+ ],
+ "shirasaka": [
+  {
+   "who": "白坂",
+   "text": "ようこそ、黎明の会へ。私は白坂。外のお還りさまを、ご覧になりましたか。",
+   "id": "shirasaka-1",
+   "voice": "assets/voice/shirasaka-1.mp3"
+  },
+  {
+   "who": "白坂",
+   "text": "あれは、亡くなった方が、家族のもとへ戻ってこられた姿です。私の妻も、戻ってきた。鎖でお守りして、夜明けをともに待つのです。",
+   "id": "shirasaka-2",
+   "voice": "assets/voice/shirasaka-2.mp3"
+  },
+  {
+   "who": "妙子",
+   "text": "縄の向こうへは、行かせません。お還りさまの眠りを妨げる人は。",
+   "id": "shirasaka-3",
+   "voice": "assets/voice/shirasaka-3.mp3"
+  }
+ ],
+ "shirasaka_talk": [
+  {
+   "who": "私",
+   "text": "私は医者です。奥さんを、診させてください。",
+   "id": "shirasaka_talk-1",
+   "voice": "assets/voice/shirasaka_talk-1.mp3"
+  },
+  {
+   "who": "私",
+   "text": "……脈がない。瞳孔が開いて、光に動かない。体温は外の空気と同じ。白坂さん、奥さんは亡くなっています。",
+   "id": "shirasaka_talk-2",
+   "voice": "assets/voice/shirasaka_talk-2.mp3"
+  },
+  {
+   "who": "白坂",
+   "text": "…………分かっていました。分かっていたんです。",
+   "id": "shirasaka_talk-3",
+   "voice": "assets/voice/shirasaka_talk-3.mp3"
+  },
+  {
+   "who": "白坂",
+   "text": "縄をほどいてください。鎖の皆さんは、私たちが公民館へ入れます。……夜明けに、ヘリが来るのですか。",
+   "id": "shirasaka_talk-4",
+   "voice": "assets/voice/shirasaka_talk-4.mp3"
+  },
+  {
+   "who": "私",
+   "text": "五時半、臨港セントラルビルの屋上。署の人たちと一緒に来てください。",
+   "id": "shirasaka_talk-5",
+   "voice": "assets/voice/shirasaka_talk-5.mp3"
+  }
+ ],
+ "shirasaka_fake": [
+  {
+   "who": "私",
+   "text": "……分かりました。私も、夜明けを待ちます。縄を、整えさせてください。",
+   "id": "shirasaka_fake-1",
+   "voice": "assets/voice/shirasaka_fake-1.mp3"
+  },
+  {
+   "who": "白坂",
+   "text": "ありがとうございます。お還りさまの縄は、ていねいに。",
+   "id": "shirasaka_fake-2",
+   "voice": "assets/voice/shirasaka_fake-2.mp3"
+  },
+  {
+   "who": "私",
+   "text": "（縄をほどいたら、そのまま抜ける。）",
+   "id": "shirasaka_fake-3",
+   "voice": "assets/voice/shirasaka_fake-3.mp3"
+  }
+ ],
+ "shirasaka_fight": [
+  {
+   "who": "白坂",
+   "text": "妨げる者には、お還りさまの手を！ 妙子さん、鎖を！",
+   "id": "shirasaka_fight-1",
+   "voice": "assets/voice/shirasaka_fight-1.mp3"
+  },
+  {
+   "who": "私",
+   "text": "鎖を外した！ 商店街に、ゾンビが放たれる。",
+   "id": "shirasaka_fight-2",
+   "voice": "assets/voice/shirasaka_fight-2.mp3"
+  }
+ ],
+ "katagiri": [
+  {
+   "who": "片桐",
+   "text": "灯ヶ浦署の片桐、巡査部長。こっちは森巡査。休憩室に、市民が三人いる。",
+   "id": "katagiri-1",
+   "voice": "assets/voice/katagiri-1.mp3"
+  },
+  {
+   "who": "森",
+   "text": "発電機の燃料はあるんです。でも誰も動かし方が分からなくて。無線も交換台も止まってる。",
+   "id": "katagiri-2",
+   "voice": "assets/voice/katagiri-2.mp3"
+  },
+  {
+   "who": "片桐",
+   "text": "先生、取引しよう。電気と無線を戻すのを手伝ってくれたら、武器庫の銃を半分渡す。私たちも屋上へ行く。",
+   "id": "katagiri-3",
+   "voice": "assets/voice/katagiri-3.mp3"
+  }
+ ],
+ "katagiri_no": [
+  {
+   "who": "片桐",
+   "text": "……そう。署の中は好きに歩いていい。でも、武器庫は私たちのものだ。",
+   "id": "katagiri_no-1",
+   "voice": "assets/voice/katagiri_no-1.mp3"
+  }
+ ],
+ "gen_done": [
+  {
+   "who": "森",
+   "text": "電気が来た！ ……待って、留置場の電気の錠が！",
+   "id": "gen_done-1",
+   "voice": "assets/voice/gen_done-1.mp3"
+  },
+  {
+   "who": "片桐",
+   "text": "署長たちが出る！ 先生、ロビーへ！",
+   "id": "gen_done-2",
+   "voice": "assets/voice/gen_done-2.mp3"
+  }
+ ],
+ "rack": [
+  {
+   "who": "私",
+   "text": "拳銃が四丁、弾の箱が六つ。約束は、半分ずつ。",
+   "id": "rack-1",
+   "voice": "assets/voice/rack-1.mp3"
+  }
+ ],
+ "rack_share": [
+  {
+   "who": "片桐",
+   "text": "約束どおりだね。ありがとう。……裏口の鎖を外す。ビルへは、私たちも追いかける。宮下さんは、パトカーで拾っていく。",
+   "id": "rack_share-1",
+   "voice": "assets/voice/rack_share-1.mp3"
+  }
+ ],
+ "rack_all": [
+  {
+   "who": "森",
+   "text": "先生、それ、全部……！",
+   "id": "rack_all-1",
+   "voice": "assets/voice/rack_all-1.mp3"
+  },
+  {
+   "who": "片桐",
+   "text": "……行って。もう、あなたを待たない。",
+   "id": "rack_all-2",
+   "voice": "assets/voice/rack_all-2.mp3"
+  }
+ ],
+ "tape_done": [
+  {
+   "who": "無線",
+   "text": "こちら、うみかぜ。五時半に、臨港セントラルビルの屋上へ降りる。待てるのは、十分だけだ。屋上の扉は、内側から開けておいてくれ。定員は八名。",
+   "id": "tape_done-1",
+   "voice": "assets/voice/tape_done-1.mp3"
+  },
+  {
+   "who": "私",
+   "text": "交換台で聞いた。ビルの防災センターに、野口という警備員がいる。",
+   "id": "tape_done-2",
+   "voice": "assets/voice/tape_done-2.mp3"
+  }
+ ],
+ "backyard": [
+  {
+   "who": "私",
+   "text": "裏口の鎖が外された。駐車場の向こうに、ビルの灯り。……走ってくる。速い。",
+   "id": "backyard-1",
+   "voice": "assets/voice/backyard-1.mp3"
+  }
+ ],
+ "noguchi": [
+  {
+   "who": "野口",
+   "text": "電話の先生か。……ガラスで、脚をやられた。縫ってくれるか。",
+   "id": "noguchi-1",
+   "voice": "assets/voice/noguchi-1.mp3"
+  }
+ ],
+ "noguchi_done": [
+  {
+   "who": "野口",
+   "text": "助かった。エレベーターの鍵だ。2階のサーバー室の冷却が止まって、非常電源が落ちてる。冷却をつなげば動く。",
+   "id": "noguchi_done-1",
+   "voice": "assets/voice/noguchi_done-1.mp3"
+  },
+  {
+   "who": "野口",
+   "text": "屋上の鍵は、4階の会長室の秘密箱。会長の趣味でな。",
+   "id": "noguchi_done-2",
+   "voice": "assets/voice/noguchi_done-2.mp3"
+  },
+  {
+   "who": "野口",
+   "text": "それと……3階の厨房に、男が立てこもってる。「防災センターの副責任者の早瀬」と名乗ったそうだが、早瀬は昨夜、私の目の前で死んだ。",
+   "id": "noguchi_done-3",
+   "voice": "assets/voice/noguchi_done-3.mp3"
+  }
+ ],
+ "hayase": [
+  {
+   "who": "早瀬",
+   "text": "誰だ！ ……医者？ 俺は早瀬、防災センターの副責任者だ。屋上の鍵の場所も知ってる。",
+   "id": "hayase-1",
+   "voice": "assets/voice/hayase-1.mp3"
+  },
+  {
+   "who": "早瀬",
+   "text": "銃を一丁、貸してくれ。そしたら、一緒に屋上へ行ってやる。",
+   "id": "hayase-2",
+   "voice": "assets/voice/hayase-2.mp3"
+  }
+ ],
+ "hayase_give": [
+  {
+   "who": "早瀬",
+   "text": "……悪いな、先生。",
+   "id": "hayase_give-1",
+   "voice": "assets/voice/hayase_give-1.mp3"
+  },
+  {
+   "who": "私",
+   "text": "戸の向こうで、足音が非常階段のほうへ走っていった。",
+   "id": "hayase_give-2",
+   "voice": "assets/voice/hayase_give-2.mp3"
+  }
+ ],
+ "hayase_refuse": [
+  {
+   "who": "早瀬",
+   "text": "ちっ。……勝手にしろ。俺は、ここから出ない。",
+   "id": "hayase_refuse-1",
+   "voice": "assets/voice/hayase_refuse-1.mp3"
+  }
+ ],
+ "hayase_expose": [
+  {
+   "who": "私",
+   "text": "早瀬さんは、昨夜死んだ。野口さんが見ている。あなたは誰？",
+   "id": "hayase_expose-1",
+   "voice": "assets/voice/hayase_expose-1.mp3"
+  },
+  {
+   "who": "早瀬",
+   "text": "…………このビルの、清掃の契約の者だ。名前を借りれば、助けてもらえると思った。",
+   "id": "hayase_expose-2",
+   "voice": "assets/voice/hayase_expose-2.mp3"
+  },
+  {
+   "who": "早瀬",
+   "text": "鍵は、会長室の秘密箱だ。本当だ。……俺も、屋上へ行っていいか。",
+   "id": "hayase_expose-3",
+   "voice": "assets/voice/hayase_expose-3.mp3"
+  }
+ ],
+ "box_empty": [
+  {
+   "who": "私",
+   "text": "秘密箱は、もう開けられていた。鍵がない。……早瀬だ。猟銃だけが残っている。",
+   "id": "box_empty-1",
+   "voice": "assets/voice/box_empty-1.mp3"
+  },
+  {
+   "who": "私",
+   "text": "屋上への扉の錠を、壊すしかない。",
+   "id": "box_empty-2",
+   "voice": "assets/voice/box_empty-2.mp3"
+  }
+ ],
+ "roof": [
+  {
+   "who": "私",
+   "text": "屋上。東の空が白い。五時二十分。",
+   "id": "roof-1",
+   "voice": "assets/voice/roof-1.mp3"
+  },
+  {
+   "who": "無線",
+   "text": "うみかぜより。あと二分で、そちらの上空。",
+   "id": "roof-2",
+   "voice": "assets/voice/roof-2.mp3"
+  },
+  {
+   "who": "私",
+   "text": "階段のほうから、足音。たくさん。ヘリの音を聞いて、上がってくる。",
+   "id": "roof-3",
+   "voice": "assets/voice/roof-3.mp3"
+  }
+ ],
+ "heli": [
+  {
+   "who": "無線",
+   "text": "着陸する。急いで乗ってくれ。十分だけだ。",
+   "id": "heli-1",
+   "voice": "assets/voice/heli-1.mp3"
+  }
+ ],
+ "heli_hold": [
+  {
+   "who": "片桐",
+   "text": "先生！ 扉を押さえて！ 下から、鎖を外された群れが来る！",
+   "id": "heli_hold-1",
+   "voice": "assets/voice/heli_hold-1.mp3"
+  },
+  {
+   "who": "私",
+   "text": "押さえていれば、みんなが乗れる。押さえていれば、私は乗れない。",
+   "id": "heli_hold-2",
+   "voice": "assets/voice/heli_hold-2.mp3"
+  }
+ ],
+ "lesson": [
+  {
+   "who": "私",
+   "text": "脚を撃つと、倒れて這う。頭を撃つと、止まる。胴は、なかなか倒れない。",
+   "id": "lesson-1",
+   "voice": "assets/voice/lesson-1.mp3"
+  }
+ ]
 }

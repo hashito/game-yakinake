@@ -16,7 +16,7 @@ export function pickOverlapSource(o = {}) {
     const pickSet = new Set(); for (const p of picks) p.traverse((q) => pickSet.add(q));
     const shown = (o) => { for (let q = o; q; q = q.parent) if (!q.visible) return false; return true; };
     const others = []; g.world.group.traverse((o) => { if (!o.isMesh || pickSet.has(o) || !shown(o)) return; const m = [].concat(o.material)[0]; if (!m || m.visible === false || (m.transparent && m.opacity < 0.05)) return; if (shell(o)) return; others.push(o); });
-    const box = (o) => { const b = new T.Box3(); o.traverse((q) => { if (!q.isMesh || !shown(q)) return; if (/mark|guide/.test(q.name || '') || (q.parent && /mark|guide/.test(q.parent.name || ''))) return; b.expandByObject(q); }); return b; };
+    const box = (o) => { const b = new T.Box3(); o.traverse((q) => { if (!q.isMesh || !shown(q)) return; const qm = [].concat(q.material)[0]; if (!qm || qm.visible === false || (qm.transparent && qm.opacity < 0.05)) return;   /* 1.22.5: the pickup's own unseen hit box (札の家: 0.8 m tall) is not what is drawn */ if (/mark|guide/.test(q.name || '') || (q.parent && /mark|guide/.test(q.parent.name || ''))) return; b.expandByObject(q); }); return b; };
     const top = (o) => { let q = o; while (q.parent && q.parent !== g.world.group && q.parent !== g.scene) q = q.parent; return q; };
     const ray = new T.Raycaster(), out = [];
     for (const p of picks) {

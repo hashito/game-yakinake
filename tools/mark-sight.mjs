@@ -16,7 +16,7 @@ export function markSightSource(scene = 'window.__game && window.__game.scene', 
       if (o.name === 'aim-marker') return;   // the kit's aim marker sits on what the aim ray already reached
       n++; o.getWorldPosition(p); const dist = p.distanceTo(C.position); if (dist < 0.6) return;
       ray.set(C.position, d.copy(p).sub(C.position).normalize()); ray.far = dist - 0.15;
-      const hit = ray.intersectObjects(walls, false)[0];
+      const hit = ray.intersectObjects(walls, false).find((h) => { const m = [].concat(h.object.material)[0], cp = m && m.clippingPlanes; return !(cp && cp.some((pl) => pl.distanceToPoint(h.point) < 0)); });   // 1.22.5: a wall cut away by clipping planes (a top-down view) does not block
       if (hit) through.push({ name: o.name || (o.parent && o.parent.name) || o.type, at: p.toArray().map((v) => +v.toFixed(2)), wall: hit.object.name });
     });
     return { n, through };
