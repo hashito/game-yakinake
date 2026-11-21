@@ -53,11 +53,20 @@ html[data-input="touch"] .yk-weapon { right: 34%; width: 192px; height: 128px; }
 .yk-status.yk-tap { pointer-events: auto; }
 .yk-status.yk-tap .yk-hp { /* pair-ok */ height: 16px; cursor: pointer; }
 .yk-status.yk-tap .yk-w { display: flex; gap: 6px; }
-.yk-status.yk-tap .yk-wn, .yk-status.yk-tap .yk-wa { min-height: 28px; display: inline-flex; align-items: center; padding: 0 6px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); cursor: pointer; }
+.yk-status.yk-tap .yk-wn, .yk-status.yk-tap .yk-wa { /* pair-ok */ min-height: 28px; display: inline-flex; align-items: center; padding: 0 6px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); cursor: pointer; }
 .yk-status.yk-float { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 62px); left: calc(env(safe-area-inset-left, 0px) + 10px); z-index: 20; min-width: 0; }
 body:not(.yk-playing) .yk-status.yk-float { display: none; }
-/* a phone held upright: the seven buttons in two low rows (four across), so the thought band above them stays clear (P31) */
+/* a phone held upright: the seven buttons in three low rows (no tall ones), so the thought band above them stays clear (P31) */
 @media (orientation: portrait) {
-  html[data-input="touch"] #t-buttons { grid-template-columns: repeat(4, auto); }
+  html[data-input="touch"] #t-buttons { grid-template-columns: repeat(3, auto); }
   html[data-input="touch"] #t-buttons button.big { grid-row: auto; height: 46px; font-size: 14px; }
 }
+/* a phone held upright: the mini games' caption and message keep a fixed height, so a longer line never moves the buttons (P36:
+   torn-paper, sort-items) */
+@media (orientation: portrait) and (max-width: 600px) {
+  .mgx .mgx-st-line { height: 4.35em !important; min-height: 0 !important; overflow: hidden !important; flex: 0 0 auto; }
+  .mgx .mgx-msg { height: 3.2em; min-height: 0; line-height: 1.6; overflow: hidden; }
+}
+/* the title box stays solid over the dark roof picture (muted lines kept readable, contrast check at 1920x1080) */
+#title > .gf-title-box { background: var(--gf-bg, #eef1ef); color: var(--gf-title-text, var(--gf-text, #1d2527)); }
+#title > .gf-title-box .gf-sub, #title > .gf-title-box .gf-ver, #title #boot-status, #title #notes-btn { color: #39424a; }
