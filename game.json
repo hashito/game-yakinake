@@ -65,7 +65,10 @@
     "timing",
     "steady-hand",
     "rotate-pipes",
-    "puzzle-box"
+    "puzzle-box",
+    "footprint-track",
+    "steam-letter",
+    "darkroom-develop"
   ],
   "entry": {
     "html": "index.html",

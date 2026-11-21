@@ -10,18 +10,18 @@ export const CATALOG = {
   pistol: { name: '拳銃', w: 2, h: 1, kind: 'weapon', gun: { dmg: 38, mag: 8, ammo: 'p9', noise: 22, rate: 0.3, spread: 0.008 }, desc: '署の拳銃。音で、遠くのゾンビも呼ぶ。', icon: 'pistol' },
   shotgun: { name: '散弾銃', w: 4, h: 1, kind: 'weapon', gun: { dmg: 14, pellets: 8, mag: 4, ammo: 'shell', noise: 30, rate: 0.95, spread: 0.07 }, desc: '押収品の散弾銃。近くの群れに。', icon: 'shotgun' },
   nails: { name: '釘', w: 1, h: 1, kind: 'ammo', stack: 24, desc: '釘打ち機の釘。', icon: 'nails' },
-  p9: { name: '拳銃の弾', w: 1, h: 1, kind: 'ammo', stack: 16, desc: '拳銃の弾。', icon: 'p9' },
+  p9: { name: '拳銃の弾', short: '拳銃弾', w: 1, h: 1, kind: 'ammo', stack: 16, desc: '拳銃の弾。', icon: 'p9' },
   shell: { name: '散弾', w: 1, h: 1, kind: 'ammo', stack: 8, desc: '散弾銃の弾。', icon: 'shell' },
   rifle: { name: '猟銃', w: 5, h: 2, kind: 'weapon', gun: { dmg: 120, mag: 3, ammo: 'rifleAmmo', noise: 34, rate: 1.25, spread: 0.002, pierce: 2 }, desc: '会長の猟銃。一発で二体を抜く。', icon: 'rifle' },
-  rifleAmmo: { name: '猟銃の弾', w: 1, h: 1, kind: 'ammo', stack: 6, desc: '猟銃の弾。', icon: 'rifleAmmo' },
+  rifleAmmo: { name: '猟銃の弾', short: '猟銃弾', w: 1, h: 1, kind: 'ammo', stack: 6, desc: '猟銃の弾。', icon: 'rifleAmmo' },
   bandage: { name: '包帯', w: 1, h: 1, kind: 'med', heal: 18, stack: 3, desc: '体力が少し戻る。消毒液と組み合わせると手当てセットになる。', icon: 'bandage' },
   disinfect: { name: '消毒液', w: 1, h: 1, kind: 'part', desc: '包帯と組み合わせる。', icon: 'disinfect' },
-  aidkit: { name: '手当てセット', w: 1, h: 2, kind: 'med', heal: 45, desc: '包帯と消毒液。体力が半分ほど戻る。', icon: 'aidkit' },
+  aidkit: { name: '手当てセット', short: '手当て', w: 1, h: 2, kind: 'med', heal: 45, desc: '包帯と消毒液。体力が半分ほど戻る。', icon: 'aidkit' },
   medkit: { name: '救急箱', w: 2, h: 2, kind: 'med', heal: 75, desc: '体力がほとんど戻る。', icon: 'medkit' },
   canned: { name: '缶詰', w: 1, h: 1, kind: 'med', heal: 10, stack: 2, desc: '食べると、体力が少し戻る。', icon: 'canned' },
   water: { name: '水', w: 1, h: 2, kind: 'med', heal: 8, desc: '飲むと、体力が少し戻る。', icon: 'water' },
   powder: { name: '火薬', w: 1, h: 1, kind: 'part', desc: '空の薬莢と組み合わせると、散弾になる。', icon: 'powder' },
-  casing: { name: '空の薬莢', w: 1, h: 1, kind: 'part', stack: 8, desc: '火薬と組み合わせると、散弾になる。', icon: 'casing' },
+  casing: { name: '空の薬莢', short: '薬莢', w: 1, h: 1, kind: 'part', stack: 8, desc: '火薬と組み合わせると、散弾になる。', icon: 'casing' },
 };
 
 // combining: two ids (either order) -> what they become

@@ -7,7 +7,7 @@
   "why": "暗い所を照らす（[F]）。",
   "feeling": "細い光でも、ないよりいい。",
   "kind": "flashlight",
-  "photo": "",
+  "photo": "assets/icons/PENLIGHT.png",
   "room": "H_TOU",
   "stage": "L1"
  },
@@ -18,7 +18,7 @@
   "desc": "首にかけたままの聴診器。",
   "why": "金庫のダイヤルの音を聞くのに使える。",
   "feeling": "耳に当てると、自分の心臓が速い。",
-  "photo": "",
+  "photo": "assets/icons/STETHO.png",
   "room": "H_TOU",
   "stage": "L1"
  },
@@ -29,7 +29,7 @@
   "desc": "電池の切れた院内のPHS。",
   "why": "今は使えない。",
   "feeling": "最後の着信は、午前一時五分。救急外来から。",
-  "photo": "",
+  "photo": "assets/icons/PHS.png",
   "room": "H_TOU",
   "stage": "L1"
  },
@@ -40,7 +40,7 @@
   "desc": "「警備　主任」と書かれたカード。",
   "why": "霊安室と搬入口の扉を開ける。",
   "feeling": "主任の顔写真は、笑っていた。",
-  "photo": "",
+  "photo": "assets/icons/KEYCARD.png",
   "room": "H_KEI",
   "stage": "L2"
  },
@@ -51,7 +51,7 @@
   "desc": "小さな鍵が五本。「シャッター」「施設課」の札。",
   "why": "搬入口のシャッターと、施設課の工具ケースを開ける。",
   "feeling": "鍵の札の字は、几帳面だ。",
-  "photo": "",
+  "photo": "assets/icons/KEYRING.png",
   "room": "H_REI",
   "stage": "L3"
  },
@@ -62,7 +62,7 @@
   "desc": "冷蔵の棚にあった、ペン型のインスリン。",
   "why": "病室の戸川さんに届ける。",
   "feeling": "まだ冷たい。",
-  "photo": "",
+  "photo": "assets/icons/INSULIN.png",
   "room": "H_YAKU",
   "stage": "L2"
  },
@@ -73,7 +73,7 @@
   "desc": "抗生物質の錠剤の箱。",
   "why": "傷が膿んだときの薬。誰かとの取引に使えるかもしれない。",
   "feeling": "今の街では、食べ物より貴重かもしれない。",
-  "photo": "",
+  "photo": "assets/icons/ANTIBIO.png",
   "room": "H_YAKU",
   "stage": "L2"
  },
@@ -84,7 +84,7 @@
   "desc": "赤い札のついた、古い南京錠の鍵。",
   "why": "商店街の消防団の倉庫を開ける。",
   "feeling": "戸川さんの手は、熱かった。",
-  "photo": "",
+  "photo": "assets/icons/FIREKEY.png",
   "room": "H_BYO",
   "stage": "L2"
  },
@@ -95,7 +95,7 @@
   "desc": "「非常運転」と刻まれた鍵。",
   "why": "ビルのエレベーターを動かす。",
   "feeling": "野口さんの血がついている。",
-  "photo": "",
+  "photo": "assets/icons/LIFTKEY.png",
   "room": "O_BOSAI",
   "stage": "L7"
  },
@@ -106,7 +106,7 @@
   "desc": "会長の秘密箱に入っていた、真鍮の鍵。",
   "why": "塔屋から屋上ヘリポートへの扉を開ける。",
   "feeling": "これで、外へ出られる。",
-  "photo": "",
+  "photo": "assets/icons/ROOFKEY.png",
   "room": "O_KAICHO",
   "stage": "L7"
  }

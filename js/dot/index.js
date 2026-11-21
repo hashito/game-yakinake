@@ -147,13 +147,15 @@ export default async function dotLayer(ext, { manifest, data }) {
     setInterval(() => { try { dotify(); } catch (e) { /* the next pass */ } }, 2000);
     // ---- light: never pure black, a small light round the player, the next goal glows ----
     const amb = new THREE.AmbientLight(0x2a3440, 0.6); amb.name = 'dot-floor-light'; scene.add(amb);
-    const near = new THREE.PointLight(0xd0d8e0, 0.6, 5, 1.6); near.name = 'dot-near-light'; scene.add(near);
+    const near = new THREE.PointLight(0xd0d8e0, 0.9, 7, 1.4); near.name = 'dot-near-light'; scene.add(near);
     const cv = document.createElement('canvas'); cv.width = cv.height = 16; const g = cv.getContext('2d');
     for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const d = Math.abs(x - 7.5) + Math.abs(y - 7.5); if (d < 7) { g.fillStyle = d < 3 ? '#fff4c8' : d < 5 ? '#f2c66a' : '#a8742a'; g.fillRect(x, y, 1, 1); } }
     const tex = new THREE.CanvasTexture(cv); tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.colorSpace = THREE.SRGBColorSpace;
     const beacon = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: true, fog: false })); beacon.scale.setScalar(0.22); beacon.name = 'dot-goal-beacon'; beacon.visible = false; scene.add(beacon);
     const goalLight = new THREE.PointLight(0xffd890, 0, 3.2, 1.5); goalLight.name = 'dot-goal-light'; scene.add(goalLight);
-    let T = 0, goalT = 0, goal = null;
+    let T = 0, goalT = 0, goal = null, blockT = 0, lightWant = null;
+    const LIGHT = { hospital: { c: new THREE.Color(0x3a5058), i: 0.8 }, street: { c: new THREE.Color(0xd08a4a), i: 1.25 }, police: { c: new THREE.Color(0x3a4a78), i: 0.95 },
+      tower: { c: new THREE.Color(0x4a5460), i: 0.9 }, roof: { c: new THREE.Color(0xb07a80), i: 1.4 } };
     const goalPos = () => {
       const tk = ctx.nextTask && ctx.nextTask(); if (!tk) return null;
       const m = tk.station ? W.interactables.find((o) => o.name === `station:${tk.station}` && o.visible !== false) : null;
@@ -162,7 +164,16 @@ export default async function dotLayer(ext, { manifest, data }) {
     ext.registerSystem('dot-world', {
       update(dt) {
         T += dt;
-        const c = ctx.camera.position; near.position.set(c.x, c.y - 0.2, c.z); near.intensity = ctx.lightOn === false ? 0.2 : 0.6;
+        const c = ctx.camera.position; near.position.set(c.x, c.y - 0.2, c.z); near.intensity = ctx.lightOn === false ? 0.3 : 0.9;
+        // the floor of light by block: outside, the sodium lamps and the fires light the street; the roof is the coming dawn
+        blockT -= dt;
+        if (blockT <= 0) {
+          blockT = 0.5;
+          const G = window.__yk, r = G && G.roomAtP ? G.roomAtP(c.x, c.z, ctx.floor || 0) : null, id = (r && r.id) || '';
+          const want = /^O_ROOF/.test(id) ? LIGHT.roof : /^(S_URA|S_ODORI|S_SHOTEN|S_HIROBA|O_PLAZA|P_URA)$/.test(id) ? LIGHT.street : /^S_/.test(id) ? LIGHT.tower : /^P_/.test(id) ? LIGHT.police : /^O_/.test(id) ? LIGHT.tower : LIGHT.hospital;
+          lightWant = want;
+        }
+        if (lightWant) { amb.color.lerp(lightWant.c, Math.min(1, dt * 2)); amb.intensity += (lightWant.i - amb.intensity) * Math.min(1, dt * 2); }
         goalT -= dt; if (goalT <= 0) { goalT = 0.5; goal = ctx.state.started ? goalPos() : null; }
         const gd = goal ? c.distanceTo(goal) : 99, on = gd < 14;
         beacon.visible = on && gd > 1.8; goalLight.intensity = on ? 1.2 + Math.sin(T * 3) * 0.4 : 0;

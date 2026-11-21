@@ -1,4 +1,4 @@
-/* game-kit 10af67dd: css/kit.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit e962dd12: css/kit.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: shared styles for first-person browser games (windows, HUD, buttons, touch controls,
    status chips, steppers, kanban, app-like software screens, tabs, stamps, share buttons; at the end
    progression pg-*, sim UI nt-/tb-/dl-/ch-*, journal jr-* / stream veil st-* / hiding hd-*, chat cx-*).
@@ -3758,3 +3758,29 @@ body.touch #say.on { pointer-events: auto; }   /* a tap on the thought band open
 .ms-pin--next { fill: var(--gf-danger, #d0603a); }
 /* 1.22.0: a dot thumbnail (inventory-ui setItemThumbs) is shown whole and sharp */
 .iv-dotthumb { background-size: contain !important; background-repeat: no-repeat; background-position: center; image-rendering: pixelated; }
+/* 1.25.2 code-drums with choices (鏡屋 the storehouse lock): one row per place - its clue, then the numbers to pick from */
+.mgx-code-pick { display: grid; gap: 10px; width: min(560px, 100%); margin: 6px auto 0; }
+.mgx-code-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; padding: 8px 10px; border: 1px solid var(--gf-mg-line, #2a5a3a); border-radius: 8px; }
+.mgx-code-q { display: flex; gap: 10px; align-items: baseline; line-height: 1.5; }
+.mgx-code-q b { font-size: 1.15em; min-width: 1.4em; }
+.mgx-code-opts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.mgx-code-opt { min-width: 48px; min-height: 48px; font-size: 1.2em; }
+.mgx-code-opt.on { outline: 3px solid var(--gf-accent, #e8b040); outline-offset: 1px; font-weight: 700; }
+@media (max-width: 560px) { .mgx-code-row { grid-template-columns: 1fr; } .mgx-code-opts { justify-content: flex-start; } }
+/* 1.25.2 (鏡屋 P36, mirror-beam at 390x844): on a narrow screen a mini game's message has a fixed two-line box (a longer one scrolls in it) */
+@media (max-width: 560px) { .mgx .mgx-msg { height: 3.4em; min-height: 0; overflow-y: auto; } }
+/* 1.25.2 photo-focus with a stick (cfg.stick, 鏡屋): gauges | the stick (up/down = size, left/right = focus) | the shutter */
+.mgx-photo-pad { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 14px; width: min(460px, 100%); }
+.mgx-photo-gauges { display: grid; gap: 10px; }
+.mgx-photo-g { display: grid; gap: 4px; font-size: 13px; line-height: 1.3; }
+.mgx-photo-g i { position: relative; display: block; height: 10px; border-radius: 5px; background: rgba(255, 255, 255, 0.16); /* pair-ok */ }
+.mgx-photo-g b { position: absolute; top: -3px; left: calc(var(--v, 0) * 100% - 4px); width: 8px; height: 16px; border-radius: 3px; background: #e8b040; /* pair-ok */ }
+.mgx-photo-stick { --s: 132px; position: relative; width: var(--s); height: var(--s); border-radius: 50%; touch-action: none; cursor: grab; user-select: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.10) 0 38%, rgba(255, 255, 255, 0.04) 39% 100%); border: 2px solid rgba(255, 255, 255, 0.35); /* pair-ok */ }
+.mgx-photo-stick:focus-visible { outline: 3px solid var(--gf-accent, #3a7a5a); outline-offset: 3px; }
+.mgx-photo-stick em { position: absolute; font-style: normal; font-size: 12px; line-height: 1; opacity: 0.8; pointer-events: none; }
+.mgx-photo-stick em.u { top: 6px; left: 50%; transform: translateX(-50%); } .mgx-photo-stick em.d { bottom: 6px; left: 50%; transform: translateX(-50%); }
+.mgx-photo-stick em.l { left: 6px; top: 50%; transform: translateY(-50%); } .mgx-photo-stick em.r { right: 4px; top: 50%; transform: translateY(-50%); }
+.mgx-photo-knob { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; background: #e8b040; /* pair-ok */ box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5); pointer-events: none; transition: transform 0.08s ease-out; }
+.mgx-photo-pad .mgx-photo-shutter { min-height: 64px; }
+@media (max-height: 500px) { .mgx-photo-stick { --s: 112px; } .mgx-photo-knob { width: 44px; height: 44px; margin: -22px 0 0 -22px; } .mgx-photo-pad { width: auto; gap: 10px; } }

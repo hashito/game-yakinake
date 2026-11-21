@@ -53,6 +53,9 @@ export function installPeople(ext, G) {
       f.root.name = `person:${P.id}`;
       ctx.scene.add(f.root);
       f.anim.play('idle');
+      // the station's own stand-in look (a grey block where a person talks) is the person now
+      const sid = P.station || (P.id === 'hayase' ? 'S_HAYASE' : null);
+      if (sid) { const look = W.group.getObjectByName(`stlook:${sid}`); if (look) look.traverse((m) => { if (m.isMesh) m.visible = false; }); }
       warm.push(f.warm);
       figs.set(P.id, { P, f, room, floor: (R && R.floor) || 0, yaw, home: f.root.position.clone(), hp: P.hp || 100, max: P.hp || 100, mode: 'stand', cool: 0, hidden: false });
     }

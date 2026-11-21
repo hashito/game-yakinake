@@ -39,7 +39,7 @@ export function installStory(ext, G) {
   ext.registerTask('T_CASE', { canStart: () => (has('KEYRING') ? true : '鍵がかかっている。霊安室の机に、鍵束があるはず。'), run: async () => { G.case.give(BOXES.T_CASE); const n = G.case.items.find((i) => i.id === 'nailgun'); if (n) G.equipUid(n.uid); ctx.ui.say('釘打ち機。音が小さい。撃つと、釘が減る。［R］で装填。', 6); return true; } });
   ext.registerTask('T_AXE', { canStart: () => (has('FIREKEY') ? true : '南京錠がかかっている。鍵は、消防団の人が持っているはず。'), run: async () => { G.case.give(BOXES.T_AXE); return true; } });
   after('T_FUEL', () => G.case.give(BOXES.T_FUEL));
-  after('T_SHOKO', () => G.case.give(BOXES.T_SHOKO));
+  after('T_SHOKO', () => { ctx.ui.say('写真の奥、ロッカーの前に、誰か立っている。……写っている札は、二十三番。', 6); G.case.give(BOXES.T_SHOKO); });
   ext.registerTask('T_PACK', { run: async () => {
     G.case.bag = 'pack';
     ctx.ui.toast('登山リュック（8×5）に持ち替えた'); G.emit('case:change'); return true;

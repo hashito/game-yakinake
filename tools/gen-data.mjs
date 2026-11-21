@@ -82,7 +82,8 @@ const tasks = [
   T('T_POWER', 'L1', 'H_DEN', 'S_BREAKER', '非常用の配電盤で、病棟の電気を戻す', '電気の錠が落ちて、病棟の扉が開かない。灯りが戻れば、ナースステーションへ行ける。', '配電室の**西の壁**の盤。', '西の壁の配電盤の前に立つ', '盤を操作する', { needs: ['T_TOOLBOX'],
     minigame: { type: 'switch-panel', cfg: { title: '非常用の配電盤', help: 'スイッチを押すと、となりの回路も一緒に切り替わる。全部の灯りをつける。', n: 4, presses: 4, seed: 11, look: 'lamp' } } }),
   // L2
-  T('T_CHISATO', 'L2', 'H_NS', 'S_CHISATO', 'ナースステーションの宮下さんと話す', '病棟で生きている人は、ほかにいるのか。外で何が起きているのか。', '廊下の北、**ナースステーション**のカウンターの奥。', 'カウンターの奥の宮下さんを見る', '話す'),
+  T('T_CHISATO', 'L2', 'H_NS', 'S_CHISATO', 'ナースステーションの宮下さんと話す', '病棟で生きている人は、ほかにいるのか。外で何が起きているのか。', '廊下の北、**ナースステーション**のカウンターの奥。', 'カウンターの奥の宮下さんを見る', '話す', {
+    minigame: { type: 'footprint-track', cfg: { title: 'ナースステーションの床', help: '床の血だまりを踏んだ足跡が、いくつも続いている。ナースサンダルの足跡だけを、ペンライトで追う。', clue: 'slipper', clueText: 'ナースサンダル：かかとのない、つっかけの跡', branches: 3, seed: 14, floor: 'dust', end: 'wall' } } }),
   T('T_RADIO', 'L2', 'H_NS', 'S_RADIO', '防災無線の受信機で、市の放送を聞き直す', 'ヘリが来る時刻と場所を、はっきり聞くため。', 'ナースステーションの**北の壁**の受信機。', '北の壁の受信機の前に立つ', '受信機を合わせる', { needs: ['T_CHISATO'],
     minigame: { type: 'tune-radio', cfg: { title: '防災無線の受信機', help: 'つまみを回して、雑音の奥の声を探す。声がはっきりしたら、少し止める。', target: 0.71, width: 0.04, hold: 1.2 } } }),
   T('T_NOTE', 'L2', 'H_KEI', 'S_NOTE', '警備主任の机で、破られたメモをつなぎ合わせる', '霊安室と搬入口を開けるカードは、警備室の金庫の中。番号は、主任が破ったメモに書いてある。', '廊下の南、**警備室**の奥の机。', '奥の机の前に立つ', '紙片をつなぐ', { needs: ['T_CHISATO'],
@@ -92,7 +93,9 @@ const tasks = [
   T('T_INSULIN', 'L2', 'H_YAKU', 'S_DRUGS', '薬剤部で、戸川さんのインスリンを探す', '病室の戸川さんは糖尿病。朝までに打たないと、意識がなくなる（寄り道）。', '廊下の南、**薬剤部**の奥の棚。', '奥の薬品棚の前に立つ', '棚を探す', { optional: true, needs: ['T_CHISATO'],
     minigame: { type: 'sort-items', cfg: { title: '薬品棚', help: '散らばった薬を、正しい棚へ戻す。インスリンは冷蔵の棚。', bins: [{ id: 'cold', label: '冷蔵' }, { id: 'room', label: '常温' }, { id: 'lock', label: '鍵付き（劇薬）' }],
       items: [{ id: 'ins', label: 'インスリン', bin: 'cold', why: 'インスリンは冷やしておく薬。' }, { id: 'abx', label: '抗生物質', bin: 'room', why: '抗生物質の錠剤は、常温でいい。' }, { id: 'mor', label: '鎮痛剤（麻薬）', bin: 'lock', why: '麻薬は、鍵付きの棚にしまう決まり。' }, { id: 'vac', label: 'ワクチン', bin: 'cold', why: 'ワクチンも冷蔵。' }, { id: 'gauze', label: 'ガーゼ', bin: 'room', why: 'ガーゼは常温の棚。' }] } } }),
-  T('T_GENZO', 'L2', 'H_BYO', 'S_GENZO', '病室の戸川さんに、インスリンを届ける', '戸川さんは元消防団。何か知っているかもしれない（寄り道）。', '廊下の北、**四人部屋の病室**の奥のベッド。', '奥のベッドの戸川さんを見る', '話す', { optional: true, needs: ['T_INSULIN'] }),
+  T('T_GENZO', 'L2', 'H_BYO', 'S_GENZO', '病室の戸川さんに、インスリンを届ける', '戸川さんは元消防団。何か知っているかもしれない（寄り道）。', '廊下の北、**四人部屋の病室**の奥のベッド。', '奥のベッドの戸川さんを見る', '話す', { optional: true, needs: ['T_INSULIN'],
+    minigame: { type: 'steam-letter', cfg: { title: '息子さんの封筒', help: '戸川さんの頼み：封を切らずに開けてほしい。ポットの湯気に封筒をかざして、のりを全部やわらかくしてから、ゆっくりはがす。', sender: '戸川 大輔', sections: 6,
+      letter: { title: '親父へ', text: '倉庫の鍵、入れとく。南京錠の赤い札のやつ。\n俺は駅のほうの手伝いに行く。朝には戻る。\nインスリン、ちゃんと打てよ。看護師さんの言うこと聞けよ。\n　　　　　　　　大輔', paper: 'note' } } } }),
   // L3
   T('T_REI', 'L3', 'H_REI', 'S_MDESK', '霊安室の机で、搬入口の鍵束を探す', 'シャッターの鍵は、霊安室の当番の机にある。', '廊下の東の南、**霊安室**の奥の机。', '奥の机の前に立つ', '机を探す',
     { minigame: { type: 'search-dark', cfg: { title: '霊安室の机', help: 'ペンライトで机の中を照らして、鍵束と、印のついた物を全部見つける。', image: 'assets/photos/mg-desk.webp', marks: [{ x: 0.24, y: 0.62, label: '鍵束' }, { x: 0.7, y: 0.35, label: '当番表' }, { x: 0.55, y: 0.8, label: '懐中電灯の電池' }], r: 0.22 } } }),
@@ -127,8 +130,8 @@ const tasks = [
   T('T_TAPE', 'L5', 'P_TSU', 'S_TAPE', '留守番の録音機で、ヘリの無線をつなぎ直す', '交換台を通った航空隊の無線が、録音機に残っている。テープは切れている。', '通信室の**北西の机**の録音機。', '北西の机の録音機の前に立つ', 'テープをつなぐ', { needs: ['T_TSU'],
     minigame: { type: 'tape-splice', cfg: { title: '留守番の録音機', help: '切れ端を一片ずつ聞き、並べ替え・裏返して、つないで聞く。',
       pieces: [{ text: 'こちら、うみかぜ。' }, { text: '五時半に、臨港セントラルビルの屋上へ降りる。' }, { text: '待てるのは、十分だけだ。' }, { text: '屋上の扉は、内側から開けておいてくれ。' }, { text: '定員は八名。' }], seed: 5 } } }),
-  T('T_SHOKO', 'L5', 'P_SHOKO', 'S_EVID', '証拠品保管庫の暗いロッカーを探す', '押収品の中に、銃と弾があるはず（寄り道）。', '署の廊下の南東、**証拠品保管庫**。', '奥のロッカーの前に立つ', 'ロッカーを照らす', { optional: true, needs: ['T_GEN'],
-    minigame: { type: 'search-dark', cfg: { title: '押収品のロッカー', help: 'ペンライトで照らして、札のついた押収品を全部見つける。', image: 'assets/photos/mg-locker.webp', marks: [{ x: 0.3, y: 0.4, label: '散弾銃' }, { x: 0.68, y: 0.7, label: '散弾の箱' }, { x: 0.52, y: 0.22, label: '押収品の札' }], r: 0.22 } } }),
+  T('T_SHOKO', 'L5', 'P_SHOKO', 'S_EVID', '証拠品保管庫の暗いロッカーを探す', '押収品の中に、銃と弾があるはず（寄り道）。', '署の廊下の南東、**証拠品保管庫**。', '奥のロッカーの前に立つ', 'フィルムを現像する', { optional: true, needs: ['T_GEN'],
+    minigame: { type: 'darkroom-develop', cfg: { title: '押収品のカメラ', help: 'ロッカーは五十もある。押収品のカメラに残ったフィルムに、散弾銃をしまう所が写っているはず。保管庫の奥の暗室で現像する。印画紙を現像液・停止液・定着液の順に。' } } }),
   // L6
   T('T_ODOOR', 'L6', 'O_PLAZA', 'S_ODOOR', '止まった自動ドアを、こじ開ける', '臨港セントラルビルに入る。屋上まで五階。', '署の裏の駐車場を南へ、**ビルの前の広場**の北。', '止まった自動ドアの前に立つ', 'ドアをこじ開ける', { needs: [],
     minigame: { type: 'timing', cfg: { title: '止まった自動ドア', help: 'パイプを隙間に差しこむ。揺れる印が的の上に来たときに押す。' } } }),
@@ -221,7 +224,7 @@ const talk = {
     ['私', '鉄パイプで、頭を。動きが遅いうちに。', {}],
   ]),
   chisato: S('chi', [
-    ['宮下', '先生！ 篠原先生、生きてたんですね。夜勤の主任の宮下です。電気が戻ったから、やっと戸が開けられた。', {}],
+    ['宮下', '先生！ 篠原先生、生きてたんですね。夜勤の主任の宮下です。カウンターの下に、ずっと隠れてました。', {}],
     ['宮下', '噛まれた人は、数時間で死にます。それから、また起き上がる。処置室の田辺さんも、そうでした。', {}],
     ['宮下', '病棟で生きてるのは、私と、病室の戸川さんだけ。戸川さんは糖尿病で、インスリンが切れかけてます。', {}],
     ['私', '外へ出る道は？', {}],
@@ -238,7 +241,7 @@ const talk = {
   ]),
   genzo: S('gen', [
     ['戸川', '先生か。……すまんな、こんな夜に。', {}],
-    ['戸川', 'わしは元は消防団でな。商店街の消防団の倉庫に、斧がある。これが鍵だ。持っていけ。', {}],
+    ['戸川', '息子は消防団でな。商店街の消防団の倉庫に、斧がある。封筒の鍵が、それだ。持っていけ。', {}],
     ['戸川', '音を立てずに戸を破るなら、斧がいちばんだ。', {}],
   ]),
   morgue_wake: S('wake', [
@@ -375,7 +378,7 @@ const releaseNotes = { version: VERSION, notes: [{ version: VERSION, date: '2026
 ] }] };
 
 const ROOM_OF = { PENLIGHT: ['H_TOU', 'L1'], STETHO: ['H_TOU', 'L1'], PHS: ['H_TOU', 'L1'] };
-for (const it of items) { const t = tasks.find((x) => x.id === it.given); const [room, stage] = ROOM_OF[it.id] || [t.room, t.stage]; Object.assign(it, { photo: it.photo || '', room, stage }); }
+for (const it of items) { const t = tasks.find((x) => x.id === it.given); const [room, stage] = ROOM_OF[it.id] || [t.room, t.stage]; Object.assign(it, { photo: it.photo || (fs.existsSync(path.join(ROOT, 'assets/icons', `${it.id}.png`)) ? `assets/icons/${it.id}.png` : ''), room, stage }); }
 out('stages.json', stages);
 out('tasks.json', tasks);
 out('items.json', items);

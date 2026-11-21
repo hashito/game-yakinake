@@ -1,7 +1,7 @@
 /* The look of 夜勤明けの街: the kit's dark-industrial theme in the colours of a hospital at night (cold teal, sodium orange),
    plus the game's own HUD (body, weapon, ammo; the part under the sights; being grabbed) and the grid case. */
 [data-theme="dark-industrial hospital-cold"] {
-  --gf-accent: #d08a2a; --gf-accent-ink: #1a1208; --gf-accent-2: #f0aa48; --gf-heading: #b4c8c2;
+  /* the kit theme as it is (its colours are checked for contrast) */
 }
 
 /* ---- HUD: body and weapon (top left, a kit HUD slot) ---- */
@@ -45,3 +45,7 @@ html[data-input="touch"] .yk-weapon { right: 34%; width: 192px; height: 128px; }
 .yk-acts button, .yk-gore button { min-height: 44px; padding: 6px 14px; font-size: 15px; border-radius: 6px; border: 1px solid var(--gf-border-strong); background: var(--gf-surface-2); color: var(--gf-text); cursor: pointer; }
 .yk-acts button.on, .yk-gore button.on { background: var(--gf-accent); color: var(--gf-accent-ink); border-color: var(--gf-accent); }
 .yk-gore { font-size: 14px; color: var(--gf-text-dim); }
+/* the pixel picture fills the item; the name sits on a dark band at the bottom */
+.yk-it .yk-ic { position: absolute; left: 50%; top: 50%; image-rendering: pixelated; pointer-events: none; opacity: 0.95; }
+.yk-it span { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 2px; background: rgba(5, 7, 10, 0.72); color: #f6faf6; font-size: 12px; line-height: 15px; white-space: nowrap; text-overflow: clip; }
+.yk-ammo { top: 1px; bottom: auto; line-height: 15px; z-index: 1; }

@@ -1,5 +1,5 @@
 {
-  "kit": "10af67dd",
+  "kit": "e962dd12",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -125,7 +125,11 @@
     "mg-timing",
     "mg-steady-hand",
     "mg-rotate-pipes",
-    "mg-puzzle-box"
+    "mg-puzzle-box",
+    "mg-footprint-track",
+    "mg-steam-letter",
+    "mg-darkroom-develop",
+    "footprints"
   ],
   "css": "css/kit.css",
   "cssExtra": [
@@ -169,7 +173,7 @@
     "pick-overlap.mjs"
   ],
   "hashes": {
-    "js\\kit\\game-core.js": "e2d83a93068f",
+    "js\\kit\\game-core.js": "4ab13f672a9f",
     "js\\kit\\item-kinds.js": "1df558ca9be9",
     "js\\kit\\item-models.js": "8c5988e07991",
     "js\\kit\\prop-geo.js": "6015f33a97f7",
@@ -265,7 +269,7 @@
     "js\\kit\\chat.js": "3e99e458a470",
     "js\\kit\\chat-ext.js": "7c0ff308e8ee",
     "js\\kit\\dot-world.js": "1dd58795007c",
-    "css/kit.css": "830b1926b52b",
+    "css/kit.css": "2f2ebddcc0de",
     "css\\theme.css": "174fb669fcd0",
     "css\\themes.css": "b49eed6cdfa5",
     "css\\shell.css": "6552678cfcfe",
@@ -329,7 +333,7 @@
     "js\\kit\\mg-knot-untangle.js": "6a011f5b9d19",
     "js\\kit\\mg-turn-dials.js": "dfb8d59de8c5",
     "js\\kit\\mg-rubbing.js": "12d0feeefa9e",
-    "js\\kit\\mg-code-drums.js": "5d79aeffda98",
+    "js\\kit\\mg-code-drums.js": "9db22f45ae3b",
     "js\\kit\\mg-widgets.js": "52a2bef3e5ee",
     "js\\kit\\mg-switchboard.js": "3b513ac904d3",
     "js\\kit\\mg-tape-splice.js": "da762d952ed1",
@@ -342,7 +346,11 @@
     "js\\kit\\sprite-stack-mesh.js": "11e65f7be71f",
     "js\\kit\\sprite-stack-anim.js": "760d53cbfba8",
     "js\\kit\\mg-library.js": "fcc07a893fef",
-    "js\\kit\\mg-sound.js": "1de7c0b9326b"
+    "js\\kit\\mg-sound.js": "1de7c0b9326b",
+    "js\\kit\\mg-footprint-track.js": "e027bad1a9f0",
+    "js\\kit\\mg-steam-letter.js": "c623b9908476",
+    "js\\kit\\mg-darkroom-develop.js": "a7a6ef9b4e25",
+    "js\\kit\\footprints.js": "302cff91ef43"
   },
   "textures": []
 }

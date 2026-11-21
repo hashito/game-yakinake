@@ -1,5 +1,560 @@
 {
   "version": 1,
   "policy": "all-gameplay-items-pixel",
-  "items": []
+  "items": [
+    {
+      "id": "scalpel",
+      "name": "メス",
+      "kind": "weapon",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/icons/scalpel.png",
+      "inventory": "assets/icons/scalpel.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "pipe",
+      "name": "鉄パイプ",
+      "kind": "weapon",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/icons/pipe.png",
+      "inventory": "assets/icons/pipe.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "axe",
+      "name": "消防斧",
+      "kind": "weapon",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/icons/axe.png",
+      "inventory": "assets/icons/axe.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "nailgun",
+      "name": "釘打ち機",
+      "kind": "weapon",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/icons/nailgun.png",
+      "inventory": "assets/icons/nailgun.png",
+      "states": [
+        "lying",
+        "in-case",
+        "held",
+        "empty"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "pistol",
+      "name": "拳銃",
+      "kind": "weapon",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/stacks/pistol.png",
+      "inventory": "assets/icons/pistol.png",
+      "states": [
+        "lying",
+        "in-case",
+        "held",
+        "empty"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "shotgun",
+      "name": "散弾銃",
+      "kind": "weapon",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/stacks/shotgun.png",
+      "inventory": "assets/icons/shotgun.png",
+      "states": [
+        "lying",
+        "in-case",
+        "held",
+        "empty"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "nails",
+      "name": "釘",
+      "kind": "ammo",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/icons/nails.png",
+      "inventory": "assets/icons/nails.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used-up"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "p9",
+      "name": "拳銃の弾",
+      "kind": "ammo",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/stacks/ammo-9mm.png",
+      "inventory": "assets/icons/p9.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used-up"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "shell",
+      "name": "散弾",
+      "kind": "ammo",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/stacks/ammo-12g.png",
+      "inventory": "assets/icons/shell.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used-up"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "rifle",
+      "name": "猟銃",
+      "kind": "weapon",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/icons/rifle.png",
+      "inventory": "assets/icons/rifle.png",
+      "states": [
+        "lying",
+        "in-case",
+        "held",
+        "empty"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "rifle-ammo",
+      "name": "猟銃の弾",
+      "kind": "ammo",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/icons/rifleAmmo.png",
+      "inventory": "assets/icons/rifleAmmo.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used-up"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "bandage",
+      "name": "包帯",
+      "kind": "med",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/icons/bandage.png",
+      "inventory": "assets/icons/bandage.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used-up"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "disinfect",
+      "name": "消毒液",
+      "kind": "part",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/icons/disinfect.png",
+      "inventory": "assets/icons/disinfect.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "aidkit",
+      "name": "手当てセット",
+      "kind": "med",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/stacks/medkit.png",
+      "inventory": "assets/icons/aidkit.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "medkit",
+      "name": "救急箱",
+      "kind": "med",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/stacks/medkit.png",
+      "inventory": "assets/icons/medkit.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "canned",
+      "name": "缶詰",
+      "kind": "med",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/icons/canned.png",
+      "inventory": "assets/icons/canned.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used-up"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "water",
+      "name": "水",
+      "kind": "med",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/icons/water.png",
+      "inventory": "assets/icons/water.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "powder",
+      "name": "火薬",
+      "kind": "part",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/icons/powder.png",
+      "inventory": "assets/icons/powder.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "casing",
+      "name": "空の薬莢",
+      "kind": "part",
+      "collectable": true,
+      "examinable": false,
+      "world": "assets/icons/casing.png",
+      "inventory": "assets/icons/casing.png",
+      "states": [
+        "lying",
+        "in-case",
+        "used-up"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "p-e-n-l-i-g-h-t",
+      "name": "ペンライト",
+      "kind": "story",
+      "collectable": true,
+      "examinable": true,
+      "world": "assets/icons/PENLIGHT.png",
+      "inventory": "assets/icons/PENLIGHT.png",
+      "examine": "assets/icons/PENLIGHT.png",
+      "states": [
+        "carried"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "s-t-e-t-h-o",
+      "name": "聴診器",
+      "kind": "story",
+      "collectable": true,
+      "examinable": true,
+      "world": "assets/icons/STETHO.png",
+      "inventory": "assets/icons/STETHO.png",
+      "examine": "assets/icons/STETHO.png",
+      "states": [
+        "carried"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "p-h-s",
+      "name": "当直のPHS",
+      "kind": "story",
+      "collectable": true,
+      "examinable": true,
+      "world": "assets/icons/PHS.png",
+      "inventory": "assets/icons/PHS.png",
+      "examine": "assets/icons/PHS.png",
+      "states": [
+        "carried"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "k-e-y-c-a-r-d",
+      "name": "警備のカード",
+      "kind": "story",
+      "collectable": true,
+      "examinable": true,
+      "world": "assets/icons/KEYCARD.png",
+      "inventory": "assets/icons/KEYCARD.png",
+      "examine": "assets/icons/KEYCARD.png",
+      "states": [
+        "in-box",
+        "carried"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "k-e-y-r-i-n-g",
+      "name": "霊安室の鍵束",
+      "kind": "story",
+      "collectable": true,
+      "examinable": true,
+      "world": "assets/icons/KEYRING.png",
+      "inventory": "assets/icons/KEYRING.png",
+      "examine": "assets/icons/KEYRING.png",
+      "states": [
+        "in-box",
+        "carried"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "i-n-s-u-l-i-n",
+      "name": "インスリン",
+      "kind": "story",
+      "collectable": true,
+      "examinable": true,
+      "world": "assets/icons/INSULIN.png",
+      "inventory": "assets/icons/INSULIN.png",
+      "examine": "assets/icons/INSULIN.png",
+      "states": [
+        "in-box",
+        "carried"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "a-n-t-i-b-i-o",
+      "name": "抗生物質",
+      "kind": "story",
+      "collectable": true,
+      "examinable": true,
+      "world": "assets/icons/ANTIBIO.png",
+      "inventory": "assets/icons/ANTIBIO.png",
+      "examine": "assets/icons/ANTIBIO.png",
+      "states": [
+        "in-box",
+        "carried"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "f-i-r-e-k-e-y",
+      "name": "消防団の鍵",
+      "kind": "story",
+      "collectable": true,
+      "examinable": true,
+      "world": "assets/icons/FIREKEY.png",
+      "inventory": "assets/icons/FIREKEY.png",
+      "examine": "assets/icons/FIREKEY.png",
+      "states": [
+        "in-box",
+        "carried"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "l-i-f-t-k-e-y",
+      "name": "エレベーターの鍵",
+      "kind": "story",
+      "collectable": true,
+      "examinable": true,
+      "world": "assets/icons/LIFTKEY.png",
+      "inventory": "assets/icons/LIFTKEY.png",
+      "examine": "assets/icons/LIFTKEY.png",
+      "states": [
+        "in-box",
+        "carried"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "r-o-o-f-k-e-y",
+      "name": "屋上の鍵",
+      "kind": "story",
+      "collectable": true,
+      "examinable": true,
+      "world": "assets/icons/ROOFKEY.png",
+      "inventory": "assets/icons/ROOFKEY.png",
+      "examine": "assets/icons/ROOFKEY.png",
+      "states": [
+        "in-box",
+        "carried"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "station-c-a-r-t",
+      "name": "救急カート",
+      "kind": "station",
+      "collectable": false,
+      "examinable": false,
+      "world": "assets/stacks/crash-cart.png",
+      "states": [
+        "closed",
+        "opened"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "station-t-o-o-l",
+      "name": "工具箱",
+      "kind": "station",
+      "collectable": false,
+      "examinable": false,
+      "world": "assets/stacks/toolbox.png",
+      "states": [
+        "closed",
+        "opened"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "station-s-a-f-e",
+      "name": "警備室の金庫",
+      "kind": "station",
+      "collectable": false,
+      "examinable": false,
+      "world": "assets/stacks/safe.png",
+      "states": [
+        "closed",
+        "opened"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "station-r-a-d-i-o",
+      "name": "防災無線の受信機",
+      "kind": "station",
+      "collectable": false,
+      "examinable": false,
+      "world": "assets/stacks/radio.png",
+      "states": [
+        "closed",
+        "opened"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "station-b-r-e-a-k-e-r",
+      "name": "配電盤",
+      "kind": "station",
+      "collectable": false,
+      "examinable": false,
+      "world": "assets/stacks/breaker.png",
+      "states": [
+        "closed",
+        "opened"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "station-b-o-a-r-d",
+      "name": "交換台",
+      "kind": "station",
+      "collectable": false,
+      "examinable": false,
+      "world": "assets/stacks/switchboard.png",
+      "states": [
+        "closed",
+        "opened"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "station-t-a-p-e",
+      "name": "録音機",
+      "kind": "station",
+      "collectable": false,
+      "examinable": false,
+      "world": "assets/stacks/tape-deck.png",
+      "states": [
+        "closed",
+        "opened"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "station-r-a-c-k",
+      "name": "銃の保管庫",
+      "kind": "station",
+      "collectable": false,
+      "examinable": false,
+      "world": "assets/stacks/gun-rack-full.png",
+      "states": [
+        "full",
+        "half",
+        "empty"
+      ],
+      "pixelArt": true
+    },
+    {
+      "id": "station-r-i-f-l-e",
+      "name": "会長室の銃のケース",
+      "kind": "station",
+      "collectable": false,
+      "examinable": false,
+      "world": "assets/stacks/rifle-case.png",
+      "states": [
+        "closed",
+        "opened"
+      ],
+      "pixelArt": true
+    }
+  ]
 }

@@ -41,7 +41,9 @@ for (const f of fs.readdirSync(path.join(ROOT, 'js/ext'))) {
   const src = fs.readFileSync(path.join(ROOT, 'js/ext', f), 'utf8');
   for (const m of src.matchAll(/ui\.say\('([^'$]{6,})'/g)) if (!/［|クリック|スマホ|\[/.test(m[1]) && !thoughts.includes(m[1])) thoughts.push(m[1]);
 }
-thoughts.forEach((text, i) => lines.set(`t-${i + 1}`, { id: `t-${i + 1}`, who: '私', text, dir: 'voice' }));
+// the file is named by the text (a hash), so a new thought in the code never shifts the others' recordings
+const tid = (text) => `t-${[...text].reduce((a, c) => (Math.imul(a, 31) + c.codePointAt(0)) >>> 0, 7).toString(36)}`;
+thoughts.forEach((text) => lines.set(tid(text), { id: tid(text), who: '私', text, dir: 'voice' }));
 // the zombies' voices: a voice line, then a filter (ffmpeg -af)
 const ROUGH = 'asetrate=24000*0.62,aresample=44100,acrusher=bits=6:mix=0.35,aecho=0.7:0.6:60|130:0.35|0.2,highpass=f=70,lowpass=f=3200,volume=1.6';
 const SFX = {
@@ -108,7 +110,7 @@ for (const job of pending) {
 console.log(`made ${n}`);
 const th = {};
 thoughts.forEach((text, i) => {
-  const f = `t-${i + 1}.mp3`, p = path.join(ROOT, 'assets/voice', f); if (!fs.existsSync(p)) return;
+  const f = `${tid(text)}.mp3`, p = path.join(ROOT, 'assets/voice', f); if (!fs.existsSync(p)) return;
   let sec = text.length * 0.13; try { sec = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', p]).toString().trim()) || sec; } catch {}
   th[`t${i + 1}`] = { text, file: f, sec: Math.round(sec * 10) / 10 };
 });

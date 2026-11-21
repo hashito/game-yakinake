@@ -111,7 +111,7 @@ export function installCase(ext, G) {
   const CELL = () => (Math.min(innerWidth, innerHeight * 1.6) < 560 ? 34 : 44);
   let host = null;
   C.open = (o = {}) => {
-    if (!ctx || ctx.wm.isOpen && ctx.wm.isOpen('case')) return;
+    if (!ctx || ctx.wm.isOpen && ctx.wm.current === 'case') return;
     C.atStore = !!o.store;
     ctx.wm.open('case', { title: o.store ? '保管箱とケース' : `ケース（${bagDim().name}）`, size: 'l', render: (el) => { host = el; draw(); }, onClose: () => { C.held = null; C.sel = null; host = null; G.emit && G.emit('case:change'); } });
   };
@@ -121,6 +121,14 @@ export function installCase(ext, G) {
   });
   document.addEventListener('keydown', (e) => { if (host && (e.code === 'KeyR') && C.held) { C.held.rot = C.held.rot ? 0 : 1; draw(); e.preventDefault(); } });
 
+  // the item's pixel picture (assets/icons, tools/dot/icons.py): drawn the long way; turned when the item stands
+  const ICON = new URL('../../assets/icons/', import.meta.url).href;
+  function iconHtml(id, w, h, cs) {
+    if (id === 'hands') return '';
+    const W = w * cs - 4, H = h * cs - 4, turn = h > w;
+    const st = turn ? `width:${H}px;height:${W}px;transform:translate(-50%,-50%) rotate(90deg)` : `width:${W}px;height:${H}px;transform:translate(-50%,-50%)`;
+    return `<img class="yk-ic" src="${ICON}${id}.png" alt="" style="${st}">`;
+  }
   function gridHtml(list, W, H, which) {
     const cs = CELL();
     let h = `<div class="yk-grid" data-which="${which}" style="width:${W * cs}px;height:${H * cs}px;--cs:${cs}px">`;
@@ -130,7 +138,7 @@ export function installCase(ext, G) {
       const eq = G.equip === it.uid ? ' yk-eq' : '';
       const sel = C.sel && C.sel.uid === it.uid ? ' yk-sel' : '';
       const gun = c.gun ? `<b class="yk-ammo">${it.loaded}/${c.gun.mag}</b>` : it.n > 1 ? `<b class="yk-ammo">×${it.n}</b>` : '';
-      h += `<button class="yk-it yk-k-${c.kind}${eq}${sel}" data-uid="${it.uid}" style="left:${it.x * cs + 2}px;top:${it.y * cs + 2}px;width:${w * cs - 4}px;height:${hh * cs - 4}px" aria-label="${esc(c.name)}"><span>${esc(c.name)}</span>${gun}</button>`;
+      h += `<button class="yk-it yk-k-${c.kind}${eq}${sel}" data-uid="${it.uid}" style="left:${it.x * cs + 2}px;top:${it.y * cs + 2}px;width:${w * cs - 4}px;height:${hh * cs - 4}px" aria-label="${esc(c.name)}">${iconHtml(it.id, w, hh, cs)}${w * hh === 1 ? '' : `<span>${esc(c.name)}</span>`}${gun}</button>`;
     }
     return h + '</div>';
   }

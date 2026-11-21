@@ -114,7 +114,20 @@
     "text": "[E] で話す",
     "done": "task"
    }
-  ]
+  ],
+  "minigame": {
+   "type": "footprint-track",
+   "cfg": {
+    "title": "ナースステーションの床",
+    "help": "床の血だまりを踏んだ足跡が、いくつも続いている。ナースサンダルの足跡だけを、ペンライトで追う。",
+    "clue": "slipper",
+    "clueText": "ナースサンダル：かかとのない、つっかけの跡",
+    "branches": 3,
+    "seed": 14,
+    "floor": "dust",
+    "end": "wall"
+   }
+  }
  },
  {
   "id": "T_RADIO",
@@ -352,7 +365,21 @@
   "optional": true,
   "needs": [
    "T_INSULIN"
-  ]
+  ],
+  "minigame": {
+   "type": "steam-letter",
+   "cfg": {
+    "title": "息子さんの封筒",
+    "help": "戸川さんの頼み：封を切らずに開けてほしい。ポットの湯気に封筒をかざして、のりを全部やわらかくしてから、ゆっくりはがす。",
+    "sender": "戸川 大輔",
+    "sections": 6,
+    "letter": {
+     "title": "親父へ",
+     "text": "倉庫の鍵、入れとく。南京錠の赤い札のやつ。\n俺は駅のほうの手伝いに行く。朝には戻る。\nインスリン、ちゃんと打てよ。看護師さんの言うこと聞けよ。\n　　　　　　　　大輔",
+     "paper": "note"
+    }
+   }
+  }
  },
  {
   "id": "T_REI",
@@ -1023,7 +1050,7 @@
     "emphasis": "station:S_EVID"
    },
    {
-    "text": "[E] でロッカーを照らす",
+    "text": "[E] でフィルムを現像する",
     "done": "task"
    }
   ],
@@ -1032,29 +1059,10 @@
    "T_GEN"
   ],
   "minigame": {
-   "type": "search-dark",
+   "type": "darkroom-develop",
    "cfg": {
-    "title": "押収品のロッカー",
-    "help": "ペンライトで照らして、札のついた押収品を全部見つける。",
-    "image": "assets/photos/mg-locker.webp",
-    "marks": [
-     {
-      "x": 0.3,
-      "y": 0.4,
-      "label": "散弾銃"
-     },
-     {
-      "x": 0.68,
-      "y": 0.7,
-      "label": "散弾の箱"
-     },
-     {
-      "x": 0.52,
-      "y": 0.22,
-      "label": "押収品の札"
-     }
-    ],
-    "r": 0.22
+    "title": "押収品のカメラ",
+    "help": "ロッカーは五十もある。押収品のカメラに残ったフィルムに、散弾銃をしまう所が写っているはず。保管庫の奥の暗室で現像する。印画紙を現像液・停止液・定着液の順に。"
    }
   }
  },
