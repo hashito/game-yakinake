@@ -1,0 +1,12 @@
+[
+ {"id": "chisato", "family": "character", "variant": "nurse", "params": {"res": 2, "hair": "#2a1e18", "hairstyle": "bun"}, "motions": ["idle", "walk", "fear", "reach", "turn"]},
+ {"id": "genzo", "family": "character", "variant": "elderly", "params": {"res": 2, "top": "#9cb4c4", "bottom": "#8ea4b4", "cane": false}, "motions": ["idle", "walk", "sit", "turn"]},
+ {"id": "gondo", "family": "character", "variant": "worker", "params": {"res": 2, "top": "#6a4a2a", "bottom": "#2e2a26", "cap": false, "hair": "#3a3430", "hairstyle": "short"}, "motions": ["idle", "walk", "attack", "fear", "turn"]},
+ {"id": "nishina", "family": "character", "variant": "casual", "params": {"res": 2, "top": "#c84a2a", "bottom": "#2a3040", "hair": "#1a1410"}, "motions": ["idle", "walk", "attack", "fear", "turn"]},
+ {"id": "shirasaka", "family": "character", "variant": "elderly", "params": {"res": 2, "top": "#e8e4d8", "bottom": "#d8d4c8", "cane": false}, "motions": ["idle", "walk", "fear", "reach", "turn"]},
+ {"id": "taeko", "family": "character", "variant": "casual-woman", "params": {"res": 2, "top": "#e0dcd0", "bottom": "#d0ccc0", "hair": "#1a1410", "hairstyle": "long"}, "motions": ["idle", "walk", "fear", "attack", "turn"]},
+ {"id": "katagiri", "family": "character", "variant": "explorer-woman", "params": {"res": 2, "top": "#2c3a5c", "bottom": "#26304a", "shoes": "#141414", "hair": "#1a1410", "hairstyle": "ponytail", "backpack": false}, "motions": ["idle", "walk", "reach", "turn", "fear"]},
+ {"id": "mori", "family": "character", "variant": "police", "params": {"res": 2}, "motions": ["idle", "walk", "fear", "turn"]},
+ {"id": "noguchi", "family": "character", "variant": "elderly", "params": {"res": 2, "top": "#4a5468", "bottom": "#2e3444", "cane": false}, "motions": ["idle", "sit", "fear", "turn", "walk"]},
+ {"id": "hayase", "family": "character", "variant": "office", "params": {"res": 2, "top": "#3a3a40", "bottom": "#2a2a30"}, "motions": ["idle", "walk", "fear", "turn"]}
+]

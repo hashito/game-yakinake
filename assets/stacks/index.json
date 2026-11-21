@@ -1,0 +1,359 @@
+{
+ "bench": {
+  "w": 77,
+  "d": 16,
+  "n": 27,
+  "src": "env-props-bench-waiting",
+  "mpp": 0.025
+ },
+ "locker": {
+  "w": 31,
+  "d": 22,
+  "n": 74,
+  "src": "props-locker",
+  "mpp": 0.025
+ },
+ "desk": {
+  "w": 49,
+  "d": 26,
+  "n": 42,
+  "src": "hikage-office-desk",
+  "mpp": 0.025
+ },
+ "steel-desk": {
+  "w": 49,
+  "d": 27,
+  "n": 45,
+  "src": "hikage-meas-desk",
+  "mpp": 0.025
+ },
+ "counter": {
+  "w": 55,
+  "d": 24,
+  "n": 39,
+  "src": "props-counter",
+  "mpp": 0.025
+ },
+ "shelf": {
+  "w": 37,
+  "d": 17,
+  "n": 57,
+  "src": "hikage-supply-shelf",
+  "mpp": 0.025
+ },
+ "shop-shelf": {
+  "w": 41,
+  "d": 17,
+  "n": 49,
+  "src": "kuromado-shop-shelf",
+  "mpp": 0.025
+ },
+ "bed": {
+  "w": 39,
+  "d": 83,
+  "n": 27,
+  "src": "game-bed",
+  "mpp": 0.025
+ },
+ "drum": {
+  "w": 33,
+  "d": 31,
+  "n": 36,
+  "src": "atmos-k3-drum-rust",
+  "mpp": 0.025
+ },
+ "crate": {
+  "w": 23,
+  "d": 21,
+  "n": 14,
+  "src": "env-props-crate-slat",
+  "mpp": 0.025
+ },
+ "pallet": {
+  "w": 29,
+  "d": 26,
+  "n": 13,
+  "src": "env-props-pallet",
+  "mpp": 0.025
+ },
+ "body-cabinets": {
+  "w": 73,
+  "d": 16,
+  "n": 48,
+  "src": "minase-body-cabinets",
+  "mpp": 0.05
+ },
+ "vending": {
+  "w": 32,
+  "d": 32,
+  "n": 71,
+  "src": "env-props-vending-machine",
+  "mpp": 0.025
+ },
+ "fridge": {
+  "w": 26,
+  "d": 30,
+  "n": 67,
+  "src": "props-fridge",
+  "mpp": 0.025
+ },
+ "table": {
+  "w": 49,
+  "d": 33,
+  "n": 33,
+  "src": "kuromado-dining-table",
+  "mpp": 0.025
+ },
+ "generator": {
+  "w": 30,
+  "d": 19,
+  "n": 23,
+  "src": "game-generator",
+  "mpp": 0.025
+ },
+ "server": {
+  "w": 44,
+  "d": 58,
+  "n": 150,
+  "src": "arakawa-server-rack",
+  "mpp": 0.0125
+ },
+ "sofa": {
+  "w": 122,
+  "d": 40,
+  "n": 50,
+  "src": "arakawa-sofa",
+  "mpp": 0.0125
+ },
+ "car-doors-open": {
+  "w": 182,
+  "d": 88,
+  "n": 48,
+  "src": "yakinake-car-doors-open",
+  "mpp": 0.025
+ },
+ "car-stalled": {
+  "w": 184,
+  "d": 74,
+  "n": 48,
+  "src": "yakinake-car-stalled",
+  "mpp": 0.025
+ },
+ "car-stalled-red": {
+  "w": 184,
+  "d": 74,
+  "n": 48,
+  "src": "yakinake-car-stalled-red",
+  "mpp": 0.025
+ },
+ "car-burnt": {
+  "w": 184,
+  "d": 88,
+  "n": 48,
+  "src": "yakinake-car-burnt",
+  "mpp": 0.025
+ },
+ "police-car": {
+  "w": 182,
+  "d": 74,
+  "n": 56,
+  "src": "yakinake-police-car",
+  "mpp": 0.025
+ },
+ "ambulance": {
+  "w": 206,
+  "d": 78,
+  "n": 96,
+  "src": "yakinake-ambulance",
+  "mpp": 0.025
+ },
+ "bus-side": {
+  "w": 330,
+  "d": 102,
+  "n": 80,
+  "src": "yakinake-bus-side",
+  "mpp": 0.03
+ },
+ "helicopter": {
+  "w": 371,
+  "d": 356,
+  "n": 108,
+  "src": "yakinake-helicopter",
+  "mpp": 0.03
+ },
+ "crash-cart": {
+  "w": 29,
+  "d": 23,
+  "n": 43,
+  "src": "yakinake-crash-cart",
+  "mpp": 0.025
+ },
+ "toolbox": {
+  "w": 25,
+  "d": 13,
+  "n": 15,
+  "src": "yakinake-toolbox",
+  "mpp": 0.025
+ },
+ "gun-rack-full": {
+  "w": 94,
+  "d": 34,
+  "n": 146,
+  "src": "yakinake-gun-rack-full",
+  "mpp": 0.0125
+ },
+ "gun-rack-half": {
+  "w": 94,
+  "d": 34,
+  "n": 146,
+  "src": "yakinake-gun-rack-half",
+  "mpp": 0.0125
+ },
+ "gun-rack-empty": {
+  "w": 94,
+  "d": 34,
+  "n": 146,
+  "src": "yakinake-gun-rack-empty",
+  "mpp": 0.0125
+ },
+ "rifle-case": {
+  "w": 122,
+  "d": 30,
+  "n": 16,
+  "src": "yakinake-rifle-case",
+  "mpp": 0.0125
+ },
+ "safe": {
+  "w": 21,
+  "d": 22,
+  "n": 28,
+  "src": "kushi-q1-safe",
+  "mpp": 0.025
+ },
+ "switchboard": {
+  "w": 43,
+  "d": 20,
+  "n": 62,
+  "src": "kuromado-switchboard",
+  "mpp": 0.025
+ },
+ "radio": {
+  "w": 21,
+  "d": 13,
+  "n": 16,
+  "src": "atmos-k5-radio-tube",
+  "mpp": 0.025
+ },
+ "breaker": {
+  "w": 31,
+  "d": 21,
+  "n": 50,
+  "src": "minase-m2-breaker",
+  "mpp": 0.025
+ },
+ "tape-deck": {
+  "w": 33,
+  "d": 21,
+  "n": 11,
+  "src": "game-yukishiro-tapeDeck",
+  "mpp": 0.007
+ },
+ "barricade": {
+  "w": 53,
+  "d": 15,
+  "n": 30,
+  "src": "arakawa-barricade",
+  "mpp": 0.025
+ },
+ "sandbags": {
+  "w": 73,
+  "d": 28,
+  "n": 14,
+  "src": "atmos-k3-sandbags",
+  "mpp": 0.025
+ },
+ "cone": {
+  "w": 17,
+  "d": 17,
+  "n": 28,
+  "src": "env-props-traffic-cone",
+  "mpp": 0.025
+ },
+ "street-lamp": {
+  "w": 9,
+  "d": 21,
+  "n": 90,
+  "src": "env-props-street-lamp",
+  "mpp": 0.025
+ },
+ "pole": {
+  "w": 58,
+  "d": 18,
+  "n": 194,
+  "src": "arakawa-utility-pole",
+  "mpp": 0.0125
+ },
+ "iv-fallen": {
+  "w": 79,
+  "d": 24,
+  "n": 33,
+  "src": "atmos-k2-iv-fallen",
+  "mpp": 0.025
+ },
+ "wheelchair": {
+  "w": 25,
+  "d": 33,
+  "n": 39,
+  "src": "atmos-k2-wheelchair-overturned",
+  "mpp": 0.025
+ },
+ "gurney": {
+  "w": 30,
+  "d": 77,
+  "n": 32,
+  "src": "atmos-k2-gurney-slipped",
+  "mpp": 0.025
+ },
+ "collapsed-shelf": {
+  "w": 39,
+  "d": 66,
+  "n": 9,
+  "src": "atmos-k3-collapsed-shelf",
+  "mpp": 0.025
+ },
+ "pistol": {
+  "w": 22,
+  "d": 15,
+  "n": 4,
+  "src": "game-arakawa-pistol",
+  "mpp": 0.007
+ },
+ "shotgun": {
+  "w": 22,
+  "d": 15,
+  "n": 4,
+  "src": "game-arakawa-shotgun",
+  "mpp": 0.007
+ },
+ "medkit": {
+  "w": 21,
+  "d": 13,
+  "n": 12,
+  "src": "game-arakawa-medkit",
+  "mpp": 0.007
+ },
+ "ammo-9mm": {
+  "w": 19,
+  "d": 11,
+  "n": 11,
+  "src": "game-arakawa-ammo-9mm",
+  "mpp": 0.007
+ },
+ "ammo-12g": {
+  "w": 19,
+  "d": 11,
+  "n": 11,
+  "src": "game-arakawa-ammo-12g",
+  "mpp": 0.007
+ }
+}

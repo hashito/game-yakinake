@@ -340,7 +340,9 @@
     "js\\kit\\moments.js": "2ceefac9e3f6",
     "js\\kit\\dot-zombie.js": "b9679a9ebd7c",
     "js\\kit\\sprite-stack-mesh.js": "11e65f7be71f",
-    "js\\kit\\sprite-stack-anim.js": "760d53cbfba8"
+    "js\\kit\\sprite-stack-anim.js": "760d53cbfba8",
+    "js\\kit\\mg-library.js": "fcc07a893fef",
+    "js\\kit\\mg-sound.js": "1de7c0b9326b"
   },
   "textures": []
 }

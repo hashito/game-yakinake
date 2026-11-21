@@ -1,5 +1,47 @@
-/* The look of 夜勤明けの街: override design tokens only (see css/theme.css for the list). Start from a kit theme (data-theme in
-   index.html and game.json "theme": dark-industrial | paper-light | retro-crt) and change what is yours. */
+/* The look of 夜勤明けの街: the kit's dark-industrial theme in the colours of a hospital at night (cold teal, sodium orange),
+   plus the game's own HUD (body, weapon, ammo; the part under the sights; being grabbed) and the grid case. */
 [data-theme="dark-industrial hospital-cold"] {
-  /* --gf-accent: #d98a2b;  --gf-accent-ink: #1a1206;  --gf-radius: 4px;  --gf-font: 'Noto Sans JP', sans-serif; */
+  --gf-accent: #d08a2a; --gf-accent-ink: #1a1208; --gf-accent-2: #f0aa48; --gf-heading: #b4c8c2;
 }
+
+/* ---- HUD: body and weapon (top left, a kit HUD slot) ---- */
+.yk-status { display: grid; gap: 4px; min-width: 150px; padding: 6px 8px; border-radius: 6px; background: rgba(8, 12, 14, 0.78); color: #dde8e2; font-size: 14px; }
+.yk-hp { /* pair-ok */ height: 10px; border-radius: 3px; background: #26363a; overflow: hidden; }
+.yk-hp i { /* pair-ok */ display: block; height: 100%; background: #8aa3a0; transition: width 0.2s; }
+.yk-hp.low i { /* pair-ok */ background: #e04a34; }
+.yk-w { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.yk-wn { font-weight: 700; color: #f6faf6; }
+.yk-wa { color: #ffd890; font-variant-numeric: tabular-nums; }
+/* the weapon in the hand, bottom right of the view */
+.yk-weapon { position: fixed; right: 18%; bottom: 0; width: 288px; height: 192px; image-rendering: pixelated; pointer-events: none; z-index: 4; display: none; }
+body.yk-playing .yk-weapon { display: block; }
+html[data-input="touch"] .yk-weapon { right: 34%; width: 192px; height: 128px; }
+/* what the part under the sights does (the first zombies teach it) */
+.yk-part { position: fixed; left: 50%; top: calc(50% + 34px); transform: translateX(-50%); padding: 3px 10px; border-radius: 4px; background: rgba(8, 12, 14, 0.8); color: #ffd890; font-size: 15px; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 5; white-space: nowrap; }
+.yk-part.on { opacity: 1; }
+/* hurt: the edge of the view goes red */
+.yk-blood { /* pair-ok */ position: fixed; inset: 0; pointer-events: none; z-index: 3; opacity: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(110, 20, 20, 0.85) 100%); transition: opacity 0.3s; }
+.yk-grab { position: fixed; left: 50%; top: 22%; transform: translateX(-50%); padding: 8px 16px; border-radius: 6px; background: #6e1414; color: #ffffff; font-size: 18px; font-weight: 700; display: none; z-index: 6; pointer-events: none; }
+.yk-grab.on { display: block; }
+
+/* ---- the grid case ---- */
+.yk-case { display: grid; gap: 12px; color: var(--gf-text); }
+.yk-help { margin: 0; font-size: 15px; }
+.yk-grids { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.yk-grids h4 { margin: 0 0 6px; font-size: 15px; color: var(--gf-heading); }
+.yk-grid { /* pair-ok */ position: relative; background: #121a1e; border: 2px solid #4a6264; border-radius: 4px; touch-action: manipulation; }
+.yk-cell { position: absolute; width: var(--cs); height: var(--cs); box-sizing: border-box; border: 1px solid #26363a; }
+.yk-it { position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 2px; border-radius: 4px; border: 2px solid #8aa3a0; background: #35494c; color: #f6faf6; font-size: 13px; line-height: 1.15; text-align: center; overflow: hidden; cursor: pointer; }
+.yk-it span { overflow: hidden; }
+.yk-it.yk-k-weapon { background: #46609a; color: #ffffff; border-color: #7a96d0; }
+.yk-it.yk-k-ammo { background: #70491a; color: #ffffff; border-color: #d08a2a; }
+.yk-it.yk-k-med { background: #e2ad8c; color: #3a0a0a; border-color: #a8221e; }
+.yk-it.yk-k-part { background: #4a4642; color: #f6faf6; border-color: #a8a29a; }
+.yk-it.yk-eq { box-shadow: inset 0 0 0 2px #ffd890; }
+.yk-it.yk-sel { outline: 3px solid #ffd890; outline-offset: -1px; z-index: 2; }
+.yk-ammo { position: absolute; right: 3px; bottom: 1px; font-size: 12px; color: #ffd890; background: rgba(5, 7, 10, 0.75); padding: 0 3px; border-radius: 3px; }
+.yk-info { min-height: 2.6em; font-size: 15px; }
+.yk-acts, .yk-gore { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.yk-acts button, .yk-gore button { min-height: 44px; padding: 6px 14px; font-size: 15px; border-radius: 6px; border: 1px solid var(--gf-border-strong); background: var(--gf-surface-2); color: var(--gf-text); cursor: pointer; }
+.yk-acts button.on, .yk-gore button.on { background: var(--gf-accent); color: var(--gf-accent-ink); border-color: var(--gf-accent); }
+.yk-gore { font-size: 14px; color: var(--gf-text-dim); }

@@ -1,0 +1,104 @@
+{
+ "id": "chisato",
+ "w": 61,
+ "d": 90,
+ "n": 168,
+ "pivot": [
+  30,
+  38
+ ],
+ "mpp": 0.0125,
+ "res": 2,
+ "frames": [
+  "idle.1",
+  "idle.2",
+  "idle.3",
+  "idle.4",
+  "walk.1",
+  "walk.2",
+  "walk.3",
+  "walk.4",
+  "walk.5",
+  "walk.6",
+  "walk.7",
+  "walk.8",
+  "fear.1",
+  "fear.2",
+  "reach.1",
+  "reach.2",
+  "reach.3",
+  "turn.1",
+  "turn.2",
+  "turn.3",
+  "turn.4"
+ ],
+ "motions": {
+  "idle": {
+   "frames": [
+    "idle.1",
+    "idle.2",
+    "idle.3",
+    "idle.4"
+   ],
+   "fps": 2,
+   "loop": true,
+   "fallback": null
+  },
+  "walk": {
+   "frames": [
+    "walk.1",
+    "walk.2",
+    "walk.3",
+    "walk.4",
+    "walk.5",
+    "walk.6",
+    "walk.7",
+    "walk.8"
+   ],
+   "fps": 8,
+   "stride": 1.4,
+   "loop": true,
+   "fallback": "idle"
+  },
+  "fear": {
+   "frames": [
+    "fear.1",
+    "fear.2"
+   ],
+   "fps": 2,
+   "loop": true,
+   "fallback": "crouch"
+  },
+  "reach": {
+   "frames": [
+    "reach.1",
+    "reach.2",
+    "reach.2",
+    "reach.3"
+   ],
+   "fps": 6,
+   "loop": false,
+   "fallback": "paste"
+  },
+  "turn": {
+   "frames": [
+    "turn.1",
+    "turn.2",
+    "turn.3",
+    "turn.4"
+   ],
+   "fps": 6,
+   "loop": true,
+   "fallback": "walk"
+  }
+ },
+ "src": {
+  "family": "character",
+  "variant": "nurse",
+  "params": {
+   "res": 2,
+   "hair": "#2a1e18",
+   "hairstyle": "bun"
+  }
+ }
+}

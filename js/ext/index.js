@@ -1,30 +1,47 @@
-// Extension module of 夜勤明けの街: the ONLY place for game-specific code. Talk to the standard through `ext` (js/kit/ext.js):
-// events (ext.on / ext.emit), registerTask / registerMinigame / registerMonster / registerScreen / registerTab / registerInteract / registerTheme.
-// Do not reach into the DOM of the kit's windows; use the events and the data files. See docs/standard-3d.md in game-kit.
+// 夜勤明けの街: the game's own code. One small shared state (G) and its events (G.on / G.emit); the parts in the order they need each other:
+//   sound.js   the shots, strikes and the zombies' voices          case.js     the grid case, the storage box, loot, boxes
+//   combat.js  weapons, aiming, the body, the HUD                  zombies.js  the dot zombies (spawns.js: where they are)
+//   people.js  the people (dot figures) and the ones who fight     story.js    talks, choices, factions, saves, the roof, the endings
+// The dot look of the world (furniture, cars, light) is js/dot/index.js.
+import { installSound } from './sound.js';
+import { installCase } from './case.js';
+import { installCombat } from './combat.js';
+import { installZombies } from './zombies.js';
+import { installPeople } from './people.js';
+import { installStory } from './story.js';
+import { LOOT } from './loot.js';
+
 export default function (ext) {
-  // The opening conversation (standard 1.7): data/talk.json "opening" in the standard conversation window; ?qa (tests) skips the window
-  let ctx = null;
-  ext.on('game:ready', (c) => { ctx = c; });
-  ext.on('game:start', ({ resume }) => { if (!resume && ctx) ctx.talk('opening', { title: 'はじまり', last: '始める' }); });
-
-  // Example: react to events
-  ext.on('task:done', ({ id }) => console.log('task done:', id));
-
-  // Example (1.7): a choice -> const v = await ctx.choose({ who: '電話', text: '出る？', options: [{ id: 'no', label: '出ない' }, { id: 'yes', label: '出る', primary: true }] });
-  // Example (1.7): your monster's look -> ext.registerLook('shadow', (o) => ({ root, update(dt, st, cam) {}, respawn() {}, dispose() {} })); monsters.json "look": "shadow"
-  // Example (1.7): a timed task -> tasks.json { "id": "T3", ..., "timer": { "seconds": 90, "label": "朝まで" } }, ext.registerTask('T3', { beforeDone: (ctx) => ctx.talk('dawn') })
-
-  // Example: a task that needs code (replaces the default "play the mini game")
-  // ext.registerTask('T2', { canStart: (ctx) => ctx.state.inv.includes('I1') || '社員証が要る。', onDone: (ctx) => ctx.ui.say('錠が外れた。') });
-
-  // Example: your own mini game type (then list it in game.json "minigames" and use it in tasks.json: { "type": "radio" })
-  // ext.registerMinigame('radio', { mount: (host, cfg, ctx) => new Promise((done) => { host.innerHTML = '<button>OK</button>'; host.firstChild.onclick = () => done(true); }) });
-
-  // Example: a monster (create once, update every frame)
-  // ext.registerMonster('lurker', { create: (ctx) => ({ update(dt, ctx) { /* ctx.camera.position, ctx.world.roomAt(...) , ctx.die('caught') */ } }) });
-
-  // Example: a tab in the pause menu
-  // ext.registerTab('memo', { label: 'メモ', order: 50, render: (host, ctx) => { host.textContent = '…'; } });
-
-  // TODO(shell): when the window manager / map-svg / step-guide land in game-kit, their registration goes here too.
+  const L = {};
+  const G = {
+    lootDefs: LOOT,
+    on: (ev, fn) => { (L[ev] = L[ev] || []).push(fn); },
+    emit: (ev, e) => { for (const fn of L[ev] || []) { try { fn(e); } catch (err) { console.error('[yakinake]', ev, err); } } },
+  };
+  installSound(ext, G);
+  installCase(ext, G);
+  installCombat(ext, G);
+  installZombies(ext, G);
+  installPeople(ext, G);
+  installStory(ext, G);
+  G.targets = () => [...(G.zombieTargets ? G.zombieTargets() : []), ...(G.peopleTargets ? G.peopleTargets() : [])];
+  // what stops a bullet: the walls, doors, floors and furniture of the world (not the pickups, the people or the marks)
+  let solid = [], solidAt = -1e9;
+  G.solidMeshes = () => {
+    const now = performance.now();
+    if (now - solidAt > 2000 && G.ctx) {
+      solidAt = now; solid = [];
+      G.ctx.world.group.traverse((o) => {
+        if (!o.isMesh || o.visible === false || !o.material || o.material.visible === false) return;
+        const n = String(o.name || ''), pn = String((o.parent && o.parent.name) || '');
+        if (/^(station|item|doc|loot|log|person|zombie|stlook|lamp|warm)/.test(n) || /^(station|item|doc|loot|log|person|zombie)/.test(pn)) return;
+        if (o.material.transparent && o.material.opacity < 0.5) return;
+        solid.push(o);
+      });
+    }
+    return solid;
+  };
+  ext.on('game:ready', (ctx) => { G.ctx = ctx; if (typeof window !== 'undefined') window.__yk = G; });
+  ext.on('player:dead', () => { G.deaths = (G.deaths || 0) + 1; });
+  ext.on('bus:error', ({ name, error }) => console.error('[yakinake]', name, error && error.stack ? error.stack.split('\n').slice(0, 3).join(' ') : String(error)));
 }
