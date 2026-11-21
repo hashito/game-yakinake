@@ -138,21 +138,6 @@
         "id": "yk-melee"
       },
       {
-        "k": "KeyR",
-        "label": "装填",
-        "id": "yk-reload"
-      },
-      {
-        "k": "KeyQ",
-        "label": "持ち替え",
-        "id": "yk-swap"
-      },
-      {
-        "k": "KeyH",
-        "label": "手当て",
-        "id": "yk-heal"
-      },
-      {
         "k": "KeyB",
         "label": "ケース",
         "id": "yk-case"

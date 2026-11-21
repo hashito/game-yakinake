@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { buildStackGeometry, loadPixels, stripVolume } from '../kit/sprite-stack-mesh.js';
 import { palette, dotifyScene } from '../kit/dot-world.js';
 import { installPhotoHooks, preparePhotos } from './photos.js';
+import { autoFurniture } from '../kit/room-types.js';
 
 const AT = (p) => new URL(`../../${p}`, import.meta.url).href;
 export const YK_PALETTE = [
@@ -22,13 +23,18 @@ export const YK_PALETTE = [
 ];
 // furniture kind -> stack; furniture id -> stack where one piece wants its own part (the cars of the street)
 const FURN = { bench: 'bench', locker: 'locker', desk: 'desk', steelDesk: 'steel-desk', counter: 'counter', shelf: 'shelf', bed: 'bed', drum: 'drum',
-  crate: 'crate', pallet: 'pallet', bodyCabinets: 'body-cabinets', vendingMachine: 'vending', fridge: 'fridge', table: 'table', tank: 'generator', cabinet: 'server', car: 'car-stalled' };
+  crate: 'crate', pallet: 'pallet', bodyCabinets: 'body-cabinets', vendingMachine: 'vending', fridge: 'fridge', table: 'table', tank: 'generator', cabinet: 'server', car: 'car-stalled',
+  filingCabinet: 'locker', cardboardBox: 'crate' };
 const FURN_ID = { F_CAR1: 'car-doors-open', F_CAR2: 'car-stalled-red', F_AMBU: 'ambulance', F_CAR3: 'car-stalled', F_CAR4: 'car-burnt', F_CAR5: 'car-doors-open',
   F_CAR6: 'car-stalled-red', F_BUS: 'bus-side', F_SHOTEN_CAR: 'car-burnt', F_HIRO_CAR: 'police-car', F_P_CAR: 'police-car', F_P_CAR2: 'police-car', F_PL_CAR: 'car-stalled',
   F_MART_S1: 'shop-shelf', F_MART_S2: 'shop-shelf', F_YAMA_S1: 'shop-shelf', F_TOU_SOFA: 'sofa' };
 // the stations' own things (the box the weapon comes out of, the safe, the radio): a part standing at the station
 const STATION_PART = { S_CART: 'crash-cart', S_TOOL: 'toolbox', S_SAFE: 'safe', S_RADIO: 'radio', S_BREAKER: 'breaker', S_BOARD: 'switchboard', S_TAPE: 'tape-deck',
-  S_RACK: { k: 'gun-rack-full', after: [['T_RACK', () => (window.__yk && window.__yk.flags.rack === 'all' ? 'gun-rack-empty' : 'gun-rack-half')]] }, S_RIFLE: 'rifle-case' };
+  S_RACK: { k: 'gun-rack-full', after: [['T_RACK', () => (window.__yk && window.__yk.flags.rack === 'all' ? 'gun-rack-empty' : 'gun-rack-half')]] }, S_RIFLE: 'rifle-case',
+  S_NOTE: 'desk', S_MDESK: 'steel-desk', S_DRUGS: 'shelf', S_FCASE: 'toolbox', S_CAGE: 'locker', S_PACK: 'shop-shelf', S_AXE: 'locker', S_ROPE: 'barricade',
+  S_GEN: 'generator', S_RECORD: 'desk', S_EVID: 'locker', S_SERVER: 'server' };
+// stations whose thing is already there without a part: a person (their figure), a door or a lock (the door), the helipad (its Ｈ)
+const STATION_BARE = ['S_CHISATO', 'S_GENZO', 'S_GONDO', 'S_SHIRA', 'S_KATA', 'S_NOGUCHI', 'S_HAYASE', 'S_HELI', 'S_ODOOR', 'S_FORCE', 'S_ARMORY', 'S_MARTLOCK', 'S_SHUTTER'];
 const STATION_MOUNT = { S_TOOL: { y: 0, back: 0.2 }, S_RADIO: { y: 1.0, back: 0.1 }, S_BREAKER: { y: 0.9, wall: true }, S_TAPE: { y: 0.76 }, S_RIFLE: { y: 0.76 }, S_SAFE: { back: 0.1 } };
 // mood props: [room, k, x, z, face (rad), scale]
 const PROPS = [
@@ -96,7 +102,8 @@ export default async function dotLayer(ext, { manifest, data }) {
     const dress = (tries = 0) => {
       const ready = plan.furniture.some((f) => ctx.recipes && ctx.recipes.props && ctx.recipes.props.get(f.id));
       if (!ready && tries < 200) { setTimeout(() => dress(tries + 1), 50); return; }
-      for (const f of plan.furniture) {
+      // the plan's own furniture and the room types' furnishing (auto_*: shelves, lockers, desks along the walls)
+      for (const f of [...plan.furniture, ...autoFurniture(plan)]) {
         const obj = (ctx.recipes && ctx.recipes.props && ctx.recipes.props.get(f.id)) || W.group.getObjectByName(`prop:${f.id}`);
         const k = FURN_ID[f.id] || FURN[f.kind];
         if (!obj || !k || !index[k]) { D.furniture.push({ id: f.id, skipped: !obj ? 'no object' : 'no part' }); continue; }
@@ -128,6 +135,12 @@ export default async function dotLayer(ext, { manifest, data }) {
       W.group.add(m); D.stations.push([sid, S.k]);
       const old = W.group.getObjectByName(`stlook:${sid}`); if (old) old.traverse((x) => { if (x.isMesh) x.visible = false; });
       if (S.after) swaps.push({ m, after: S.after });
+    }
+    // the kit's grey stand-in box at each station is the thing you press: it stays (the ray still finds it), but unseen where a part
+    // or a figure or a door shows the thing instead
+    for (const sid of [...D.stations.map((x) => x[0]), ...STATION_BARE]) {
+      const o = W.interactables.find((x) => x.name === `station:${sid}`) || W.group.getObjectByName(`station:${sid}`);
+      if (o && o.isMesh && o.material) { o.material = o.material.clone(); o.material.visible = false; }
     }
     // ---- the mood props ----
     for (const [room, k, x, z, face = 0, s = 1] of PROPS) {

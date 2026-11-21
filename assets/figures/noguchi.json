@@ -1,0 +1,99 @@
+{
+ "id": "noguchi",
+ "w": 62,
+ "d": 82,
+ "n": 168,
+ "pivot": [
+  30,
+  30
+ ],
+ "mpp": 0.0125,
+ "res": 2,
+ "frames": [
+  "idle.1",
+  "idle.2",
+  "idle.3",
+  "idle.4",
+  "sit.1",
+  "fear.1",
+  "fear.2",
+  "turn.1",
+  "turn.2",
+  "turn.3",
+  "turn.4",
+  "walk.1",
+  "walk.2",
+  "walk.3",
+  "walk.4",
+  "walk.5",
+  "walk.6",
+  "walk.7",
+  "walk.8"
+ ],
+ "motions": {
+  "idle": {
+   "frames": [
+    "idle.1",
+    "idle.2",
+    "idle.3",
+    "idle.4"
+   ],
+   "fps": 2,
+   "loop": true,
+   "fallback": null
+  },
+  "sit": {
+   "frames": [
+    "sit.1"
+   ],
+   "loop": true,
+   "fallback": "crouch"
+  },
+  "fear": {
+   "frames": [
+    "fear.1",
+    "fear.2"
+   ],
+   "fps": 2,
+   "loop": true,
+   "fallback": "crouch"
+  },
+  "turn": {
+   "frames": [
+    "turn.1",
+    "turn.2",
+    "turn.3",
+    "turn.4"
+   ],
+   "fps": 6,
+   "loop": true,
+   "fallback": "walk"
+  },
+  "walk": {
+   "frames": [
+    "walk.1",
+    "walk.2",
+    "walk.3",
+    "walk.4",
+    "walk.5",
+    "walk.6",
+    "walk.7",
+    "walk.8"
+   ],
+   "fps": 8,
+   "stride": 1.4,
+   "loop": true,
+   "fallback": "idle"
+  }
+ },
+ "src": {
+  "family": "character",
+  "variant": "elderly",
+  "params": {
+   "res": 2,
+   "top": "#4a5468",
+   "bottom": "#2e3444",
+   "cane": false
+  }
+ }
+}

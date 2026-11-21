@@ -34,9 +34,9 @@ export function installStory(ext, G) {
 
   // ---------------------------------------------------------------- tasks
   const after = (id, fn) => ext.registerTask(id, { onDone: (c) => { try { fn(c); } catch (e) { console.error(e); } } });
-  ext.registerTask('T_CART', { run: async () => { G.case.give(BOXES.T_CART); const s = G.case.items.find((i) => i.id === 'scalpel'); if (s) G.equipUid(s.uid); ctx.ui.say('メスを持った。左クリック（スマホは「殴る」）で振る。ケースは[B]。', 7); await ctx.mapTip(); return true; } });
+  ext.registerTask('T_CART', { run: async () => { G.case.give(BOXES.T_CART); const s = G.case.items.find((i) => i.id === 'scalpel'); if (s) G.equipUid(s.uid); ctx.ui.say(ctx.isTouch ? 'メスを持った。「殴る」で振る。左上の武器の欄を押すと持ち替え。ケースは「ケース」。' : 'メスを持った。左クリックで振る。ケースは[B]、持ち替えは[Q]。', 7); await ctx.mapTip(); return true; } });
   ext.registerTask('T_TOOLBOX', { run: async () => { G.case.give(BOXES.T_TOOLBOX); const p = G.case.items.find((i) => i.id === 'pipe'); if (p) G.equipUid(p.uid); return true; } });
-  ext.registerTask('T_CASE', { canStart: () => (has('KEYRING') ? true : '鍵がかかっている。霊安室の机に、鍵束があるはず。'), run: async () => { G.case.give(BOXES.T_CASE); const n = G.case.items.find((i) => i.id === 'nailgun'); if (n) G.equipUid(n.uid); ctx.ui.say('釘打ち機。音が小さい。撃つと、釘が減る。[R]で装填。', 6); return true; } });
+  ext.registerTask('T_CASE', { canStart: () => (has('KEYRING') ? true : '鍵がかかっている。霊安室の机に、鍵束があるはず。'), run: async () => { G.case.give(BOXES.T_CASE); const n = G.case.items.find((i) => i.id === 'nailgun'); if (n) G.equipUid(n.uid); ctx.ui.say(ctx.isTouch ? '釘打ち機。音が小さい。撃つと、釘が減る。切れたら自動で込める（弾の数を押しても装填）。' : '釘打ち機。音が小さい。撃つと、釘が減る。[R]で装填。', 6); return true; } });
   ext.registerTask('T_AXE', { canStart: () => (has('FIREKEY') ? true : '南京錠がかかっている。鍵は、消防団の人が持っているはず。'), run: async () => { G.case.give(BOXES.T_AXE); return true; } });
   after('T_FUEL', () => G.case.give(BOXES.T_FUEL));
   after('T_SHOKO', () => { ctx.ui.say('写真の奥、ロッカーの前に、誰か立っている。……写っている札は、二十三番。', 6); G.case.give(BOXES.T_SHOKO); });

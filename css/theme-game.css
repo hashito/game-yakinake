@@ -49,3 +49,10 @@ html[data-input="touch"] .yk-weapon { right: 34%; width: 192px; height: 128px; }
 .yk-it .yk-ic { position: absolute; left: 50%; top: 50%; image-rendering: pixelated; pointer-events: none; opacity: 0.95; }
 .yk-it span { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 2px; background: rgba(5, 7, 10, 0.72); color: #f6faf6; font-size: 12px; line-height: 15px; white-space: nowrap; text-overflow: clip; }
 .yk-ammo { top: 1px; bottom: auto; line-height: 15px; z-index: 1; }
+/* touch: the status panel is the 手当て (bar) / 持ち替え (name) / 装填 (count) buttons */
+.yk-status.yk-tap { pointer-events: auto; }
+.yk-status.yk-tap .yk-hp { /* pair-ok */ height: 16px; cursor: pointer; }
+.yk-status.yk-tap .yk-w { display: flex; gap: 6px; }
+.yk-status.yk-tap .yk-wn, .yk-status.yk-tap .yk-wa { min-height: 28px; display: inline-flex; align-items: center; padding: 0 6px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); cursor: pointer; }
+.yk-status.yk-float { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 62px); left: calc(env(safe-area-inset-left, 0px) + 10px); z-index: 20; min-width: 0; }
+body:not(.yk-playing) .yk-status.yk-float { display: none; }

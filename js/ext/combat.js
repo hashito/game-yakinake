@@ -51,11 +51,25 @@ export function installCombat(ext, G) {
   ext.on('game:ready', (c) => {
     ctx = c;
     document.body.append(view, partTag, blood, grabTag);
-    if (ctx.registerHudPart) ctx.registerHudPart('yk-status', { slot: 'tl', order: 60, el });
-    else document.body.append(el);
+    if (ctx.isTouch) {   // a phone has no 装填 / 持ち替え / 手当て buttons (the right column stays short): the status panel takes them
+      el.classList.add('yk-tap');
+      const tap = (sel, f) => el.querySelector(sel).addEventListener('click', (e) => { e.stopPropagation(); if (!ctx.blocked || !ctx.blocked()) f(); });
+      tap('.yk-hp', () => quickHeal()); tap('.yk-wn', () => cycle(1)); tap('.yk-wa', () => reload());
+    }
+    place();
     hud();
   });
-  ext.on('game:start', () => { document.body.classList.add('yk-playing'); hud(); });
+  // a phone hides the top-left stack (#hud-left) behind the goal chip, so there the panel floats on its own under the chip:
+  // the body, the weapon and the count must stay in sight while fighting
+  let placed = '';
+  function place() {
+    const phone = document.body.classList.contains('gf-phone'), want = phone ? 'float' : 'slot';
+    if (want === placed) return; placed = want;
+    el.classList.toggle('yk-float', phone);
+    if (phone || !ctx.registerHudPart) document.body.append(el); else ctx.registerHudPart('yk-status', { slot: 'tl', order: 60, el });
+  }
+  addEventListener('resize', () => { if (ctx) setTimeout(place, 50); });
+  ext.on('game:start', () => { document.body.classList.add('yk-playing'); place(); hud(); });
 
   // ---------------------------------------------------------------- input
   const want = { fire: false, melee: false };
@@ -115,7 +129,7 @@ export function installCombat(ext, G) {
   };
   function shoot() {
     const h = heldNow(), g = h.c.gun;
-    if (h.it.loaded <= 0) { G.sfx('empty'); cool = 0.25; if (G.case.count(g.ammo)) reload(); else ctx.ui.say(`弾がない。${CATALOG[g.ammo].name}を探すか、[V]で殴る。`, 3, { urgent: true }); return; }
+    if (h.it.loaded <= 0) { G.sfx('empty'); cool = 0.25; if (G.case.count(g.ammo)) reload(); else ctx.ui.say(`弾がない。${CATALOG[g.ammo].name}を探すか、${ctx.isTouch ? '「殴る」' : '[V]'}で殴る。`, 3, { urgent: true }); return; }
     h.it.loaded -= 1; cool = g.rate; kick = 1; flashT = 0.06;
     G.sfx(h.it.id); G.noise(ctx.camera.position, g.noise);
     const base = aimRay().clone(), n = g.pellets || 1;
