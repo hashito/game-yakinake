@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { loadZombiePattern, createZombie, createGoreFx } from '../kit/dot-zombie.js';
 import { SPAWNS, PATTERNS } from './spawns.js';
+import { corpseLine } from './corpses.js';
 
 const ZDIR = new URL('../../assets/zombies/', import.meta.url).href;
 
@@ -94,6 +95,14 @@ export function installZombies(ext, G) {
   // ---------------------------------------------------------------- one body
   const rnd = (seed) => { let s = seed * 9301 + 49297; return () => ((s = (s * 9301 + 49297) % 233280) / 233280); };
   const hash = (s) => { let h = 7; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) % 100000; return h; };
+  // 1.2.0 (play test #2 「ゾンビの体力が少ないので、強くしてください」): toughness by block, weak in the hospital and stronger on the way
+  // to the roof. Life and every part's hp are multiplied, so a head shot stays the quick way (the head breaks after 2-3 pistol rounds
+  // everywhere) and the body takes more: pistol rounds to the chest 4 / 5 / 5 / 6 / 7 (was 3). The giant (330 life) gets its own.
+  // tools/ammo-budget.mjs adds up what each block needs against the ammo lying in it.
+  G.TOUGH = { H: 1.3, S: 1.6, P: 1.9, O: 2.2, ROOF: 2.4, giant: 1.6 };
+  const BLOCK_OF = { O_PLAZA: 'P' };   // the plaza in front of the tower is still the police block's fight
+  G.toughOf = (def) => def.p === 'giant' ? G.TOUGH.giant : def.room === 'O_ROOF' ? G.TOUGH.ROOF : G.TOUGH[BLOCK_OF[def.room] || String(def.room || '').charAt(0)] || 1;
+  const toughen = (z, k) => { if (k === 1) return; for (const P of Object.values(z.parts)) { P.max = Math.round(P.max * k); P.hp = P.hp > 0 ? P.max : 0; } z.life = z.maxLife = Math.round(z.maxLife * k); z.tough = k; };
   function spawn(def) {
     const pat = pats.get(def.p); if (!pat) return null;
     const R = roomById.get(def.room); if (!R) return null;
@@ -103,6 +112,7 @@ export function installZombies(ext, G) {
     const r = rnd(hash(def.id));
     const tall = def.p === 'crawler' || def.p === 'giant' ? 1 : 0.9 + r() * 0.18;
     z.root.scale.setScalar(tall);
+    toughen(z, G.toughOf(def));
     z.body.rotation.x = (r() - 0.35) * 0.12;   // some lean forward, a few lean back
     const rot = def.rot ?? (/-rot|drowned|bloated/.test(def.p) ? 0.6 : /-dry|skeletal|burnt/.test(def.p) ? 0.3 : r() * 0.45);
     z.root.traverse((m) => {
@@ -139,11 +149,32 @@ export function installZombies(ext, G) {
       else if (k === 'spit') G.sfx3d('z-spit', z.root.position);
     });
     z.on('sever', (e) => { G.emit('zombie:sever', { id: def.id, parts: e.parts }); });
-    z.on('died', () => { L.alive = false; G.killed.add(def.id); G.emit('zombie:died', { id: def.id, p: def.p }); });
+    z.on('died', () => { L.alive = false; G.killed.add(def.id); G.emit('zombie:died', { id: def.id, p: def.p }); setTimeout(() => layBody(L), 1600); });
     live.set(def.id, L);
     return L;
   }
-  const despawn = (id) => { const L = live.get(id); if (!L) return; L.z.dispose(); live.delete(id); };
+  // 1.2.0 #6: a fallen one can be looked at ([E]): a low box over the body once it lies still, one short line of who it was
+  const bodyBoxes = new Map(), bodyMat = new THREE.MeshBasicMaterial({ visible: false });
+  const unbody = (id) => { const b = bodyBoxes.get(id); if (!b) return; b.removeFromParent(); const W = ctx && ctx.world, i = W ? W.interactables.indexOf(b) : -1; if (i >= 0) W.interactables.splice(i, 1); bodyBoxes.delete(id); };
+  const layBody = (L) => {
+    const line = corpseLine(L.def); if (!line || !ctx || !live.has(L.def.id)) return;
+    unbody(L.def.id);
+    const z = L.z, c = new THREE.Vector3(); let n = 0;
+    z.root.updateMatrixWorld(true);
+    z.root.traverse((m) => { if (m.isBone && /chest|pelvis|spine|head/i.test(m.name)) { c.add(m.getWorldPosition(new THREE.Vector3())); n++; } });
+    if (n) c.multiplyScalar(1 / n); else c.set(z.pos[0], z.pos[1], z.pos[2]);
+    const y = ctx.world.floorY(L.floor), b = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.5, 1.2), bodyMat);
+    b.position.set(c.x, y + 0.25, c.z); b.name = `corpse:${L.def.id}`;
+    b.userData.interact = { kind: 'corpse', id: L.def.id, label: '倒れた人' };
+    ctx.world.group.add(b); ctx.world.interactables.push(b); bodyBoxes.set(L.def.id, b);
+  };
+  ext.registerInteract('corpse', {
+    prompt: () => '[E] 調べる：倒れた人',
+    run: (o) => { const L = live.get(o.id); const line = corpseLine(L ? L.def : SPAWNS.find((d) => d.id === o.id)); if (line) ctx.ui.say(line, 4); },
+  });
+  G.corpseLine = (id) => { const L = live.get(id); return corpseLine(L ? L.def : SPAWNS.find((d) => d.id === id)); };
+  G.bodyBox = (id) => bodyBoxes.get(id) || null;
+  const despawn = (id) => { const L = live.get(id); if (!L) return; unbody(id); L.z.dispose(); live.delete(id); };
 
   // which spawns are in the world now: their condition (a stage reached, a task done, a flag) holds and they are not dead
   const wanted = (def) => {

@@ -1,6 +1,6 @@
 {
- "w": 160,
- "h": 96,
+ "w": 320,
+ "h": 192,
  "weapons": {
   "hands": {
    "muzzle": null
@@ -16,26 +16,32 @@
   },
   "nailgun": {
    "muzzle": [
-    79,
-    37
+    140,
+    82
    ]
   },
   "pistol": {
    "muzzle": [
-    97,
-    31
+    181,
+    51
    ]
   },
   "shotgun": {
    "muzzle": [
-    78,
-    14
+    147,
+    23
    ]
   },
   "rifle": {
    "muzzle": [
-    81,
-    8
+    155,
+    9
+   ]
+  },
+  "flashlight": {
+   "muzzle": [
+    117,
+    94
    ]
   }
  }

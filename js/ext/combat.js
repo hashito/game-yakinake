@@ -4,13 +4,13 @@
 //   { kind, pos: Vector3, raycast(ray) -> { part, dist, point } | null, hit(ray|part, dmg, o) -> result, alive }
 import * as THREE from 'three';
 import { CATALOG } from './case-data.js';
-import { drawWeapon, KICK } from './weapon-art.js';
+import { drawWeapon, KICK, FP_SIZE } from './weapon-art.js';
 import { KINDS, isRead } from '../kit/toast-lane.js';
 
 // few notices (UI rule): one at a time at the top, short, then gone
 KINDS.toast.ttl = 2600; KINDS.card.ttl = 3000; KINDS['quest-note'].ttl = 3400;
 
-const PART_SAY = { head: '頭：撃てば止まる', chest: '胴：倒れにくい', pelvis: '腰：上と下に分かれる', upperArmL: '腕：つかめなくなる', upperArmR: '腕：つかめなくなる', foreArmL: '腕：つかめなくなる', foreArmR: '腕：つかめなくなる', thighL: '脚：倒れて這う', thighR: '脚：倒れて這う', shinL: '脚：倒れて這う', shinR: '脚：倒れて這う' };
+// 1.2.0 (play test #5 「ゾンビに手を向けると～になりますとかの表示は不要」): no tag under the sights; the parts are told once in the monologue (talk 'lesson')
 
 export function installCombat(ext, G) {
   let ctx = null;
@@ -20,6 +20,9 @@ export function installCombat(ext, G) {
   G.setGore = (g) => { G.gore = g; try { localStorage.setItem('yk-gore', g); } catch (e) { /* private mode */ } G.emit('gore', g); };
   const ray = new THREE.Raycaster();
   let muzzle = null;
+  let reloadMax = 1;
+  // 1.2.0 #7: the hand sways - it lags the look and bobs with the steps (px of the 320 x 192 picture)
+  const sway = { x: 0, y: 0, yaw: null, phase: 0, px: null, pz: null };
   let hintT = 0, cool = 0, reloading = 0, swing = 0, kick = 0, flashT = 0, grab = null, hurtFlash = 0, regen = 0;
   const heldNow = () => { const it = G.equip && G.case.byUid(G.equip); return it ? { it, c: CATALOG[it.id] } : { it: null, c: CATALOG.hands }; };
   G.held = heldNow;
@@ -50,8 +53,7 @@ export function installCombat(ext, G) {
   // ---------------------------------------------------------------- HUD: body, weapon, ammo; the weapon in the hand; the part under the sights
   const el = document.createElement('div'); el.id = 'yk-status'; el.className = 'yk-status';
   el.innerHTML = '<div class="yk-hp"><i></i></div><div class="yk-w"><b class="yk-wn"></b><span class="yk-wa"></span></div>';
-  const view = document.createElement('canvas'); view.id = 'yk-weapon'; view.width = 160; view.height = 96; view.className = 'yk-weapon';
-  const partTag = document.createElement('div'); partTag.id = 'yk-part'; partTag.className = 'yk-part';
+  const view = document.createElement('canvas'); view.id = 'yk-weapon'; view.width = FP_SIZE[0]; view.height = FP_SIZE[1]; view.className = 'yk-weapon';
   const blood = document.createElement('div'); blood.id = 'yk-blood'; blood.className = 'yk-blood';
   const grabTag = document.createElement('div'); grabTag.id = 'yk-grab'; grabTag.className = 'yk-grab';
   function hud() {
@@ -60,7 +62,7 @@ export function installCombat(ext, G) {
     el.querySelector('.yk-hp').classList.toggle('low', G.hp < 35);
     el.querySelector('.yk-wn').textContent = h.c.name;
     el.querySelector('.yk-wa').textContent = h.c.gun ? `${h.it.loaded} / ${G.case.count(h.c.gun.ammo)}${reloading > 0 ? '　装填中' : ''}` : '';
-    drawWeapon(view, h.it ? h.it.id : 'hands', { swing, kick, flash: flashT > 0 });
+    drawWeapon(view, h.it ? h.it.id : 'hands', { swing, kick, flash: flashT > 0, reload: reloading > 0 ? 1 - reloading / reloadMax : 0, swayX: sway.x, swayY: sway.y, light: !!(ctx && ctx.lightOn) });
   }
   G.hud = hud;
   ext.on('game:ready', (c) => {
@@ -77,7 +79,7 @@ export function installCombat(ext, G) {
       };
     }
     muzzle = new THREE.PointLight(0xffc070, 0, 14, 1.6); muzzle.name = 'yk-muzzle'; ctx.scene.add(muzzle);
-    document.body.append(view, partTag, blood, grabTag);
+    document.body.append(view, blood, grabTag);
     if (ctx.isTouch) {   // a phone has no 装填 / 持ち替え / 手当て buttons (the right column stays short): the status panel takes them
       el.classList.add('yk-tap');
       const tap = (sel, f) => el.querySelector(sel).addEventListener('click', (e) => { e.stopPropagation(); if (!ctx.blocked || !ctx.blocked()) f(); });
@@ -125,7 +127,7 @@ export function installCombat(ext, G) {
     const h = heldNow(); if (!h.c.gun || reloading > 0) return;
     if (h.it.loaded >= h.c.gun.mag) return;
     if (!G.case.count(h.c.gun.ammo)) return ctx.ui.say(`${CATALOG[h.c.gun.ammo].name}がない。`, 3, { urgent: true });
-    reloading = h.c.gun.mag > 6 ? 1.3 : 0.6 * (h.c.gun.mag - h.it.loaded); G.sfx('reload'); hud();
+    reloading = reloadMax = h.c.gun.mag > 6 ? 1.3 : 0.6 * (h.c.gun.mag - h.it.loaded); G.sfx('reload'); hud();
   }
 
   // ---------------------------------------------------------------- aim: the crosshair ray, nudged to the nearest part on a touch screen
@@ -156,7 +158,7 @@ export function installCombat(ext, G) {
   };
   function shoot() {
     const h = heldNow(), g = h.c.gun;
-    if (h.it.loaded <= 0) { G.sfx('empty'); cool = 0.25; if (G.case.count(g.ammo)) reload(); else ctx.ui.say(`弾がない。${CATALOG[g.ammo].name}を探すか、${ctx.isTouch ? '「殴る」' : '[V]'}で殴る。`, 3, { urgent: true }); return; }
+    if (h.it.loaded <= 0) { G.sfx('empty'); cool = 0.25; if (G.case.count(g.ammo)) reload(); else ctx.ui.say(`弾がない。${CATALOG[g.ammo].name}を探す。`, 3, { urgent: true }); return; }
     h.it.loaded -= 1; cool = g.rate; kick = 1; flashT = 0.07;
     // the recoil: the view climbs a little (the heavier the gun, the more) and the room lights up for a frame or two
     if (ctx.fp) ctx.fp.pitch = Math.min(1.2, (ctx.fp.pitch || 0) + 0.018 * (KICK[h.it.id] || 1));
@@ -207,7 +209,6 @@ export function installCombat(ext, G) {
   ext.on('player:respawn', () => { G.dead = false; G.hp = Math.max(G.hp, 100); grab = null; grabTag.classList.remove('on'); hud(); });
 
   // ---------------------------------------------------------------- every frame
-  let partT = 0;
   ext.registerSystem('yk-combat', {
     update(dt, c) {
       if (!ctx || !ctx.state.started || ctx.state.ended) return;
@@ -216,6 +217,16 @@ export function installCombat(ext, G) {
       if ((hintT -= dt) <= 0) { hintT = 0.25; dropStaleHints(); }
       if (muzzle && muzzle.intensity > 0) muzzle.intensity = flashT > 0 ? muzzle.intensity : Math.max(0, muzzle.intensity - dt * 400);
       swing = Math.max(0, swing - dt * 3); kick = Math.max(0, kick - dt * 6);
+      { const cam = ctx.camera.position, yaw = ctx.fp ? ctx.fp.yaw : 0;
+        if (sway.yaw == null) { sway.yaw = yaw; sway.px = cam.x; sway.pz = cam.z; }
+        let dy = yaw - sway.yaw; if (dy > Math.PI) dy -= 2 * Math.PI; if (dy < -Math.PI) dy += 2 * Math.PI;
+        const sp = Math.min(8, Math.hypot(cam.x - sway.px, cam.z - sway.pz) / Math.max(dt, 1e-3));
+        sway.yaw = yaw; sway.px = cam.x; sway.pz = cam.z;
+        sway.phase += dt * (sp > 0.3 ? 2.2 + sp * 0.9 : 0.8);
+        const lagX = Math.max(-18, Math.min(18, (dy / Math.max(dt, 1e-3)) * 6)), step = sp > 0.3 ? Math.min(1, sp / 4) : 0.15;
+        const k = 1 - Math.exp(-dt * 10);
+        sway.x += (lagX + Math.sin(sway.phase) * 7 * step - sway.x) * k;
+        sway.y += (Math.abs(Math.cos(sway.phase)) * 9 * step - sway.y) * k; }
       hurtFlash = Math.max(0, hurtFlash - dt * 1.6); blood.style.opacity = String(Math.min(0.85, hurtFlash * 0.7 + (G.hp < 35 ? 0.25 + Math.sin(performance.now() / 300) * 0.08 : 0)));
       if (reloading > 0) { reloading -= dt; if (reloading <= 0) { const h = heldNow(); if (h.c.gun) { const need = h.c.gun.mag - h.it.loaded; h.it.loaded += G.case.take(h.c.gun.ammo, need); G.sfx('reloaded'); } } }
       if (grab) { grab.t -= dt; G.hp -= dt * 5; if (G.hp <= 0) G.hurt(0, { reason: 'bitten' }); if (grab && grab.t <= 0) { grab = null; grabTag.classList.remove('on'); } }
@@ -226,18 +237,6 @@ export function installCombat(ext, G) {
         if (want.melee) { want.melee = false; strike(); }
         else if (want.fire) { if (h.c.gun) { shoot(); if (!(h.c.gun.rate < 0.35)) want.fire = false; } else { want.fire = false; strike(); } }
       } else if (busy) { want.fire = false; want.melee = false; }
-      // the part under the sights (the first minutes teach what each part does; later only for the first look at a new kind)
-      partT -= dt;
-      if (partT <= 0) {
-        partT = 0.12;
-        let say = '';
-        if (G.teachParts && !busy) {
-          const r = aimRay().clone(); const wall = wallHit(r, 25);
-          let best = null; for (const t of G.targets()) { if (!t.alive || t.kind !== 'zombie') continue; const q = t.raycast(r); if (q && q.dist < wall && (!best || q.dist < best.dist)) best = q; }
-          if (best) say = PART_SAY[best.part] || '';
-        }
-        partTag.textContent = say; partTag.classList.toggle('on', !!say);
-      }
       hud();
     },
   });

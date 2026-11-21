@@ -13,15 +13,13 @@
 .yk-wn { font-weight: 700; color: #f6faf6; }
 .yk-wa { color: #ffd890; font-variant-numeric: tabular-nums; }
 /* the weapon in the hand, bottom right of the view */
-.yk-weapon { position: fixed; right: 4%; bottom: 0; width: min(50vw, 66vh * 1.667, 520px); aspect-ratio: 160 / 96; height: auto; image-rendering: pixelated; pointer-events: none; z-index: 4; display: none; }
+.yk-weapon { position: fixed; right: 1%; bottom: 0; width: min(62vw, 94vh * 1.667, 780px); aspect-ratio: 320 / 192; height: auto; image-rendering: pixelated; pointer-events: none; z-index: 4; display: none; }
 body.yk-playing .yk-weapon { display: block; }
 html[data-input="touch"] .yk-weapon { right: 30%; width: min(42vw, 52vh * 1.667, 340px); height: auto; }
 /* a short phone held sideways (844 x 340): the weapon and the thought band both want the bottom middle, so the band goes up under the
    notice lane while a weapon is in the hand (nothing hides the weapon, nothing hides the band) */
 @media (orientation: landscape) and (max-height: 400px) { body.touch.yk-playing #say { top: 52px; bottom: auto; } }
 /* what the part under the sights does (the first zombies teach it) */
-.yk-part { position: fixed; left: 50%; top: calc(50% + 34px); transform: translateX(-50%); padding: 3px 10px; border-radius: 4px; background: rgba(8, 12, 14, 0.8); color: #ffd890; font-size: 15px; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 5; white-space: nowrap; }
-.yk-part.on { opacity: 1; }
 /* hurt: the edge of the view goes red */
 .yk-blood { /* pair-ok */ position: fixed; inset: 0; pointer-events: none; z-index: 3; opacity: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(110, 20, 20, 0.85) 100%); transition: opacity 0.3s; }
 .yk-grab { position: fixed; left: 50%; top: 22%; transform: translateX(-50%); padding: 8px 16px; border-radius: 6px; background: #6e1414; color: #ffffff; font-size: 18px; font-weight: 700; display: none; z-index: 6; pointer-events: none; }

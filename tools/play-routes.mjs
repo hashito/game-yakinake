@@ -161,11 +161,27 @@ async function run(route) {
     log('after the leg shots', JSON.stringify(st));
     expect(st && /crawl|squirm|fall/.test(st.motion), 'shooting the legs makes it crawl');
     await shot('crawler');
-    expect(await G("document.getElementById('yk-part') && document.getElementById('yk-part').textContent.length > 0 || true"), 'the part tag exists');
+    expect(await G("!document.getElementById('yk-part')"), 'no part tag under the sights (1.2.0 #5)');
     // head -> dead at once
     for (let i = 0; i < 4 && (await G(`!!${Z}`)); i++) { const at = await partAt('head'); if (!at) break; await lookAt(...at); await frames(2); await key('Fire'); await frames(3); await key('Fire', 'keyup'); await sleep(300); await key('KeyR'); await sleep(200); }
     expect(await G(`!${Z}`), 'a shot to the head kills it');
     await shot('headshot');
+    // 1.2.0 #2: tougher by block - weak in the hospital, the strongest on the roof (tools/ammo-budget.mjs adds up the ammo)
+    { const T = await G("(() => { const o = {}; for (const [r, x, z] of [['H_ROKA', 13, 6.8], ['S_ODORI', 56, 1.2], ['P_ROKA', 112, 7.6], ['O_OFF', 136, 7], ['O_ROOF', 137, 8]]) { const L = y.extraZombie({ id: 'Z_TOUGH_' + r, room: r, x, z, p: 'salaryman', yaw: 0 }); o[r] = L ? [L.z.maxLife, L.z.parts.head.max, L.z.parts.chest.max] : null; if (L) L.z.kill(); } return o; })()");
+      log('toughness', JSON.stringify(T));
+      const life = ['H_ROKA', 'S_ODORI', 'P_ROKA', 'O_OFF', 'O_ROOF'].map((r) => T && T[r] ? T[r][0] : 0);
+      expect(life[0] > 100 && life.every((v, i) => !i || v > life[i - 1]), `life grows block by block, all above 1.1.1's 100 (${life.join(' / ')})`); }
+    // 1.2.0 #6: a fallen one says who it was ([E] on the body: one line, no window)
+    { await G("(() => { const c = g.camera.position, f = g.camera.getWorldDirection(c.clone()); f.y = 0; f.normalize(); const L = y.extraZombie({ id: 'Z_TEST_BODY', room: y.roomAtP(c.x + f.x * 2, c.z + f.z * 2, g.floor || 0).id, x: c.x + f.x * 2, z: c.z + f.z * 2, p: 'clerk', yaw: 0 }); L.z.kill(); return 1; })()");
+      await sleep(2200);
+      const B = await G("(() => { const b = y.bodyBox('Z_TEST_BODY'); return b ? { kind: b.userData.interact.kind, inList: g.world.interactables.includes(b) } : null; })()");
+      expect(B && B.kind === 'corpse' && B.inList, `a fallen zombie can be looked at (${JSON.stringify(B)})`);
+      expect(/田辺/.test(await G("y.corpseLine('Z_ROKA1')")) && /署長/.test(await G("y.corpseLine('Z_RYU2')")) && /40代/.test(await G("y.corpseLine('Z_REI3')")), 'the identity lines tie to the documents (田辺さん, the chief, the morgue list)');
+      const at = await G("(() => { const b = y.bodyBox('Z_TEST_BODY'); return b ? [b.position.x, b.position.y, b.position.z] : null; })()");
+      if (at) { await lookAt(...at); await frames(4); await key('KeyE'); await frames(2); await key('KeyE', 'keyup'); await sleep(500); }
+      const said = await G("(document.getElementById('say') || {}).textContent || ''");
+      expect(/コンビニ/.test(said) && !(await G("!!(g.wm && g.wm.isOpen)")), `[E] on the body says who it was, with no window (${said.slice(0, 40)})`);
+      await shot('corpse_look'); }
     // melee with the pipe, then grab + shove
     const pipe = await G("(y.case.items.find((i) => i.id === 'pipe') || {}).uid");
     await G(`(y.equipUid(${pipe}), 1)`);

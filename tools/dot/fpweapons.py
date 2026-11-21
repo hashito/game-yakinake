@@ -1,26 +1,45 @@
 #!/usr/bin/env python3
-"""The weapons in the hand, seen from behind the shoulder (first person): one dot picture per weapon, 160 x 96 px, the muzzle or
-the head toward the middle of the screen and the grip and the white-coat sleeve coming in from the lower right. Drawn with hard
-polygons (no smoothing), a light top face and a dark side face, then a one-pixel ink outline. js/ext/weapon-art.js draws them
-scaled up with crisp pixels, kicked up on a shot and swung on a strike, with the muzzle flash on top.
+"""The hands and the weapons in first person, fine dot (1.2.0, play test #7 「手や武器のドット絵をもっと細かく」): 320 x 192 px a
+picture, twice the old 160 x 96, so a finger is 6-9 px wide and a knuckle, a nail, a crease and the cuff's seam can be drawn.
 
-    python tools/dot/fpweapons.py   -> assets/fp/<id>.png and assets/fp/fp.json (muzzle points)
+Seen from just behind the right shoulder: the white coat sleeve and the blue scrub cuff come in from the lower right, the right hand
+holds the weapon the way that weapon is held (a pistol grip with the index on the trigger and the thumb along the frame, a pipe or an
+axe handle in a full fist, a scalpel in a pencil grip between thumb and index, a long gun's pistol grip with the left hand forward on
+the pump / fore-end), the muzzle or the head toward the middle of the screen. The flashlight is its own picture (the left hand,
+lower left of the same canvas), drawn when the light is on.
+
+Every shape is a hard polygon or a round-capped stroke (no smoothing) in a ramp of 4-5 tones (light from the upper left), then a
+one-pixel ink outline. js/ext/weapon-art.js draws them with crisp pixels and moves them (sway, recoil, reload, strike).
+The same pictures are the kit's common parts yakinake-fp-<id>.png (assets/fp-weapons in the game kit).
+
+    python tools/dot/fpweapons.py [outDir]   -> <outDir or assets/fp>/<id>.png, fp.json (muzzle points, grip point)
 """
 import json
+import math
 import os
+import sys
 from PIL import Image, ImageDraw
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(os.path.dirname(os.path.dirname(HERE)), 'assets', 'fp')
-W, H = 160, 96
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.dirname(HERE)), 'assets', 'fp')
+W, H = 320, 192
 K = {
-    'ink': (12, 14, 18), 'gun': (40, 44, 50), 'gunM': (62, 68, 76), 'gunL': (104, 112, 122), 'gunH': (150, 160, 170),
-    'steel': (120, 128, 136), 'steelL': (172, 182, 190), 'steelH': (220, 228, 232), 'steelD': (70, 76, 84),
-    'wood': (112, 66, 34), 'woodL': (150, 94, 48), 'woodD': (74, 42, 22),
-    'skin': (214, 164, 132), 'skinL': (234, 192, 160), 'skinD': (166, 118, 92),
-    'coat': (226, 228, 220), 'coatD': (170, 172, 166), 'coatL': (246, 248, 242), 'cuff': (90, 110, 130),
-    'yel': (222, 170, 40), 'yelL': (250, 210, 90), 'yelD': (150, 108, 20), 'red': (170, 36, 32), 'redL': (214, 70, 52), 'redD': (110, 22, 22),
-    'lens': (70, 120, 160), 'lensL': (150, 200, 230), 'blood': (110, 20, 20),
+    'ink': (10, 11, 14),
+    # skin: 5 tones
+    'sk0': (122, 78, 60), 'sk1': (168, 116, 90), 'sk2': (206, 152, 122), 'sk3': (228, 180, 148), 'sk4': (244, 208, 180), 'nail': (236, 196, 184), 'nailL': (252, 232, 222),
+    # the white coat and the scrub cuff
+    'co0': (128, 132, 128), 'co1': (176, 180, 174), 'co2': (214, 216, 210), 'co3': (236, 238, 232), 'co4': (250, 251, 248),
+    'cu0': (32, 58, 78), 'cu1': (52, 88, 112), 'cu2': (78, 120, 146), 'cu3': (112, 156, 180),
+    # black gun metal, steel, wood, plastic
+    'g0': (18, 20, 24), 'g1': (34, 37, 43), 'g2': (54, 59, 67), 'g3': (84, 91, 101), 'g4': (128, 138, 150),
+    's0': (60, 66, 74), 's1': (98, 106, 116), 's2': (142, 150, 160), 's3': (186, 194, 202), 's4': (230, 236, 240),
+    'w0': (62, 34, 18), 'w1': (98, 56, 28), 'w2': (134, 80, 40), 'w3': (170, 108, 56), 'w4': (198, 140, 80),
+    'y0': (120, 84, 14), 'y1': (176, 128, 24), 'y2': (222, 170, 40), 'y3': (246, 204, 80), 'y4': (255, 232, 150),
+    'r0': (90, 18, 18), 'r1': (140, 30, 28), 'r2': (182, 46, 38), 'r3': (214, 78, 58),
+    'rb0': (24, 24, 26), 'rb1': (44, 44, 48), 'rb2': (66, 66, 72),
+    'blood': (104, 18, 18), 'bloodL': (146, 30, 26),
+    'lens': (255, 246, 200), 'lensD': (220, 196, 120), 'bulb': (255, 255, 236),
+    'brass': (170, 130, 50), 'brassL': (220, 182, 90), 'shell': (150, 30, 30), 'shellL': (196, 60, 50),
 }
 
 
@@ -30,11 +49,51 @@ def canvas():
 
 
 def P(d, pts, c):
-    d.polygon(pts, fill=K[c] + (255,))
+    d.polygon([(round(x), round(y)) for x, y in pts], fill=K[c] + (255,))
 
 
-def L(d, a, b, c, w=1):
-    d.line([a, b], fill=K[c] + (255,), width=w)
+def Ln(d, a, b, c, w=1):
+    d.line([tuple(map(round, a)), tuple(map(round, b))], fill=K[c] + (255,), width=w)
+
+
+def disc(d, x, y, r, c):
+    d.ellipse([round(x - r), round(y - r), round(x + r), round(y + r)], fill=K[c] + (255,))
+
+
+def stroke(d, a, b, w, c):
+    """a round-capped thick stroke (a finger, a barrel)"""
+    Ln(d, a, b, c, int(w))
+    disc(d, a[0], a[1], w / 2 - 0.5, c)
+    disc(d, b[0], b[1], w / 2 - 0.5, c)
+
+
+def nrm(a, b):
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    L = math.hypot(dx, dy) or 1
+    return -dy / L, dx / L
+
+
+def quad(a, b, w0, w1=None):
+    """the four corners of a band from a to b, w0 wide at a and w1 at b"""
+    w1 = w0 if w1 is None else w1
+    nx, ny = nrm(a, b)
+    return [(a[0] + nx * w0 / 2, a[1] + ny * w0 / 2), (b[0] + nx * w1 / 2, b[1] + ny * w1 / 2),
+            (b[0] - nx * w1 / 2, b[1] - ny * w1 / 2), (a[0] - nx * w0 / 2, a[1] - ny * w0 / 2)]
+
+
+def tube(d, a, b, w, ramp, w1=None, cap=True):
+    """a lit cylinder from a to b: dark side, body, light, highlight stripe (ramp: 4 colour keys, dark to light)"""
+    w1 = w if w1 is None else w1
+    P(d, quad(a, b, w, w1), ramp[1])
+    nx, ny = nrm(a, b)
+    # the side away from the light (light from the upper left: the normal with negative x+y is lit)
+    s = 1 if (nx + ny) > 0 else -1
+    off0, off1 = w * 0.3 * s, w1 * 0.3 * s
+    P(d, quad((a[0] + nx * off0, a[1] + ny * off0), (b[0] + nx * off1, b[1] + ny * off1), w * 0.4, w1 * 0.4), ramp[0])
+    P(d, quad((a[0] - nx * off0 * 0.8, a[1] - ny * off0 * 0.8), (b[0] - nx * off1 * 0.8, b[1] - ny * off1 * 0.8), w * 0.3, w1 * 0.3), ramp[2])
+    Ln(d, (a[0] - nx * off0 * 1.15, a[1] - ny * off0 * 1.15), (b[0] - nx * off1 * 1.15, b[1] - ny * off1 * 1.15), ramp[3])
+    if cap:
+        disc(d, b[0], b[1], w1 / 2 - 0.5, ramp[1])
 
 
 def outline(im):
@@ -50,151 +109,409 @@ def outline(im):
     return out
 
 
-def sleeve(d, x0=104):
-    # the white coat sleeve from the lower right, the blue scrub cuff at the wrist
-    P(d, [(x0, 96), (160, 96), (160, 74), (x0 + 30, 70), (x0 + 6, 78)], 'coat')
-    P(d, [(x0 + 4, 96), (x0 + 22, 96), (x0 + 14, 80), (x0 + 6, 82)], 'coatD')
-    P(d, [(x0 + 26, 74), (160, 76), (160, 72), (x0 + 30, 70)], 'coatL')
-    P(d, [(x0 + 4, 80), (x0 + 30, 72), (x0 + 32, 76), (x0 + 8, 84)], 'cuff')
+def layer():
+    return canvas()
 
 
-def fist(d, x, y, w=24, h=20):
-    # a hand round a grip: back of the hand, four knuckles, the thumb over the top
-    P(d, [(x, y + 4), (x + w, y), (x + w + 2, y + h - 4), (x + 2, y + h)], 'skin')
-    P(d, [(x, y + 4), (x + w, y), (x + w, y + 4), (x + 1, y + 8)], 'skinL')
-    for i in range(4):
-        L(d, (x + 3 + i * 5, y + h - 2), (x + 4 + i * 5, y + h - 7), 'skinD')
-    P(d, [(x - 4, y + 2), (x + 8, y - 2), (x + 10, y + 3), (x - 2, y + 7)], 'skin')
-    L(d, (x - 3, y + 6), (x + 9, y + 3), 'skinD')
+def paste(base, top):
+    base.alpha_composite(outline(top))
 
 
+# ---------------------------------------------------------------- the arm
+def sleeve(im, wrist=(236, 160), elbow=(330, 186), w=58):
+    """the white coat sleeve from the lower right to the wrist, folds, the blue scrub cuff peeking out"""
+    L, d = layer()
+    ax, ay = wrist; bx, by = elbow
+    # the scrub cuff (rib knit) just above the wrist
+    P(d, quad((ax + 2, ay + 4), (ax + 22, ay + 12), w * 0.74, w * 0.8), 'cu1')
+    for i in range(7):
+        t = i / 6
+        p0 = (ax - 8 + t * 4 + 0, ay - 14 + t * 30)
+        Ln(d, p0, (p0[0] + 14, p0[1] + 6), 'cu0')
+    P(d, quad((ax + 2, ay + 2), (ax + 8, ay + 5), w * 0.7, w * 0.72), 'cu2')
+    Ln(d, (ax - 10, ay - 16), (ax + 10, ay - 8), 'cu3')
+    # the coat
+    P(d, quad((ax + 16, ay + 10), (bx, by), w, w * 1.25), 'co2')
+    nx, ny = nrm((ax + 16, ay + 10), (bx, by))
+    P(d, quad((ax + 16 - nx * w * 0.3, ay + 10 - ny * w * 0.3), (bx - nx * w * 0.38, by - ny * w * 0.38), w * 0.34, w * 0.42), 'co3')
+    P(d, quad((ax + 16 + nx * w * 0.34, ay + 10 + ny * w * 0.34), (bx + nx * w * 0.42, by + ny * w * 0.42), w * 0.3, w * 0.4), 'co1')
+    Ln(d, (ax + 16 - nx * w * 0.44, ay + 10 - ny * w * 0.44), (bx - nx * w * 0.56, by - ny * w * 0.56), 'co4', 2)
+    # the cuff's hem: a turned edge, its stitch line, and two folds
+    hem = quad((ax + 14, ay + 9), (ax + 22, ay + 13), w * 1.02, w * 1.04)
+    P(d, hem, 'co3')
+    Ln(d, ((hem[0][0] + hem[1][0]) / 2, (hem[0][1] + hem[1][1]) / 2), ((hem[2][0] + hem[3][0]) / 2, (hem[2][1] + hem[3][1]) / 2), 'co1')
+    for t, c in ((0.42, 'co1'), (0.62, 'co0'), (0.8, 'co1')):
+        px, py = ax + 16 + (bx - ax - 16) * t, ay + 10 + (by - ay - 10) * t
+        Ln(d, (px - nx * w * 0.2, py - ny * w * 0.2), (px + nx * w * 0.36 + 6, py + ny * w * 0.36 - 2), c)
+    paste(im, L)
+
+
+# ---------------------------------------------------------------- hands
+def finger(d, a, b, w, nail=False, tip=None):
+    """one finger: two phalanges with a crease, lit from the top left; tip: where it ends if it bends"""
+    tube(d, a, b, w, ('sk1', 'sk2', 'sk3', 'sk4'))
+    if tip:
+        tube(d, b, tip, w * 0.92, ('sk1', 'sk2', 'sk3', 'sk4'))
+        nx, ny = nrm(a, b)
+        Ln(d, (b[0] - nx * w * 0.42, b[1] - ny * w * 0.42), (b[0] + nx * w * 0.42, b[1] + ny * w * 0.42), 'sk1')
+    end = tip or b
+    if nail:
+        st = b if tip else a
+        dx, dy = end[0] - st[0], end[1] - st[1]; L = math.hypot(dx, dy) or 1
+        ux, uy = dx / L, dy / L
+        c = (end[0] - ux * w * 0.55, end[1] - uy * w * 0.55)
+        P(d, quad((c[0] - ux * w * 0.4, c[1] - uy * w * 0.4), (c[0] + ux * w * 0.35, c[1] + uy * w * 0.35), w * 0.62), 'nail')
+        Ln(d, (c[0] - ux * w * 0.3 - uy * 1, c[1] - uy * w * 0.3 + ux * 1), (c[0] + ux * w * 0.2 - uy * 1, c[1] + uy * w * 0.2 + ux * 1), 'nailL')
+
+
+def knuckles(d, pts, r=4):
+    for x, y in pts:
+        disc(d, x, y, r, 'sk3')
+        disc(d, x - 1, y - 1, max(1, r - 2), 'sk4')
+        Ln(d, (x - r + 1, y + r - 1), (x + r - 1, y + r - 1), 'sk1')
+
+
+def back_of_hand(d, pts):
+    """the back of the hand: a rounded plate, lit on the upper left, shaded toward the little finger and the wrist, tendons
+    fanning from the wrist (the last point) to the knuckle row (the first two points)"""
+    n = len(pts)
+    cx, cy = sum(p[0] for p in pts) / n, sum(p[1] for p in pts) / n
+    soft = []
+    for k in range(n):                                   # cut the corners: a plate with rounded edges
+        a, b = pts[k], pts[(k + 1) % n]
+        soft += [(a[0] * 0.8 + b[0] * 0.2, a[1] * 0.8 + b[1] * 0.2), (a[0] * 0.2 + b[0] * 0.8, a[1] * 0.2 + b[1] * 0.8)]
+    P(d, soft, 'sk2')
+    P(d, [(p[0] * 0.62 + cx * 0.38 + 4, p[1] * 0.62 + cy * 0.38 + 4) for p in soft[2:7]], 'sk1')        # the shaded side
+    P(d, [(p[0] * 0.6 + cx * 0.4 - 3, p[1] * 0.6 + cy * 0.4 - 3) for p in soft[-3:] + soft[:3]], 'sk3')  # the lit side
+    w = pts[-1]
+    a, b = pts[0], pts[1]
+    for t in (0.25, 0.5, 0.75):                            # tendons
+        k = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
+        Ln(d, ((k[0] * 0.75 + w[0] * 0.25), (k[1] * 0.75 + w[1] * 0.25)), ((k[0] * 0.3 + w[0] * 0.7), (k[1] * 0.3 + w[1] * 0.7)), 'sk3')
+
+
+def grip_hand(im, gx, gy, ang=-0.32, gw=26, gh=58, trigger=True, thumb='side', fingers=4, fw=10):
+    """the right hand round a grip whose axis runs from (gx, gy) down at `ang` (radians from vertical, + = leaning right):
+    the fingers wrap the front (left) of the grip and show as four stacked rounded segments with creases, the back of the hand and
+    the knuckles on the right, the thumb along the left side of the frame (side) or over the top (over), the index on the trigger"""
+    L, d = layer()
+    ux, uy = math.sin(ang), math.cos(ang)          # down the grip
+    rx, ry = uy, -ux                               # to the right of the grip
+    def at(t, s):                                  # t down the grip, s to the right (px)
+        return (gx + ux * t + rx * s, gy + uy * t + ry * s)
+    # the palm and the back of the hand, behind the grip on the right
+    back_of_hand(d, [at(2, gw * 0.2), at(-2, gw * 0.2 + 30), at(gh * 0.9, gw * 0.2 + 40), at(gh + 6, gw * 0.3 + 10), at(gh * 0.9, gw * 0.1)])
+    # the wrist into the cuff
+    P(d, [at(gh * 0.55, gw * 0.4 + 30), at(gh * 0.75, gw * 0.4 + 46), at(gh + 26, gw * 0.4 + 40), at(gh + 18, gw * 0.3 + 16)], 'sk2')
+    P(d, [at(gh * 0.6, gw * 0.4 + 34), at(gh * 0.75, gw * 0.4 + 44), at(gh + 20, gw * 0.4 + 36)], 'sk1')
+    # the fingers round the front of the grip (from the trigger guard down): each a segment from the back of the hand,
+    # round the front, the tips tucked; drawn bottom up so the upper one overlaps
+    n = fingers
+    top = 10 if trigger else 2
+    span = (gh - top - 4) / n
+    for i in reversed(range(n)):
+        t = top + span * (i + 0.5)
+        w = fw - (1.5 if i == n - 1 else 0)
+        a = at(t - 1, gw * 0.15 + 6)
+        b = at(t + 1, -gw * 0.5 - w * 0.3)
+        tip = at(t + 3, -gw * 0.5 + w * 0.2)
+        finger(d, a, b, w, nail=False, tip=tip)
+        # the crease between this finger and the next
+        Ln(d, at(t + span * 0.5, gw * 0.1), at(t + span * 0.5, -gw * 0.5 - w * 0.2), 'sk0')
+    # the knuckles on the back
+    knuckles(d, [at(top + span * (i + 0.4), gw * 0.15 + 9) for i in range(n)], 4)
+    # the index finger on the trigger, bent
+    if trigger:
+        a = at(top - 4, gw * 0.1 + 6)
+        b = at(top - 6, -gw * 0.4)
+        tip = at(top - 2, -gw * 0.62)
+        finger(d, a, b, fw - 1, nail=True, tip=tip)
+        knuckles(d, [at(top - 6, gw * 0.15 + 8)], 4)
+    # the thumb: along the left of the frame toward the muzzle, nail toward us
+    if thumb == 'side':
+        a = at(top - 10, gw * 0.35 + 6)
+        b = at(top - 24, gw * 0.05)
+        tip = at(top - 36, -gw * 0.18)
+        finger(d, a, b, fw + 1, nail=True, tip=tip)
+    elif thumb == 'over':
+        a = at(top - 2, gw * 0.4 + 8)
+        b = at(top - 10, -gw * 0.1)
+        tip = at(top - 6, -gw * 0.55)
+        finger(d, a, b, fw + 1, nail=True, tip=tip)
+    paste(im, L)
+
+
+def support_hand(im, x, y, ang, w=14, n=4, under=True):
+    """the left hand from the left, cupping a fore-end / pump: four finger tips curling over the top edge, the thumb along it"""
+    L, d = layer()
+    ux, uy = math.cos(ang), math.sin(ang)       # along the barrel (toward the muzzle)
+    rx, ry = uy, -ux                            # down (to the lower left)
+    def at(t, s):
+        return (x + ux * t + rx * s, y + uy * t + ry * s)
+    # the palm under the fore-end
+    P(d, [at(-18, 4), at(22, 2), at(26, 22), at(-10, 30)], 'sk2')
+    P(d, [at(-16, 6), at(18, 4), at(20, 10), at(-12, 12)], 'sk3')
+    # the wrist off to the lower left
+    P(d, [at(-10, 22), at(14, 22), at(0, 60), at(-30, 56)], 'sk1')
+    P(d, [at(-8, 24), at(6, 24), at(-8, 54), at(-24, 50)], 'sk2')
+    # the fingers wrapping over the far side (tips visible over the top edge)
+    for i in range(n):
+        t = -12 + i * (w * 0.75)
+        finger(d, at(t, 10), at(t + 2, -6), w * 0.62, nail=True, tip=at(t + 4, -12))
+    # the thumb along the near side
+    finger(d, at(-14, 14), at(6, 12), w * 0.72, nail=True, tip=at(18, 10))
+    paste(im, L)
+    # the cuff and the sleeve of the left arm, off the bottom left
+    L2, d2 = layer()
+    wx, wy = at(-14, 58)
+    P(d2, quad((wx, wy), (wx - 30, wy + 50), 30, 40), 'cu1')
+    Ln(d2, (wx - 12, wy - 4), (wx + 14, wy + 4), 'cu3')
+    P(d2, quad((wx - 10, wy + 16), (wx - 50, wy + 80), 44, 60), 'co2')
+    Ln(d2, (wx - 30, wy + 10), (wx - 66, wy + 70), 'co4', 2)
+    Ln(d2, (wx + 4, wy + 22), (wx - 30, wy + 82), 'co1', 2)
+    paste(im, L2)
+
+
+# ---------------------------------------------------------------- the weapons
 def pistol():
-    im, d = canvas()
-    sleeve(d)
-    P(d, [(100, 64), (118, 62), (124, 90), (104, 94)], 'gun')            # grip
-    P(d, [(103, 66), (108, 66), (110, 90), (105, 92)], 'gunM')
-    fist(d, 98, 64, 26, 24)
-    P(d, [(90, 30), (104, 29), (122, 60), (96, 63)], 'gunM')             # slide, top face
-    P(d, [(93, 31), (99, 31), (108, 60), (100, 61)], 'gunL')
-    P(d, [(96, 63), (122, 60), (122, 68), (98, 71)], 'gun')              # slide, side face
-    for i in range(4):
-        L(d, (112 + i * 2, 60), (113 + i * 2, 67), 'gunM')               # serrations
-    P(d, [(97, 58), (101, 58), (101, 62), (97, 62)], 'gunH')             # rear sights
-    P(d, [(115, 56), (119, 56), (119, 60), (115, 60)], 'gunH')
-    P(d, [(95, 27), (98, 27), (98, 31), (95, 31)], 'gunH')               # front sight
-    P(d, [(92, 30), (102, 29), (102, 33), (92, 34)], 'ink')              # bore
-    return outline(im), (97, 31)
-
-
-def shotgun():
-    im, d = canvas()
-    P(d, [(112, 74), (134, 70), (160, 92), (160, 96), (120, 96)], 'wood')   # stock
-    P(d, [(116, 76), (132, 72), (150, 90), (124, 92)], 'woodL')
-    sleeve(d, 108)
-    P(d, [(98, 54), (124, 50), (128, 74), (102, 78)], 'gun')              # receiver
-    P(d, [(100, 56), (122, 52), (122, 56), (101, 60)], 'gunM')
-    fist(d, 106, 68, 22, 20)
-    P(d, [(74, 14), (84, 13), (112, 52), (100, 55)], 'steel')             # barrel
-    P(d, [(76, 15), (80, 14), (104, 52), (100, 53)], 'steelL')
-    P(d, [(72, 20), (80, 19), (102, 58), (94, 60)], 'steelD')             # magazine tube
-    P(d, [(80, 30), (94, 28), (104, 48), (86, 52)], 'wood')               # pump
-    for i in range(5):
-        L(d, (83 + i * 3, 31 + i * 4), (95 + i * 2, 30 + i * 4), 'woodD')
-    P(d, [(76, 34), (90, 30), (94, 40), (80, 46)], 'skin')                # the left hand on the pump
-    P(d, [(76, 34), (90, 30), (90, 33), (77, 37)], 'skinL')
-    P(d, [(75, 12), (82, 11), (82, 16), (75, 17)], 'ink')                 # bore
-    return outline(im), (78, 14)
-
-
-def rifle():
-    im, d = canvas()
-    P(d, [(114, 72), (136, 68), (160, 88), (160, 96), (122, 96)], 'wood')
-    P(d, [(118, 74), (134, 70), (152, 86), (126, 90)], 'woodL')
-    sleeve(d, 110)
-    P(d, [(96, 50), (122, 46), (126, 72), (100, 76)], 'gun')
-    fist(d, 108, 66, 22, 20)
-    P(d, [(78, 8), (84, 8), (106, 48), (100, 50)], 'gun')                 # barrel
-    P(d, [(79, 9), (81, 9), (102, 48), (100, 49)], 'gunL')
-    P(d, [(82, 24), (96, 22), (108, 46), (92, 50)], 'wood')               # fore-end
-    P(d, [(90, 30), (102, 28), (112, 48), (98, 51)], 'gunM')              # scope
-    P(d, [(92, 30), (97, 29), (106, 47), (100, 48)], 'gunL')
-    P(d, [(88, 26), (100, 24), (102, 31), (90, 33)], 'gun')               # scope front
-    P(d, [(91, 27), (98, 26), (99, 30), (92, 31)], 'lens')
-    P(d, [(93, 27), (95, 27), (95, 29), (93, 29)], 'lensL')
-    P(d, [(78, 26), (90, 22), (94, 32), (82, 38)], 'skin')
-    P(d, [(79, 6), (83, 6), (83, 10), (79, 10)], 'ink')
-    return outline(im), (81, 8)
+    im, _ = canvas()
+    sleeve(im, (240, 168), (330, 196), 56)
+    G, d = layer()
+    # the frame and the grip (polymer, black), leaning right
+    P(d, [(196, 100), (226, 96), (246, 172), (214, 178)], 'g1')
+    P(d, [(200, 102), (210, 101), (226, 172), (216, 174)], 'g2')
+    for i in range(6):                                                  # the grip's texture
+        Ln(d, (214 + i * 2, 118 + i * 9), (230 + i * 2, 116 + i * 9), 'g0')
+    # the trigger guard
+    d.arc([184, 96, 216, 132], 100, 260, fill=K['g1'] + (255,), width=5)
+    P(d, [(198, 106), (203, 105), (206, 118), (200, 119)], 'g0')     # the trigger
+    # the slide: long, toward the middle, top face lit, side face dark, the serrations at the back
+    P(d, [(170, 52), (196, 48), (232, 98), (194, 104)], 'g3')          # top face
+    P(d, [(176, 52), (186, 50), (214, 98), (204, 100)], 'g4')
+    P(d, [(194, 104), (232, 98), (234, 112), (194, 118)], 'g1')        # side face
+    Ln(d, (196, 108), (232, 103), 'g2')
+    for i in range(6):
+        Ln(d, (216 + i * 3, 100), (218 + i * 3, 112), 'g0')           # the serrations
+    P(d, [(166, 50), (198, 45), (200, 54), (168, 58)], 'g2')           # the muzzle end
+    P(d, [(176, 49), (186, 48), (186, 54), (176, 55)], 'g0')           # the bore
+    disc(d, 181, 51, 2, 'ink')
+    P(d, [(182, 42), (188, 42), (188, 48), (182, 48)], 'g4')           # the front sight, with its white dot
+    disc(d, 185, 44, 1, 's4')
+    P(d, [(216, 88), (230, 86), (230, 94), (216, 96)], 'g3')           # the rear sight, two dots
+    disc(d, 219, 90, 1, 's4'); disc(d, 227, 89, 1, 's4')
+    P(d, [(232, 98), (242, 100), (240, 112), (234, 112)], 'g2')        # the hammer
+    paste(im, G)
+    grip_hand(im, 214, 116, ang=-0.34, gw=28, gh=58, trigger=True, thumb=None, fw=11)
+    T, d = layer()                                                      # the thumb along the left of the frame, toward the muzzle
+    finger(d, (232, 116), (210, 102), 12, nail=True, tip=(198, 88))
+    paste(im, T)
+    return im, (181, 51)
 
 
 def nailgun():
-    im, d = canvas()
-    sleeve(d)
-    P(d, [(104, 62), (120, 60), (126, 88), (108, 92)], 'gun')             # handle
-    fist(d, 102, 64, 24, 22)
-    P(d, [(84, 36), (116, 30), (126, 58), (92, 66)], 'yel')               # body
-    P(d, [(86, 37), (114, 31), (116, 36), (88, 42)], 'yelL')
-    P(d, [(92, 60), (126, 54), (126, 58), (92, 66)], 'yelD')
-    P(d, [(76, 34), (88, 32), (92, 46), (80, 50)], 'gun')                 # nose
-    P(d, [(78, 35), (86, 34), (87, 37), (79, 39)], 'gunL')
-    P(d, [(86, 50), (96, 48), (90, 76), (82, 76)], 'steelD')              # nail strip
-    for i in range(6):
-        L(d, (85 + i, 54 + i * 4), (93 + i, 53 + i * 4), 'steelL')
-    P(d, [(77, 36), (81, 35), (82, 40), (78, 41)], 'ink')
-    return outline(im), (79, 37)
+    im, _ = canvas()
+    sleeve(im, (240, 166), (330, 196), 56)
+    G, d = layer()
+    # the body (yellow) with the motor housing, the nose and the nail magazine
+    P(d, [(160, 62), (232, 50), (250, 112), (176, 126)], 'y2')
+    P(d, [(166, 64), (228, 53), (232, 66), (170, 78)], 'y3')
+    P(d, [(168, 66), (196, 61), (198, 66), (170, 71)], 'y4')
+    P(d, [(176, 116), (250, 104), (250, 112), (176, 126)], 'y1')
+    P(d, [(212, 58), (240, 54), (248, 82), (220, 86)], 'rb1')         # the rubber cap of the motor
+    Ln(d, (216, 64), (242, 60), 'rb2')
+    for i in range(4):
+        Ln(d, (176 + i * 12, 92 - i * 2), (178 + i * 12, 104 - i * 2), 'y0')   # vents
+    P(d, [(140, 64), (166, 60), (172, 96), (146, 102)], 'g1')          # the nose
+    P(d, [(144, 66), (162, 63), (164, 70), (146, 73)], 'g3')
+    P(d, [(132, 72), (146, 70), (148, 92), (134, 94)], 's2')           # the safety tip
+    Ln(d, (134, 74), (144, 72), 's4')
+    disc(d, 140, 82, 3, 'ink')
+    P(d, [(166, 116), (188, 112), (176, 176), (156, 178)], 's0')       # the strip of nails
+    for i in range(9):
+        Ln(d, (164 - i * 0.6, 120 + i * 6), (186 - i * 1.3, 116 + i * 6), 's3')
+    d.text((190, 80), 'NAIL', fill=K['y0'] + (255,))
+    paste(im, G)
+    H2, d2 = layer()                                                    # the handle under the body
+    P(d2, [(206, 108), (230, 104), (248, 170), (220, 176)], 'rb1')
+    P(d2, [(210, 110), (218, 108), (232, 170), (224, 172)], 'rb2')
+    paste(im, H2)
+    grip_hand(im, 222, 118, ang=-0.3, gw=26, gh=54, trigger=True, thumb='over', fw=11)
+    return im, (140, 82)
+
+
+def shotgun():
+    im, _ = canvas()
+    G, d = layer()
+    # the stock to the lower right, wood
+    P(d, [(222, 140), (270, 130), (320, 176), (320, 192), (238, 192)], 'w2')
+    P(d, [(230, 142), (266, 134), (310, 174), (246, 182)], 'w3')
+    Ln(d, (240, 150), (300, 176), 'w4')
+    # the receiver
+    P(d, [(184, 104), (236, 96), (248, 146), (196, 154)], 'g1')
+    P(d, [(188, 106), (232, 98), (234, 108), (190, 116)], 'g3')
+    P(d, [(204, 120), (226, 117), (228, 134), (206, 137)], 'g0')       # the ejection port
+    # the barrel and the magazine tube, long toward the middle
+    tube(d, (204, 104), (146, 24), 14, ('s0', 's1', 's2', 's4'), 12)
+    tube(d, (196, 124), (140, 44), 12, ('g0', 'g1', 'g2', 'g3'), 10)
+    P(d, [(138, 18), (154, 16), (156, 28), (140, 30)], 's1')           # the muzzle
+    disc(d, 147, 23, 4, 'ink')
+    disc(d, 148, 17, 2, 's4')                                          # the bead sight
+    # the pump: ribbed wood round the tube
+    P(d, [(150, 54), (180, 46), (196, 92), (166, 100)], 'w2')
+    P(d, [(154, 56), (166, 52), (182, 94), (172, 97)], 'w3')
+    for i in range(7):
+        Ln(d, (156 + i * 3.6, 60 + i * 5.6), (182 + i * 2, 52 + i * 6), 'w0')
+    paste(im, G)
+    support_hand(im, 168, 72, math.atan2(-56, -40), w=13)
+    sleeve(im, (262, 176), (330, 200), 54)
+    grip_hand(im, 236, 146, ang=-0.5, gw=24, gh=40, trigger=True, thumb='over', fingers=3, fw=11)
+    return im, (147, 23)
+
+
+def rifle():
+    im, _ = canvas()
+    G, d = layer()
+    P(d, [(226, 140), (272, 128), (320, 170), (320, 192), (240, 192)], 'w1')   # the stock
+    P(d, [(234, 142), (268, 132), (312, 170), (248, 182)], 'w2')
+    Ln(d, (244, 152), (302, 172), 'w3')
+    P(d, [(190, 100), (240, 92), (250, 144), (200, 150)], 'g1')        # the action
+    P(d, [(194, 102), (236, 95), (238, 104), (196, 110)], 'g3')
+    tube(d, (226, 120), (250, 118), 6, ('s0', 's1', 's2', 's4'))      # the bolt handle
+    disc(d, 252, 118, 5, 's2'); disc(d, 251, 116, 2, 's4')
+    tube(d, (200, 104), (152, 10), 10, ('g0', 'g1', 'g2', 'g3'), 8)  # the barrel, long and thin
+    P(d, [(150, 6), (160, 5), (161, 12), (151, 13)], 'g2')
+    disc(d, 155, 9, 3, 'ink')
+    P(d, [(160, 40), (186, 34), (206, 100), (178, 106)], 'w2')        # the fore-end
+    P(d, [(164, 42), (174, 40), (192, 100), (184, 102)], 'w3')
+    # the scope on its rings
+    tube(d, (214, 92), (176, 26), 18, ('g0', 'g1', 'g2', 'g4'), 16)
+    P(d, [(168, 14), (188, 10), (192, 26), (172, 30)], 'g2')          # the objective bell, seen from behind (no lens toward us)
+    Ln(d, (170, 15), (187, 11), 'g4')
+    for t in (0.35, 0.7):                                              # the rings on the receiver
+        x, y = 214 + (176 - 214) * t, 92 + (26 - 92) * t
+        P(d, quad((x + 10, y - 2), (x - 10, y + 2), 5), 'g0')
+    P(d, [(206, 84), (228, 80), (232, 100), (210, 104)], 'g1')        # the eyepiece, its glass dark blue toward the eye
+    disc(d, 219, 92, 7, 'g0'); disc(d, 219, 92, 5, 'cu0'); disc(d, 217, 90, 1, 'cu3')
+    paste(im, G)
+    support_hand(im, 184, 84, math.atan2(-60, -26), w=12)
+    sleeve(im, (264, 176), (330, 200), 54)
+    grip_hand(im, 238, 140, ang=-0.5, gw=24, gh=40, trigger=True, thumb='over', fingers=3, fw=11)
+    return im, (155, 9)
 
 
 def pipe():
-    im, d = canvas()
-    sleeve(d)
-    P(d, [(96, 6), (106, 4), (128, 84), (116, 88)], 'steel')
-    P(d, [(98, 6), (101, 5), (121, 86), (118, 87)], 'steelL')
-    P(d, [(104, 5), (106, 4), (128, 84), (126, 85)], 'steelD')
-    P(d, [(95, 4), (107, 2), (108, 8), (96, 10)], 'steelD')               # the fitting at the end
-    P(d, [(97, 3), (104, 2), (104, 4), (97, 5)], 'steelH')
-    L(d, (100, 30), (108, 28), 'blood', 2)
-    fist(d, 104, 60, 24, 22)
-    return outline(im), None
+    """a crowbar: a black steel bar, the hooked claw at the top end, a full fist round the lower end"""
+    im, _ = canvas()
+    sleeve(im, (244, 170), (330, 196), 56)
+    G, d = layer()
+    tube(d, (232, 190), (172, 18), 12, ('s0', 's1', 's2', 's4'))
+    # the hook and claw at the top, bending toward the middle
+    d.arc([136, 2, 184, 46], 200, 360, fill=K['s1'] + (255,), width=11)
+    d.arc([138, 4, 182, 44], 210, 330, fill=K['s3'] + (255,), width=2)
+    P(d, [(136, 22), (146, 24), (144, 34), (132, 30)], 's1')           # the claw's split tip
+    Ln(d, (136, 26), (142, 30), 'ink')
+    Ln(d, (186, 60), (196, 56), 'blood', 3); Ln(d, (190, 70), (194, 68), 'bloodL', 2)
+    paste(im, G)
+    grip_hand(im, 214, 128, ang=-0.32, gw=12, gh=44, trigger=False, thumb='over', fw=12)
+    return im, None
 
 
 def axe():
-    im, d = canvas()
-    sleeve(d)
-    P(d, [(98, 14), (106, 12), (128, 84), (118, 88)], 'wood')
-    P(d, [(100, 14), (103, 13), (122, 86), (119, 87)], 'woodL')
-    P(d, [(84, 4), (112, 0), (114, 20), (88, 26)], 'red')                 # the head
-    P(d, [(86, 5), (110, 1), (110, 5), (87, 9)], 'redL')
-    P(d, [(88, 22), (114, 16), (114, 20), (88, 26)], 'redD')
-    P(d, [(72, 4), (86, 2), (90, 28), (76, 32)], 'steel')                 # the blade
-    P(d, [(72, 4), (76, 4), (79, 31), (76, 32)], 'steelH')
-    L(d, (75, 14), (80, 22), 'blood', 2)
-    fist(d, 104, 60, 24, 22)
-    return outline(im), None
+    im, _ = canvas()
+    sleeve(im, (244, 170), (330, 196), 56)
+    G, d = layer()
+    tube(d, (236, 192), (180, 30), 14, ('w0', 'w1', 'w2', 'w4'))      # the hickory handle
+    P(d, [(150, 6), (214, 0), (218, 40), (160, 52)], 'r2')            # the red head
+    P(d, [(154, 8), (210, 3), (212, 12), (156, 18)], 'r3')
+    P(d, [(160, 44), (216, 32), (218, 40), (160, 52)], 'r0')
+    P(d, [(122, 4), (154, 0), (164, 56), (134, 64)], 's2')            # the blade, its bevel and edge
+    P(d, [(122, 4), (132, 3), (142, 62), (134, 64)], 's3')
+    Ln(d, (122, 5), (134, 63), 's4', 2)
+    P(d, [(212, 6), (232, 10), (230, 30), (214, 34)], 'r1')           # the pick at the back
+    Ln(d, (130, 24), (138, 40), 'blood', 3)
+    paste(im, G)
+    grip_hand(im, 216, 130, ang=-0.32, gw=14, gh=46, trigger=False, thumb='over', fw=12)
+    return im, None
 
 
 def scalpel():
-    im, d = canvas()
-    sleeve(d)
-    P(d, [(104, 48), (110, 47), (120, 76), (114, 78)], 'steel')
-    P(d, [(105, 48), (107, 48), (116, 77), (114, 78)], 'steelL')
-    for i in range(5):
-        L(d, (107 + i * 2, 56 + i * 4), (111 + i * 2, 55 + i * 4), 'steelD')
-    P(d, [(100, 30), (104, 28), (110, 48), (104, 49)], 'steelH')          # the blade
-    P(d, [(100, 30), (102, 29), (106, 48), (104, 49)], 'steelL')
-    fist(d, 106, 64, 22, 20)
-    return outline(im), None
+    """a pencil grip: the steel handle between the thumb and the index, the blade's belly toward the middle"""
+    im, _ = canvas()
+    sleeve(im, (248, 172), (330, 196), 56)
+    G, d = layer()
+    tube(d, (226, 150), (180, 70), 8, ('s0', 's1', 's2', 's4'))
+    for i in range(6):
+        t = 0.45 + i * 0.07
+        x, y = 226 + (180 - 226) * t, 150 + (70 - 150) * t
+        Ln(d, (x - 3, y + 1), (x + 3, y - 1), 's0')                   # the grip's knurl
+    P(d, [(170, 74), (182, 68), (184, 74), (174, 82)], 's1')          # the blade's shoulder
+    P(d, [(158, 44), (168, 40), (182, 70), (172, 76)], 's3')          # the blade
+    P(d, [(158, 44), (162, 43), (174, 74), (172, 76)], 's4')
+    Ln(d, (166, 44), (180, 70), 's1')
+    paste(im, G)
+    # the hand: a loose fist, the index along the top of the handle, the thumb opposite
+    L, d = layer()
+    back_of_hand(d, [(222, 128), (262, 120), (272, 172), (232, 180), (214, 156)])
+    for i, (y0, w) in enumerate(((142, 11), (154, 10), (166, 9))):
+        finger(d, (232, y0), (212, y0 + 4), w, tip=(208, y0 + 12))
+        Ln(d, (234, y0 + 6), (210, y0 + 8), 'sk0')
+    knuckles(d, [(236, 140), (238, 152), (238, 164)], 4)
+    finger(d, (234, 126), (206, 112), 10, nail=True, tip=(194, 102))  # the index along the handle
+    knuckles(d, [(232, 128)], 4)
+    finger(d, (224, 140), (204, 128), 11, nail=True, tip=(196, 118))  # the thumb opposite
+    paste(im, L)
+    return im, None
 
 
 def hands():
-    im, d = canvas()
-    sleeve(d, 100)
-    fist(d, 104, 62, 26, 22)
-    return outline(im), None
+    """bare hands: a loose right fist ready to shove"""
+    im, _ = canvas()
+    sleeve(im, (240, 168), (330, 196), 56)
+    L, d = layer()
+    back_of_hand(d, [(206, 104), (252, 100), (262, 160), (220, 170), (200, 138)])
+    for i in range(4):
+        y0 = 114 + i * 13
+        finger(d, (218, y0), (194, y0 + 2), 11 - (1 if i == 3 else 0), tip=(194, y0 + 12))
+        Ln(d, (218, y0 + 7), (190, y0 + 8), 'sk0')
+    knuckles(d, [(214, 112 + i * 13) for i in range(4)], 5)
+    finger(d, (226, 114), (204, 104), 12, nail=True, tip=(192, 112))  # the thumb over the fingers
+    paste(im, L)
+    return im, None
+
+
+def flashlight():
+    """the left hand with a pen light, lower left; the lens glows"""
+    im, _ = canvas()
+    L2, d2 = layer()
+    P(d2, quad((46, 164), (0, 200), 46, 60), 'co2')
+    Ln(d2, (30, 150), (-6, 186), 'co4', 2)
+    P(d2, quad((52, 152), (40, 168), 34, 40), 'cu1')
+    Ln(d2, (38, 144), (66, 152), 'cu3')
+    paste(im, L2)
+    G, d = layer()
+    tube(d, (70, 160), (112, 96), 14, ('g0', 'g1', 'g2', 'g4'))
+    P(d, [(104, 90), (124, 84), (128, 104), (110, 108)], 'g2')       # the head
+    disc(d, 117, 94, 8, 'lensD'); disc(d, 117, 94, 6, 'lens'); disc(d, 115, 92, 2, 'bulb')
+    for i in range(5):
+        Ln(d, (78 + i * 4, 150 - i * 6), (88 + i * 4, 154 - i * 6), 'g0')   # the knurl
+    Ln(d, (96, 120), (100, 114), 'g4', 2)                             # the switch
+    paste(im, G)
+    L, d = layer()
+    back_of_hand(d, [(48, 136), (86, 116), (96, 156), (60, 172)])
+    for i in range(4):
+        y0 = 126 + i * 10
+        finger(d, (70, y0 + 6), (96, y0 - 4), 9, tip=(100, y0 + 4))
+        Ln(d, (72, y0 + 11), (98, y0 + 2), 'sk0')
+    knuckles(d, [(66 + i * 2, 132 + i * 10) for i in range(4)], 4)
+    finger(d, (60, 128), (84, 110), 10, nail=True, tip=(98, 104))     # the thumb on the switch
+    paste(im, L)
+    return im, (117, 94)
 
 
 def main():
     os.makedirs(OUT, exist_ok=True)
     meta = {}
-    for fn in (hands, scalpel, pipe, axe, nailgun, pistol, shotgun, rifle):
+    for fn in (hands, scalpel, pipe, axe, nailgun, pistol, shotgun, rifle, flashlight):
         im, muzzle = fn()
         im.save(os.path.join(OUT, f'{fn.__name__}.png'))
         meta[fn.__name__] = {'muzzle': list(muzzle) if muzzle else None}

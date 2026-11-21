@@ -22,6 +22,7 @@
     "check:pixel": "node tools/audit-pixel-items.mjs pixel-items.json",
     "build": "node tools/build-site.js",
     "play": "node tools/play-routes.mjs",
-    "check:all": "npm run check && npm run check:pixel && npm run check:pairs && npm run check:copy && node tools/check-playtest.mjs ."
+    "check:ammo": "node tools/ammo-budget.mjs",
+    "check:all": "npm run check && npm run check:ammo && npm run check:pixel && npm run check:pairs && npm run check:copy && node tools/check-playtest.mjs ."
   }
 }
