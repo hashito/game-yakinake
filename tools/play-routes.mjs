@@ -112,7 +112,7 @@ async function run(route) {
           expect(await G("y.flags['mart:fight'] === true || y.flags.mart === 'fight'"), 'the mart fight starts');
           await G("(() => { const it = y.case.add('pistol', 1, { loaded: 8 }); y.case.add('p9', 40); const w = y.case.items.find((i) => i.id === 'pistol'); if (w) y.equipUid(w.uid); return 1; })()");
           for (let i = 0; i < 80 && !(await G("!!y.flags['mart:open']")); i++) {
-            const t2 = await G("(() => { const t = y.peopleTargets().find((t) => t.alive); if (!t) return null; const p = t.root.getWorldPosition(t.root.position.clone()); return [p.x, p.y + 1.2, p.z]; })()");
+            const t2 = await G("(() => { const t = y.peopleTargets().find((t) => t.alive); if (!t) return null; const p = t.pos; return [p.x, p.y + 1.2, p.z]; })()");
             if (!t2) break;
             await lookAt(...t2); await key('Fire'); await frames(3); await key('Fire', 'keyup'); await key('KeyR'); await sleep(250);
           }

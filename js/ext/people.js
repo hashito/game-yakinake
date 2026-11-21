@@ -29,15 +29,19 @@ export function installPeople(ext, G) {
       try { sets.set(p.id, await loadFrameSet(THREE, `${FIG}${p.id}.json`)); } catch (e) { console.warn('[yakinake] figure', p.id, e); }
       report(++k / PEOPLE.length, `人を準備中… ${Math.round((k / PEOPLE.length) * 100)}%`);
     }));
+    loaded = true; placeAll();
   });
+  // the boot (behind the title) ends after game:ready: the people stand once both have happened
+  let loaded = false, placed = false;
   const figMat = (self, name) => {
     const m = new THREE.MeshLambertMaterial({ vertexColors: true }); m.name = name;
     m.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\n totalEmissiveRadiance += diffuseColor.rgb * ${self.toFixed(3)};`); };
     m.customProgramCacheKey = () => `yk-fig-${self}`;
     return m;
   };
-  ext.on('game:ready', (c) => {
-    ctx = c;
+  ext.on('game:ready', (c) => { ctx = c; placeAll(); });
+  function placeAll() {
+    if (!ctx || !loaded || placed) return; placed = true;
     const plan = ctx.data.plan, W = ctx.world, mat = figMat(0.22, 'yk-person');
     const warm = [];
     for (const P of PEOPLE) {
@@ -62,7 +66,7 @@ export function installPeople(ext, G) {
     for (const w of warm) { if (!w) continue; w.visible = false; ctx.scene.add(w); }
     ctx.warmObjects = [...(ctx.warmObjects || []), ...warm.filter(Boolean)];
     G.people = figs;
-  });
+  }
   G.person = (id) => figs.get(id) || null;
   G.showPerson = (id, on) => { const p = figs.get(id); if (p) { p.hidden = !on; p.f.root.visible = on; } };
   /** a person walks to (x, z) (no path: a straight line inside the room), then stands */
