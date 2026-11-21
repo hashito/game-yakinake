@@ -56,15 +56,17 @@ html[data-input="touch"] .yk-weapon { right: 34%; width: 192px; height: 128px; }
 .yk-status.yk-tap .yk-wn, .yk-status.yk-tap .yk-wa { /* pair-ok */ min-height: 28px; display: inline-flex; align-items: center; padding: 0 6px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); cursor: pointer; }
 .yk-status.yk-float { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 62px); left: calc(env(safe-area-inset-left, 0px) + 10px); z-index: 20; min-width: 0; }
 body:not(.yk-playing) .yk-status.yk-float { display: none; }
-/* a phone held upright: the seven buttons in three low rows (no tall ones), so the thought band above them stays clear (P31) */
+/* a phone held upright: the seven buttons in two low rows of four narrow ones, clear of the stick on the left and of the thought band
+   above (P31; the prompt joins the column on top when something can be pressed) */
 @media (orientation: portrait) {
-  html[data-input="touch"] #t-buttons { grid-template-columns: repeat(3, auto); }
+  html[data-input="touch"] #t-buttons { grid-template-columns: repeat(4, auto); gap: 6px; }
+  html[data-input="touch"] #t-buttons button { min-width: 50px; padding: 0 2px; font-size: 12px; }
   html[data-input="touch"] #t-buttons button.big { grid-row: auto; height: 46px; font-size: 14px; }
 }
 /* a phone held upright: the mini games' caption and message keep a fixed height, so a longer line never moves the buttons (P36:
    torn-paper, sort-items) */
 @media (orientation: portrait) and (max-width: 600px) {
-  .mgx .mgx-st-line { height: 4.35em !important; min-height: 0 !important; overflow: hidden !important; flex: 0 0 auto; }
+  .mgx .mgx-st-line { height: 4.35em !important; min-height: 0 !important; overflow: hidden !important; }
   .mgx .mgx-msg { height: 3.2em; min-height: 0; line-height: 1.6; overflow: hidden; }
 }
 /* the title box stays solid over the dark roof picture (muted lines kept readable, contrast check at 1920x1080) */
