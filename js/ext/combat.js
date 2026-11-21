@@ -115,7 +115,7 @@ export function installCombat(ext, G) {
   };
   function shoot() {
     const h = heldNow(), g = h.c.gun;
-    if (h.it.loaded <= 0) { G.sfx('empty'); cool = 0.25; if (G.case.count(g.ammo)) reload(); else ctx.ui.say(`弾がない。${CATALOG[g.ammo].name}を探すか、［V］で殴る。`, 3, { urgent: true }); return; }
+    if (h.it.loaded <= 0) { G.sfx('empty'); cool = 0.25; if (G.case.count(g.ammo)) reload(); else ctx.ui.say(`弾がない。${CATALOG[g.ammo].name}を探すか、[V]で殴る。`, 3, { urgent: true }); return; }
     h.it.loaded -= 1; cool = g.rate; kick = 1; flashT = 0.06;
     G.sfx(h.it.id); G.noise(ctx.camera.position, g.noise);
     const base = aimRay().clone(), n = g.pellets || 1;
@@ -156,7 +156,7 @@ export function installCombat(ext, G) {
   G.hurt = (dmg, o = {}) => {
     if (!ctx || ctx.state.ended || G.dead) return;
     G.hp -= dmg; hurtFlash = 1; regen = 0; G.sfx('hurt');
-    if (o.grab && !grab) { grab = { t: o.grab + 0.6, by: o.by }; grabTag.textContent = ctx.isTouch ? 'つかまれた！「殴る」で振りほどく' : 'つかまれた！［V］か右クリックで振りほどく'; grabTag.classList.add('on'); }
+    if (o.grab && !grab) { grab = { t: o.grab + 0.6, by: o.by }; grabTag.textContent = ctx.isTouch ? 'つかまれた！「殴る」で振りほどく' : 'つかまれた！[V]か右クリックで振りほどく'; grabTag.classList.add('on'); }
     hud();
     if (G.hp <= 0) { G.dead = true; G.hp = 0; grab = null; grabTag.classList.remove('on'); ctx.die(o.reason || 'bitten'); }
   };

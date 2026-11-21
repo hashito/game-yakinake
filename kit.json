@@ -1,5 +1,5 @@
 {
-  "kit": "e962dd12",
+  "kit": "80041248",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -170,10 +170,12 @@
     "talk-ring.mjs",
     "wall-door.mjs",
     "mark-sight.mjs",
-    "pick-overlap.mjs"
+    "pick-overlap.mjs",
+    "build-site.js",
+    "make_og.py"
   ],
   "hashes": {
-    "js\\kit\\game-core.js": "4ab13f672a9f",
+    "js\\kit\\game-core.js": "db4f53342d0a",
     "js\\kit\\item-kinds.js": "1df558ca9be9",
     "js\\kit\\item-models.js": "8c5988e07991",
     "js\\kit\\prop-geo.js": "6015f33a97f7",
@@ -350,7 +352,9 @@
     "js\\kit\\mg-footprint-track.js": "e027bad1a9f0",
     "js\\kit\\mg-steam-letter.js": "c623b9908476",
     "js\\kit\\mg-darkroom-develop.js": "a7a6ef9b4e25",
-    "js\\kit\\footprints.js": "302cff91ef43"
+    "js\\kit\\footprints.js": "302cff91ef43",
+    "tools/build-site.js": "c8beaa333016",
+    "tools/make_og.py": "5f7a64af835d"
   },
   "textures": []
 }

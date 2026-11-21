@@ -10,16 +10,16 @@
     "fog": {
       "type": "exp2",
       "color": 726038,
-      "density": 0.05
+      "density": 0.03
     },
     "far": 60,
     "background": 329738,
     "hemi": {
-      "sky": 2767428,
-      "ground": 921618,
-      "intensity": 0.35
+      "sky": 6978184,
+      "ground": 2761760,
+      "intensity": 0.95
     },
-    "exposure": 0.95
+    "exposure": 1.15
   },
   "modules": [
     "game-core",

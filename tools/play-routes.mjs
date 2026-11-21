@@ -52,8 +52,8 @@ async function run(route) {
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
       if (g.target && g.target.kind + ':' + g.target.id === ${JSON.stringify(name)}) return 'ok'; }
     return 'no selectable approach side'; })()`);
-  const dismiss = async () => { for (let i = 0; i < 6 && (await G('!!(g.ui.open || g.wm.isOpen)')); i++) { await p.key('Escape'); await sleep(250); if (await G('!!(g.ui.open || g.wm.isOpen)')) { await p.eval("document.querySelector('.win-foot .btn')?.click()"); await sleep(250); } } };
-  const press = async (name) => { await dismiss(); const a = await approach(name); if (a !== 'ok') { log('cannot reach', name, a); return false; } await p.key('KeyE'); await sleep(400); return true; };
+  const dismiss = async () => { for (let i = 0; i < 6 && (await G('!!(g.ui.open || g.wm.isOpen || (g.blockers || []).some((f) => f()))')); i++) { await p.key('Escape'); await sleep(250); if (await G('!!(g.ui.open || g.wm.isOpen)')) { await p.eval("document.querySelector('.win-foot .btn')?.click()"); await sleep(250); } } };
+  const press = async (name) => { await dismiss(); const a = await approach(name); if (a !== 'ok') { log('cannot reach', name, a, JSON.stringify(await G("({ blocked: g.blocked && g.blocked(), wm: g.wm.current, ui: !!g.ui.open, target: g.target && g.target.id, floor: g.floor, blockers: (g.blockers || []).map((f) => !!f()), mg: !!g.mgOpen, rn: !!g.rnOpen, started: g.state.started, ended: g.state.ended, ov: [...document.querySelectorAll('[class*=mg-], .reading, .lane')].filter((e) => e.offsetParent).map((e) => e.className).slice(0, 4), dead: !!g.state.dead, hold: !!g.holding })"))); return false; } await p.key('KeyE'); await sleep(400); return true; };
   // clear the zombies near the player (the play scripts are about the story; "combat" checks the fighting)
   const calm = () => G('(y.liveZombies().forEach((L) => { if (L.alive && L.z && L.z.root && L.z.root.position.distanceTo(g.camera.position) < 12) L.z.kill(); }), 1)');
   try {

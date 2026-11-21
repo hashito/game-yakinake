@@ -97,7 +97,7 @@ export function installCase(ext, G) {
     run: (o) => {
       const g = lootMeshes.get(o.id); if (!g) return;
       const def = g.userData.def, r = C.add(def.item, def.n, def.o || {});
-      if (r === def.n) { ctx.ui.say(`ケースに入らない。ケースを開いて（［B］）、詰め直すか、何かを置いていく。`, 5, { urgent: true }); return; }
+      if (r === def.n) { ctx.ui.say(`ケースに入らない。ケースを開いて（[B]）、詰め直すか、何かを置いていく。`, 5, { urgent: true }); return; }
       ctx.sound && ctx.sound('pickup');
       ctx.ui.toast(`入手：${esc(CATALOG[def.item].name)}${def.n - r > 1 ? `×${def.n - r}` : ''}`);
       if (r > 0) { def.n = r; g.userData.interact.label = `${CATALOG[def.item].name}×${r}`; ctx.ui.say('全部は入らなかった。残りは、そこに置いてある。', 4); }
@@ -155,7 +155,7 @@ export function installCase(ext, G) {
     ].join('') : '';
     const gore = G.gore || 'full';
     host.innerHTML = `<div class="yk-case">
-      <p class="yk-help">${C.held ? `「${esc(CATALOG[C.held.id].name)}」を持っている。置きたい枡を押す。［R］か「回す」で向きを変える。` : '物を押すと持ち上がる。置きたい枡を押すと置ける。'}</p>
+      <p class="yk-help">${C.held ? `「${esc(CATALOG[C.held.id].name)}」を持っている。置きたい枡を押す。[R]か「回す」で向きを変える。` : '物を押すと持ち上がる。置きたい枡を押すと置ける。'}</p>
       <div class="yk-grids"><div><h4>${esc(B.name)}（${B.w}×${B.h}）</h4>${gridHtml(C.items, B.w, B.h, 'bag')}</div>
       ${C.atStore ? `<div><h4>保管箱（${STORE.w}×${STORE.h}）</h4>${gridHtml(C.store, STORE.w, STORE.h, 'store')}</div>` : ''}</div>
       <div class="yk-info">${sel ? `<b>${esc(c.name)}</b>　${esc(c.desc || '')}${c.gun ? `（弾：${esc(CATALOG[c.gun.ammo].name)}　残り ${C.count(c.gun.ammo)}）` : ''}` : `体力 ${Math.round(G.hp)} / 100${G.equip && C.byUid(G.equip) ? `　構えている物：${esc(CATALOG[C.byUid(G.equip).id].name)}` : ''}`}</div>

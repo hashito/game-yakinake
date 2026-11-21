@@ -83,6 +83,9 @@ export default async function dotLayer(ext, { manifest, data }) {
     D.timings.pictures = Math.round(performance.now() - t);
   });
 
+  // systems are registered before the game starts; the world's own update is filled in at game:ready
+  let worldUpdate = null;
+  ext.registerSystem('dot-world', { update(dt) { if (worldUpdate) worldUpdate(dt); } });
   const PAL = palette(YK_PALETTE);
   D.palette = PAL;
   ext.on('game:ready', (ctx) => {
@@ -112,6 +115,7 @@ export default async function dotLayer(ext, { manifest, data }) {
     dress();
     // ---- the stations' own things ----
     const swaps = [];
+    const lamps = [];
     for (const [sid, spec] of Object.entries(STATION_PART)) {
       const st = plan.stations.find((s) => s.id === sid); const S = typeof spec === 'string' ? { k: spec } : spec;
       if (!st || !index[S.k]) continue;
@@ -129,7 +133,11 @@ export default async function dotLayer(ext, { manifest, data }) {
     for (const [room, k, x, z, face = 0, s = 1] of PROPS) {
       if (!index[k]) { D.props.push([k, 'missing']); continue; }
       const m = part(k, s); m.rotation.y = face; m.position.set(x, fy(room), z); W.group.add(m); D.props.push([k, room]);
+      if (k === 'street-lamp') lamps.push(new THREE.Vector3(x, fy(room) + 4.2, z));
     }
+    // the street lamps that still burn: three sodium lights follow the three lamps nearest the player (cheap on a phone)
+    const lampLights = [0, 1, 2].map(() => { const l = new THREE.PointLight(0xffa850, 0, 16, 1.2); l.name = 'dot-street-lamp'; scene.add(l); return l; });
+    D.lamps = lamps.length;
     // ---- the helicopter: it comes down onto the pad when the last stand is over ----
     let heli = null;
     if (index.helicopter) { heli = part('helicopter'); heli.position.set(136, W.floorY(4) + 40, 6); heli.rotation.y = Math.PI / 2; heli.visible = false; W.group.add(heli); D.heli = heli; }
@@ -147,13 +155,23 @@ export default async function dotLayer(ext, { manifest, data }) {
     setInterval(() => { try { dotify(); } catch (e) { /* the next pass */ } }, 2000);
     // ---- light: never pure black, a small light round the player, the next goal glows ----
     const amb = new THREE.AmbientLight(0x2a3440, 0.6); amb.name = 'dot-floor-light'; scene.add(amb);
-    const near = new THREE.PointLight(0xd0d8e0, 0.9, 7, 1.4); near.name = 'dot-near-light'; scene.add(near);
+    const near = new THREE.PointLight(0xd0d8e0, 3, 7, 1.4); near.name = 'dot-near-light'; scene.add(near);
     const cv = document.createElement('canvas'); cv.width = cv.height = 16; const g = cv.getContext('2d');
     for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const d = Math.abs(x - 7.5) + Math.abs(y - 7.5); if (d < 7) { g.fillStyle = d < 3 ? '#fff4c8' : d < 5 ? '#f2c66a' : '#a8742a'; g.fillRect(x, y, 1, 1); } }
     const tex = new THREE.CanvasTexture(cv); tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.colorSpace = THREE.SRGBColorSpace;
     const beacon = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: true, fog: false })); beacon.scale.setScalar(0.22); beacon.name = 'dot-goal-beacon'; beacon.visible = false; scene.add(beacon);
     const goalLight = new THREE.PointLight(0xffd890, 0, 3.2, 1.5); goalLight.name = 'dot-goal-light'; scene.add(goalLight);
     let T = 0, goalT = 0, goal = null, blockT = 0, lightWant = null;
+    const DAWN = new THREE.Color(0x6a4a52);
+    // the helipad: a painted H in a circle on the roof (a pixel decal)
+    {
+      const cv2 = document.createElement('canvas'); cv2.width = cv2.height = 48; const q = cv2.getContext('2d');
+      q.fillStyle = '#e8d8a0'; for (let y = 0; y < 48; y++) for (let x = 0; x < 48; x++) { const d = Math.hypot(x - 23.5, y - 23.5); if (d > 19 && d < 22) q.fillRect(x, y, 1, 1); }
+      q.fillRect(15, 13, 4, 22); q.fillRect(29, 13, 4, 22); q.fillRect(15, 22, 18, 4);
+      const tx = new THREE.CanvasTexture(cv2); tx.magFilter = THREE.NearestFilter; tx.minFilter = THREE.NearestFilter; tx.colorSpace = THREE.SRGBColorSpace;
+      const pad = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), new THREE.MeshLambertMaterial({ map: tx, transparent: true, depthWrite: false }));
+      pad.rotation.x = -Math.PI / 2; pad.position.set(137, W.floorY(4) + 0.02, 6.5); pad.name = 'dot-helipad'; W.group.add(pad);
+    }
     const LIGHT = { hospital: { c: new THREE.Color(0x3a5058), i: 0.8 }, street: { c: new THREE.Color(0xd08a4a), i: 1.25 }, police: { c: new THREE.Color(0x3a4a78), i: 0.95 },
       tower: { c: new THREE.Color(0x4a5460), i: 0.9 }, roof: { c: new THREE.Color(0xb07a80), i: 1.4 } };
     const goalPos = () => {
@@ -161,10 +179,9 @@ export default async function dotLayer(ext, { manifest, data }) {
       const m = tk.station ? W.interactables.find((o) => o.name === `station:${tk.station}` && o.visible !== false) : null;
       return m ? m.getWorldPosition(new THREE.Vector3()) : null;
     };
-    ext.registerSystem('dot-world', {
-      update(dt) {
+    worldUpdate = (dt) => {
         T += dt;
-        const c = ctx.camera.position; near.position.set(c.x, c.y - 0.2, c.z); near.intensity = ctx.lightOn === false ? 0.3 : 0.9;
+        const c = ctx.camera.position; near.position.set(c.x, c.y - 0.2, c.z); near.intensity = ctx.lightOn === false ? 1 : 3;
         // the floor of light by block: outside, the sodium lamps and the fires light the street; the roof is the coming dawn
         blockT -= dt;
         if (blockT <= 0) {
@@ -172,11 +189,18 @@ export default async function dotLayer(ext, { manifest, data }) {
           const G = window.__yk, r = G && G.roomAtP ? G.roomAtP(c.x, c.z, ctx.floor || 0) : null, id = (r && r.id) || '';
           const want = /^O_ROOF/.test(id) ? LIGHT.roof : /^(S_URA|S_ODORI|S_SHOTEN|S_HIROBA|O_PLAZA|P_URA)$/.test(id) ? LIGHT.street : /^S_/.test(id) ? LIGHT.tower : /^P_/.test(id) ? LIGHT.police : /^O_/.test(id) ? LIGHT.tower : LIGHT.hospital;
           lightWant = want;
+          // the roof is open to the sky: the dawn shows behind it (the stage look keeps the night elsewhere)
+          if (want === LIGHT.roof) { scene.background = DAWN; if (scene.fog) scene.fog.color.copy(DAWN); }
+          else if (scene.background === DAWN) { scene.background = null; ctx.stageLook && ctx.stageLook.apply(); }
+        }
+        if (lamps.length && blockT >= 0.49) {
+          const near3 = lamps.map((v) => [v, v.distanceToSquared(c)]).sort((a, b) => a[1] - b[1]).slice(0, 3);
+          lampLights.forEach((l, i) => { const n = near3[i]; if (n && n[1] < 30 * 30 && (ctx.floor || 0) === 0) { l.position.copy(n[0]); l.intensity = 22; } else l.intensity = 0; });
         }
         if (lightWant) { amb.color.lerp(lightWant.c, Math.min(1, dt * 2)); amb.intensity += (lightWant.i - amb.intensity) * Math.min(1, dt * 2); }
         goalT -= dt; if (goalT <= 0) { goalT = 0.5; goal = ctx.state.started ? goalPos() : null; }
         const gd = goal ? c.distanceTo(goal) : 99, on = gd < 14;
-        beacon.visible = on && gd > 1.8; goalLight.intensity = on ? 1.2 + Math.sin(T * 3) * 0.4 : 0;
+        beacon.visible = on && gd > 1.8; goalLight.intensity = on ? 4 + Math.sin(T * 3) * 1.2 : 0;
         if (on) { beacon.position.set(goal.x, goal.y + 0.55 + Math.sin(T * 2.5) * 0.05, goal.z); goalLight.position.set(goal.x, goal.y + 0.4, goal.z); }
         for (const s of swaps) for (const [task, k] of s.after) if (!s.done && ctx.state.tasks.includes(task)) { const kk = typeof k === 'function' ? k() : k; if (index[kk]) s.m.geometry = cgeo(kk); s.done = true; }
         // the helicopter: seen coming once the timer of the last stand runs low, landed when it is over
@@ -185,8 +209,7 @@ export default async function dotLayer(ext, { manifest, data }) {
           if (done) { heli.visible = true; heli.position.y += (W.floorY(4) + 0.05 - heli.position.y) * Math.min(1, dt * 1.5); }
           else if (tm && tm.left < 25 && ctx.floor === 4) { heli.visible = true; heli.position.y = W.floorY(4) + 6 + tm.left * 1.4; }
         }
-      },
-    });
+    };
     D.timings.dress = Math.round(performance.now() - t);
   });
 }

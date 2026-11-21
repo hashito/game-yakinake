@@ -1,0 +1,14 @@
+{
+  "image": "tools/_raw/og-street.png",
+  "out": "assets/og-image.png",
+  "size": [1200, 630],
+  "bg": "#05070a",
+  "brightness": 1.0,
+  "shade": { "side": "left", "color": "#05070a", "from": 225, "to": 0, "reach": 0.7 },
+  "texts": [
+    { "text": "夜勤明けの街", "x": 60, "y": 150, "font": "mincho", "size": 104, "color": "#f6faf6", "glow": "#d08a2a", "max_width": 640, "line_gap": 12, "max_lines": 1 },
+    { "text": "屋上のヘリまで、生きて歩け", "x": 64, "y": 290, "font": "gothic_b", "size": 38, "color": "#ffd890", "max_width": 620, "max_lines": 1 },
+    { "text": "一人称ドット3D ゾンビ・サバイバル", "x": 64, "y": 350, "font": "gothic", "size": 24, "color": "#dde8e2", "max_width": 620, "max_lines": 1 },
+    { "text": "PC・スマホ・無料", "x": 64, "y": 388, "font": "gothic", "size": 24, "color": "#dde8e2", "max_width": 620, "max_lines": 1 }
+  ]
+}

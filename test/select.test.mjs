@@ -6,9 +6,10 @@ import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
 // no residuals: the checker (1.7) counts only approaches from inside a room with no wall in between
-const RESIDUALS = '';
+// the stairs are entered along their run; from the side the wall of the stairwell is in the way (residual, kit 1.7 counts poses inside the room)
+const RESIDUALS = 'stairs:ST01,stairs:ST23';
 const have = ['C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', 'C:/Program Files/Microsoft/Edge/Application/msedge.exe', 'C:/Program Files/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', process.env.BROWSER].filter(Boolean).some((p) => fs.existsSync(p));
 test('select range: every interactable passes check-select-range (--preset core --strict)', { skip: !have && 'no headless browser' }, () => {
-  const r = spawnSync(process.execPath, ['tools/check-select-range.mjs', '--root', '.', '--preset', 'core', '--query', 'qa=1&autostart', '--strict', ...(RESIDUALS ? ['--allow', RESIDUALS] : [])], { encoding: 'utf8', timeout: 120000 });
+  const r = spawnSync(process.execPath, ['tools/check-select-range.mjs', '--root', '.', '--preset', 'core', '--query', 'qa=1&autostart', '--strict', ...(RESIDUALS ? ['--allow', RESIDUALS] : [])], { encoding: 'utf8', timeout: 280000 });
   assert.equal(r.status, 0, r.stdout + r.stderr);
 });

@@ -3,11 +3,6 @@
  "negative": "text, letters, words, numbers, caption, watermark, logo, kanji, writing, signs, signature, label text, gore, guts, deformed, extra fingers, bad hands, disfigured face, cartoon, nudity",
  "images": [
   {
-   "key": "title",
-   "size": "1344x768",
-   "prompt": "the rooftop helipad of a tall office building at the blue hour before dawn, a big painted H circle on wet concrete, a city of dark towers below with a few fires and smoke, the first pale light on the horizon over the sea, a lone woman in a white doctor coat seen from behind holding a crowbar, wind"
-  },
-  {
    "key": "op-1",
    "size": "1344x768",
    "prompt": "a small hospital on-call room at night, a tired Japanese woman doctor in her early thirties in a white coat asleep sitting on a worn sofa, a desk lamp, a stethoscope on the table, a wall clock, cold hospital light"
@@ -136,11 +131,6 @@
    "key": "mg-desk",
    "size": "1344x768",
    "prompt": "top-down view into an open steel desk drawer in a hospital morgue office at night, a ring of old keys at lower left, a duty roster clipboard at upper right, pens, a stamp pad, scattered papers, dark, a penlight beam"
-  },
-  {
-   "key": "mg-locker",
-   "size": "1344x768",
-   "prompt": "inside an open grey steel evidence locker in a Japanese police station, a pump shotgun with a paper evidence tag standing at left, a cardboard box of shotgun shells with a tag at lower right, plastic bags with tags, dark, a penlight beam"
   }
  ]
 }
