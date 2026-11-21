@@ -1,0 +1,19 @@
+{
+  "image": "valve-detail.png",
+  "width": 40,
+  "height": 40,
+  "pivot": [
+    20,
+    25
+  ],
+  "loop": false,
+  "frames": [
+    {
+      "x": 0,
+      "y": 0,
+      "w": 40,
+      "h": 40,
+      "duration": 1000
+    }
+  ]
+}

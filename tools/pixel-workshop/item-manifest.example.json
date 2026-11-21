@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "policy": "all-gameplay-items-pixel",
+  "items": [
+    {
+      "id": "maintenance-key",
+      "name": "保守庫の鍵",
+      "kind": "pickup",
+      "collectable": true,
+      "examinable": true,
+      "world": "assets/pixel/items/maintenance-key-world.png",
+      "inventory": "assets/pixel/items/maintenance-key-inventory.png",
+      "examine": "assets/pixel/items/maintenance-key-examine.png",
+      "states": ["unused", "used"],
+      "pixelArt": true
+    },
+    {
+      "id": "wall-phone",
+      "name": "壁掛け電話",
+      "kind": "prop",
+      "collectable": false,
+      "examinable": false,
+      "world": "assets/pixel/props/wall-phone.png",
+      "inventory": null,
+      "examine": null,
+      "states": ["idle"],
+      "pixelArt": true
+    }
+  ]
+}

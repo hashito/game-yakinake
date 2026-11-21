@@ -1,0 +1,66 @@
+[
+  {
+    "id": "T1",
+    "title": "勤怠端末で出勤をつける",
+    "stage": "L1",
+    "room": "R1",
+    "station": "S1",
+    "meaning": "今夜の勤務が始まったことを、記録に残すため。",
+    "hint": "端末は、机の並ぶ奥の壁にあるはず。",
+    "minigame": {
+      "type": "dial",
+      "cfg": {
+        "title": "勤怠端末：時刻つまみ",
+        "target": 110,
+        "label": "1:50",
+        "help": "つまみを回して、印に針を合わせる"
+      }
+    },
+    "steps": [
+      {
+        "text": "事務室の奥の端末へ歩く",
+        "body": "光っている端末が、作業の場所。",
+        "done": "look",
+        "emphasis": "station:S1"
+      },
+      {
+        "text": "[E]で端末を操作する",
+        "body": "小さな遊びを一つ終えると、出勤がつく。",
+        "done": "task"
+      }
+    ]
+  },
+  {
+    "id": "T2",
+    "title": "制御盤で出入口を開ける",
+    "stage": "L2",
+    "room": "R2",
+    "station": "S2",
+    "meaning": "外へ出られるように、出入口の錠を外すため。",
+    "needs": [
+      "T1"
+    ],
+    "hint": "廊下の奥、ロビーの壁に盤がある。",
+    "minigame": {
+      "type": "sequence",
+      "cfg": {
+        "title": "制御盤：点灯の順番",
+        "n": 4,
+        "symbols": 4,
+        "help": "上に出た順に、ボタンを押す"
+      }
+    },
+    "steps": [
+      {
+        "text": "廊下の奥、ロビーの盤へ",
+        "body": "ロビーに入ったら、光っている盤を見る。",
+        "done": "look",
+        "emphasis": "station:S2"
+      },
+      {
+        "text": "[E]で盤を操作する",
+        "done": "task"
+      }
+    ]
+  }
+]

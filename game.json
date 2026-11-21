@@ -1,0 +1,74 @@
+{
+  "id": "yakinake",
+  "title": "夜勤明けの街",
+  "subtitle": "3D一人称ゲームの標準ひな形",
+  "version": "0.1.0",
+  "standard": "1.23",
+  "theme": "dark-industrial hospital-cold",
+  "preset": "office",
+  "modules": [
+    "game-core",
+    "ext",
+    "schema-check",
+    "game-data",
+    "world-from-plan",
+    "plan-check",
+    "task-minigames",
+    "render-presets",
+    "frame-guard",
+    "controller",
+    "ui",
+    "store",
+    "audio",
+    "progression",
+    "progress-ui",
+    "inventory-ui",
+    "release-notes",
+    "win-manager",
+    "tab-menu",
+    "pause-menu",
+    "journal-ui",
+    "map-svg",
+    "step-guide",
+    "analytics"
+  ],
+  "minigames": [],
+  "entry": {
+    "html": "index.html",
+    "main": "js/main.js"
+  },
+  "ext": [
+    "js/ext/index.js"
+  ],
+  "data": {
+    "plan": "data/plan.json",
+    "items": "data/items.json",
+    "docs": "data/docs.json",
+    "tasks": "data/tasks.json",
+    "stages": "data/stages.json",
+    "endings": "data/endings.json",
+    "releaseNotes": "data/release-notes.json",
+    "monsters": "data/monsters.json",
+    "things": "data/things.json",
+    "terminals": "data/terminals.json",
+    "talk": "data/talk.json"
+  },
+  "media": {
+    "dir": "assets"
+  },
+  "fx": "old-tv",
+  "recipes": {
+    "props": true,
+    "textures": "assets/textures/"
+  },
+  "voice": true,
+  "things": true,
+  "controls": {
+    "crouch": true,
+    "flashlight": true
+  },
+  "style": "pixel",
+  "pixel": {
+    "world": "texture"
+  }
+}

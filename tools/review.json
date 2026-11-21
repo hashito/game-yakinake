@@ -1,0 +1,29 @@
+{
+  "about": "画面の点検（node tools/review-shots.mjs）。順路の要所に加えて、順番を外れた行動（早すぎる階段・鍵の戸・死亡）と結末を必ず入れる。撮った絵は全部見る。",
+  "runs": [
+    {
+      "name": "route",
+      "query": "?debug=1",
+      "steps": [
+        {
+          "name": "title",
+          "shot": true
+        },
+        {
+          "name": "start",
+          "shot": true
+        },
+        {
+          "name": "off-route-locked-door",
+          "eval": "/* stand at a locked door or stairs, then press E */",
+          "keys": [
+            "KeyE"
+          ],
+          "wait": 900,
+          "shot": true,
+          "expect": "scr.say.join('') ? true : 'nothing said why it is locked'"
+        }
+      ]
+    }
+  ]
+}

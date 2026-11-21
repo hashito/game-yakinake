@@ -1,0 +1,5 @@
+/* The look of 夜勤明けの街: override design tokens only (see css/theme.css for the list). Start from a kit theme (data-theme in
+   index.html and game.json "theme": dark-industrial | paper-light | retro-crt) and change what is yours. */
+[data-theme="dark-industrial hospital-cold"] {
+  /* --gf-accent: #d98a2b;  --gf-accent-ink: #1a1206;  --gf-radius: 4px;  --gf-font: 'Noto Sans JP', sans-serif; */
+}

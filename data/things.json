@@ -1,0 +1,29 @@
+[
+  {
+    "id": "R1_CALENDAR",
+    "room": "R1",
+    "position": [
+      4,
+      3
+    ],
+    "y": 1.5,
+    "label": "カレンダー",
+    "photo": "",
+    "text": "今月の日付が、全部丸で囲まれている。",
+    "feeling": "毎日、出勤している。",
+    "size": 1
+  },
+  {
+    "id": "R1_PC",
+    "room": "R1",
+    "position": [
+      6,
+      2.2
+    ],
+    "y": 1.1,
+    "label": "勤怠ログの端末",
+    "terminal": "T_LOG",
+    "text": "端末の画面が、ついている。",
+    "size": 1
+  }
+]

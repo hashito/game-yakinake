@@ -1,0 +1,38 @@
+{
+  "goal": {
+    "title": "今夜の仕事を終えて、建物を出る",
+    "short": "仕事を終える",
+    "sub": "事務室で勤怠をつけ、ロビーの制御盤を操作して、外へ出る。",
+    "meter": "進み"
+  },
+  "levels": [
+    {
+      "id": "L1",
+      "name": "事務室",
+      "title": "勤怠をつける",
+      "unlocks": [
+        "office"
+      ]
+    },
+    {
+      "id": "L2",
+      "name": "ロビー",
+      "title": "出入口を開ける",
+      "unlocks": [
+        "lobby"
+      ]
+    }
+  ],
+  "unlocks": {
+    "office": {
+      "name": "事務室と廊下",
+      "icon": "building",
+      "desc": "最初から歩ける。"
+    },
+    "lobby": {
+      "name": "ロビー",
+      "icon": "door",
+      "desc": "勤怠をつけると、廊下の奥の扉が開く。"
+    }
+  }
+}

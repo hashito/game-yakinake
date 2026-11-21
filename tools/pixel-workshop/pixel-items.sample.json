@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "policy": "all-gameplay-items-pixel",
+  "items": [
+    {
+      "id": "valve-wheel",
+      "name": "止水ハンドル",
+      "kind": "pickup",
+      "collectable": true,
+      "examinable": true,
+      "world": "samples/valve-wheel.png",
+      "inventory": "samples/valve-wheel.png",
+      "examine": "samples/valve-detail.png",
+      "states": ["loose", "installed"],
+      "pixelArt": true
+    }
+  ]
+}
