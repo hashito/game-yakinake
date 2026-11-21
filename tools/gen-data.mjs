@@ -368,7 +368,12 @@ for (const [k, lines] of Object.entries(talk)) lines.forEach((l, i) => { l.id = 
 // ------------------------------------------------------------------ monsters: none from the kit (the zombies are js/ext/zombies.js)
 const monsters = { early: { stages: 1 }, hints: { run: '走れ！', turn: '曲がれ！', hide: '隠れろ！' }, monsters: [] };
 
-const releaseNotes = { version: VERSION, notes: [{ version: '1.1.0', date: '2026-11-22', title: 'ケース・武器・夜の街', items: [
+const releaseNotes = { version: VERSION, notes: [{ version: '1.1.1', date: '2026-11-22', title: '細かな直し', items: [
+  { type: 'fix', text: '武器の使い方の一言は、手に持っている武器のことだけを出すようにしました（持ち替えると消えます）。' },
+  { type: 'fix', text: '夜空の星が、赤・緑・青の点のちらつきに見えていたのを直しました。星は少なく、淡くしました。' },
+  { type: 'fix', text: '背の低いスマホの横持ちで、手の武器が字幕に隠れないよう、字幕を上に出すようにしました。' },
+  { type: 'change', text: '物陰に隠れた人は、降参と見分けられるよう、しゃがむ姿になりました。' },
+] }, { version: '1.1.0', date: '2026-11-22', title: 'ケース・武器・夜の街', items: [
   { type: 'change', text: 'ケースを大きくしました。升目が画面いっぱいに広がり、持った物の影が「入る（緑）／入らない（赤）」で見えます。回転ボタンと、物の名前・説明を横に表示。' },
   { type: 'change', text: '鍵やカード、薬を拾ったときの絵を、物の写真をドットにしたものに替えました。書類と調べた物にも絵が付きます。' },
   { type: 'change', text: 'お知らせは一つずつ、短く出て消えるようにしました。' },

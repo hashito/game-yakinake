@@ -24,6 +24,7 @@
   "walk.8",
   "attack.1",
   "attack.2",
+  "crouch.1",
   "fear.1",
   "fear.2",
   "turn.1",
@@ -67,6 +68,13 @@
    "fps": 4,
    "loop": true,
    "fallback": "reach"
+  },
+  "crouch": {
+   "frames": [
+    "crouch.1"
+   ],
+   "loop": true,
+   "fallback": "idle"
   },
   "fear": {
    "frames": [

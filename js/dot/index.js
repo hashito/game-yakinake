@@ -150,13 +150,14 @@ export default async function dotLayer(ext, { manifest, data }) {
       const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 256; const q = cv.getContext('2d');
       const gr = q.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, '#04060c'); gr.addColorStop(0.36, '#0a0e1c'); gr.addColorStop(0.47, '#1c1a2a'); gr.addColorStop(0.5, '#3a2420'); gr.addColorStop(0.53, '#0a0a0e'); gr.addColorStop(1, '#060608');
       q.fillStyle = gr; q.fillRect(0, 0, 1024, 256);
-      for (let i = 0; i < 180; i++) { q.fillStyle = rnd() < 0.15 ? '#d8d0b0' : '#4a5270'; q.fillRect(Math.floor(rnd() * 1024), Math.floor(rnd() * 96), 1, 1); }
+      // sparse dim stars high up, 2 x 2 texels each; the skyline has no lit windows (dark on dark they floated like specks) (a lone texel became a red-green-blue speck under the screen's colour fringe), none near the horizon glow
+      for (let i = 0; i < 28; i++) { q.fillStyle = rnd() < 0.3 ? '#7c7a70' : '#3e4458'; q.fillRect(Math.floor(rnd() * 1022), Math.floor(rnd() * 60), 2, 2); }
       for (let i = 0; i < 5; i++) { const x = Math.floor(rnd() * 1024); q.fillStyle = 'rgba(240,120,40,0.35)'; q.fillRect(x - 24, 110, 48, 14); q.fillStyle = 'rgba(255,170,70,0.5)'; q.fillRect(x - 8, 116, 16, 8); }
       let x = 0;
       while (x < 1024) {
         const w = 8 + Math.floor(rnd() * 30), h = 4 + Math.floor(rnd() * 22);
         q.fillStyle = rnd() < 0.5 ? '#07080c' : '#0b0d14'; q.fillRect(x, 130 - h, w, h + 126);
-        for (let k = 0; k < (w * h) / 30; k++) if (rnd() < 0.3) { q.fillStyle = rnd() < 0.7 ? '#c89048' : '#8098b0'; q.fillRect(x + 1 + Math.floor(rnd() * (w - 2)), 131 - h + Math.floor(rnd() * h), 1, 1); }
+        
         x += w;
       }
       const tx = nearestTex(cv); tx.wrapS = THREE.RepeatWrapping;

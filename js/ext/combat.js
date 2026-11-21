@@ -20,10 +20,20 @@ export function installCombat(ext, G) {
   G.setGore = (g) => { G.gore = g; try { localStorage.setItem('yk-gore', g); } catch (e) { /* private mode */ } G.emit('gore', g); };
   const ray = new THREE.Raycaster();
   let muzzle = null;
-  let cool = 0, reloading = 0, swing = 0, kick = 0, flashT = 0, grab = null, hurtFlash = 0, regen = 0;
+  let hintT = 0, cool = 0, reloading = 0, swing = 0, kick = 0, flashT = 0, grab = null, hurtFlash = 0, regen = 0;
   const heldNow = () => { const it = G.equip && G.case.byUid(G.equip); return it ? { it, c: CATALOG[it.id] } : { it: null, c: CATALOG.hands }; };
   G.held = heldNow;
-  G.equipUid = (uid, o = {}) => { G.equip = uid; reloading = 0; const h = heldNow(); if (ctx && h.it && !o.quiet) ctx.ui.toast(`構えた：${h.c.name}`); G.emit('equip'); hud(); };
+  // a line about the weapon in the hand: tagged with the weapon's id, and dropped (shown or still waiting) as soon as another is held
+  G.weaponHint = (id, text, sec = 6) => { if (ctx) ctx.ui.say(`<span hidden data-wh="${id}"></span>${text}`, sec); };
+  const whOf = (html) => { const m = /data-wh="([a-z]+)"/.exec(html || ''); return m ? m[1] : null; };
+  function dropStaleHints() {
+    const S = ctx && ctx.ui && ctx.ui.sayLine; if (!S) return;
+    const held = heldNow().it ? heldNow().it.id : 'hands';
+    S.q = S.q.filter((x) => { const w = whOf(x.html); return !w || w === held; });
+    const w = S.cur && whOf(S.cur.html);
+    if (w && w !== held) { S.cur = null; S.clear(S.hideT); S.hide(); S.next(); }
+  }
+  G.equipUid = (uid, o = {}) => { G.equip = uid; reloading = 0; const h = heldNow(); if (ctx && h.it && !o.quiet) ctx.ui.toast(`構えた：${h.c.name}`); G.emit('equip'); hud(); dropStaleHints(); };
   G.heal = (it) => {
     const c = CATALOG[it.id]; if (!c.heal) return false;
     if (G.hp >= 100) { ctx.ui.say('今は、手当ての必要はない。', 3); return false; }
@@ -203,6 +213,7 @@ export function installCombat(ext, G) {
       if (!ctx || !ctx.state.started || ctx.state.ended) return;
       const busy = ctx.blocked && ctx.blocked();
       cool -= dt; flashT -= dt;
+      if ((hintT -= dt) <= 0) { hintT = 0.25; dropStaleHints(); }
       if (muzzle && muzzle.intensity > 0) muzzle.intensity = flashT > 0 ? muzzle.intensity : Math.max(0, muzzle.intensity - dt * 400);
       swing = Math.max(0, swing - dt * 3); kick = Math.max(0, kick - dt * 6);
       hurtFlash = Math.max(0, hurtFlash - dt * 1.6); blood.style.opacity = String(Math.min(0.85, hurtFlash * 0.7 + (G.hp < 35 ? 0.25 + Math.sin(performance.now() / 300) * 0.08 : 0)));

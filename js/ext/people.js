@@ -150,7 +150,7 @@ export function installPeople(ext, G) {
               C.t += dt; if (C.t > 3.5) C.down = true;
             } else {
               if (!C.down) { C.down = true; C.t = 0; C.hold = 1.6 + Math.random() * 1.2; }
-              C.t += dt; motion = 'fear';
+              C.t += dt; motion = 'crouch';   // down behind the shelf (not the hands-up 'fear' of giving up)
               p.f.root.rotation.y = turnToward(p.f.root.rotation.y, toP, dt, 4);
               // out again when the time is up, or at once when the player comes round the shelf
               if (C.t > C.hold || d < 1.6) { p.cover = null; p.swings = 0; p.cool = Math.min(p.cool, 0.3); }
