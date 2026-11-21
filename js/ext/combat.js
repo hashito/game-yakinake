@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { CATALOG } from './case-data.js';
 import { drawWeapon, KICK } from './weapon-art.js';
-import { KINDS } from '../kit/toast-lane.js';
+import { KINDS, isRead } from '../kit/toast-lane.js';
 
 // few notices (UI rule): one at a time at the top, short, then gone
 KINDS.toast.ttl = 2600; KINDS.card.ttl = 3000; KINDS['quest-note'].ttl = 3400;
@@ -55,7 +55,17 @@ export function installCombat(ext, G) {
   G.hud = hud;
   ext.on('game:ready', (c) => {
     ctx = c;
-    if (ctx.lane && ctx.lane.model) ctx.lane.model.setMax(1);
+    if (ctx.lane && ctx.lane.model) {
+      // one notice at a time, and no queue of old ones: a new notice drops the ones still waiting and cuts the one on screen short
+      // (a reading card, which the player closes, is never touched)
+      const M = ctx.lane.model, push0 = M.push.bind(M), card = (i) => isRead(i.cls) || i.ttl === 0;
+      M.setMax(1);
+      M.push = (spec) => {
+        M.items = M.items.filter((i) => i.shown || card(i));
+        for (const i of M.items) if (i.shown && !card(i) && i.key !== (spec.key || '')) i.left = Math.min(i.left, 600);
+        return push0(spec);
+      };
+    }
     muzzle = new THREE.PointLight(0xffc070, 0, 14, 1.6); muzzle.name = 'yk-muzzle'; ctx.scene.add(muzzle);
     document.body.append(view, partTag, blood, grabTag);
     if (ctx.isTouch) {   // a phone has no 装填 / 持ち替え / 手当て buttons (the right column stays short): the status panel takes them
