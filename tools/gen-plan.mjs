@@ -163,7 +163,8 @@ const S = [
   ['S_SHIRA', 'S_KOMIN', 70, 29.2, '白坂', { talk: true }],
   ['S_TAEKO', 'S_KHAN', 71.5, 36.4, '妙子', { talk: true }],
   ['S_KDESK', 'S_KLEAD', 77.6, 36.8, '白坂の机'],
-  ['S_MIYAKE', 'S_KCHIKA', 67.4, 35.4, '格子の向こうの男', { talk: true }],
+  // 1.4.1: 三宅 stands behind iron bars in the south-east corner of the cellar (F_KCHIKA_BARS1/2); the talk point is at the bars
+  ['S_MIYAKE', 'S_KCHIKA', 68.4, 34.5, '格子の向こうの男', { talk: true }],
   ['S_ROPE', 'S_SHOTEN', 81.4, 19, '参道の縄'],
   ['S_KATA', 'P_KYU', 100, 1.6, '片桐さん', { talk: true }],
   ['S_GEN', 'P_HATSU', 106, 13.8, '非常用発電機'],
@@ -268,6 +269,8 @@ const F = [
   ['F_RF_C3', 'O_ROOF', 131, 12.2, 0.9, 0.9, 'crate'],
   ['F_RF_C4', 'O_ROOF', 142.6, 12.8, 0.9, 0.9, 'crate'],
   ['F_KCHIKA_C2', 'S_KCHIKA', 68.3, 32.6, 0.8, 0.8, 'crate'],
+  ['F_KCHIKA_BARS1', 'S_KCHIKA', 68.5, 35.0, 3.0, 0.1, 'railing', { opts: { len: 3.0, h: 2.3, kind: 'bars', color: 0x3a3a36 } }],
+  ['F_KCHIKA_BARS2', 'S_KCHIKA', 67.0, 36.5, 3.0, 0.1, 'railing', { rot: 90, opts: { len: 3.0, h: 2.3, kind: 'bars', color: 0x3a3a36 } }],
   ['F_YAMAURA_S', 'S_YAMAURA', 54.4, 30, 0.45, 2.4, 'shelf', { rot: 90 }],
   ['F_HIRO_CAR', 'S_HIROBA', 89, 9.5, 1.8, 4.4, 'car', { rot: 15 }],
   ['F_P_CNT', 'P_LOBBY', 100, 8.6, 3.0, 0.6, 'counter', { args: [3] }],

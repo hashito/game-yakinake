@@ -306,10 +306,16 @@ export function installCase(ext, G) {
     const eq = G.equip && C.byUid(G.equip), ec = eq ? CATALOG[eq.id] : null;
     const guns = C.weapons().filter((w) => CATALOG[w.id].gun).map((w) => { const g = CATALOG[w.id].gun; return `<li${G.equip === w.uid ? ' class="on"' : ''}><b>${esc(CATALOG[w.id].name)}</b><span>${w.loaded} / ${g.mag}　予備 ${C.count(g.ammo)}</span></li>`; }).join('');
     const meds = C.items.filter((i) => CATALOG[i.id].kind === 'med').reduce((m, i) => m + i.n, 0);
+    // 1.4.1: the weapons that are not guns and every other thing by name and count, before the people and the case picture (a short
+    // phone shows these on its first screen; the case picture is only drawn where there is height for it)
+    const melee = C.weapons().filter((w) => !CATALOG[w.id].gun && w.uid !== G.equip).map((w) => `<li><b>${esc(CATALOG[w.id].name)}</b></li>`).join('');
+    const sums = new Map(); for (const i of C.items) { const k = CATALOG[i.id].kind; if (k === 'weapon') continue; sums.set(i.id, (sums.get(i.id) || 0) + (i.n || 1)); }
+    const things = [...sums].map(([id, n]) => `<li><b>${esc(CATALOG[id].short || CATALOG[id].name)}</b><span>${n}</span></li>`).join('');
     el.innerHTML = `<div class="yk-pmcase"><p class="yk-pm-now"><span>構えている物</span><b>${ec ? esc(ec.name) : '素手'}</b>${ec && ec.gun ? `<em>${eq.loaded} / ${ec.gun.mag}　予備 ${C.count(ec.gun.ammo)}</em>` : ''}</p>
       <p class="yk-pm-hp"><span>体力</span><b>${Math.round(G.hp)} / 100</b><span>手当ての品 ${meds}</span></p>
-      ${guns ? `<ul class="yk-pm-guns">${guns}</ul>` : ''}${facHtml()}
-      <h4>${esc(B.name)}（${B.w}×${B.h}）</h4>${gridHtml(C.items, B.w, B.h, 'peek')}
+      ${guns || melee ? `<ul class="yk-pm-guns">${guns}${melee}</ul>` : ''}
+      <h4>持ち物</h4>${things ? `<ul class="yk-pm-things">${things}</ul>` : '<p class="yk-pm-none">武器のほかには、何も持っていない。</p>'}${facHtml()}
+      <div class="yk-pm-pic"><h4>${esc(B.name)}（${B.w}×${B.h}）</h4>${gridHtml(C.items, B.w, B.h, 'peek')}</div>
       <button type="button" class="pm-item yk-pm-open" data-open-case>ケースを開く（並べ替え・構える）</button></div>`;
     cs = keep;
     el.querySelectorAll('.yk-it').forEach((b) => { b.tabIndex = -1; b.disabled = true; });

@@ -58,6 +58,9 @@
 //   1.22.0 (the 鏡屋 dot play test rolled out): P42 a mark (▼, arrow, the next-place pointer, a glow) drawn through a wall, every room
 //   (tools/mark-sight.mjs; js/mark-sight.js markSight().clear() fixes it); P43 a pickup cut into by another thing - a wall clock over an
 //   item (tools/pick-overlap.mjs)
+//   P56 (1.37.0, 水無瀬病院 #5) the map shows two player arrows after a step in the same room (js/map-svg.js) (an error)
+//   P57 (1.37.0, 水無瀬病院 #16) the bloom halo of a bright point is a square tile, not round (js/render-presets.js Post, pixel lowres) (an error)
+//   P58 (1.37.0, 水無瀬病院 #6) a thought about a sound (音・鳴った・聞こえた・はねた) said with or before its sound (tools/cue-order.mjs; play scripts too) (an error)
 //   P52 (1.32.0, 夜勤明けの街 「ゾンビのゲーム重すぎて開かない」): the JS heap behind the title - over 400 MB a warning, over 600 MB an error
 //   1.28.0 (夜勤明けの街 play test 2026-11-22; tools/rest-check.mjs): P47 a placed thing floating - nothing under it within 4 cm, not a thin wall
 //   thing against a wall, not hanging (「空中にものが浮いています（ラジオや紙）」); P48 a thing of a known kind out of body size - desks 0.66-0.8 m,
@@ -75,7 +78,7 @@
 //   1.36.0 (札の家 play test 2026-11-22): P53 a loud guide mark (over 30 px at 3 m, or nearly opaque: a warning); P54 a closed door or a story
 //   gate a body walks through (an error); P55 an [E] spot with nothing visible within 0.45 m of its centre (a warning)
 //   1.31.0: P49 a document read keeps its emphasis (glow, marks) or cannot be read again (「読んだら強調表示をやめるようにしてください」)
-// Exit 1 on an error (P54, P4, P7, P9, P19, P24, P25 overlap, P26, P30, P31, P32, P33, P34, P35, P36, P37, P38, P39, P40, P41, P42, P43, P44, P46, P49, P47 / P48 with checks.rest = "error", P52 over 600 MB) or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
+// Exit 1 on an error (P54, P4, P7, P9, P19, P24, P25 overlap, P26, P30, P31, P32, P33, P34, P35, P36, P37, P38, P39, P40, P41, P42, P43, P44, P46, P49, P56, P57, P58, P47 / P48 with checks.rest = "error", P52 over 600 MB) or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -94,6 +97,7 @@ import { menuPicturesSource, headButtonsSource, pictureRoomSource } from './menu
 import { markSightSource } from './mark-sight.mjs';
 import { pickOverlapSource } from './pick-overlap.mjs';
 import { restSource, sizeSource } from './rest-check.mjs';
+import { cueOrderSource } from './cue-order.mjs';
 const MARK_MAX = 30;   // P53: the guide mark's height on screen at 3 m, px on a 720 px view (js/guidance.js MARK_MAX_PX)
 // P26: in ctx.readLog order, a 'say' / 'talk' after an 'open' and before its 'close'
 const docOpenSay = (lg) => { let open = 0; for (const k of lg) { if (k === 'open') open++; else if (k === 'close') open = Math.max(0, open - 1); else if ((k === 'say' || k === 'talk') && open) return true; } return false; };
@@ -591,6 +595,46 @@ try {
     })()`);
     for (const [id, why] of (Array.isArray(R) ? R : []).slice(0, 12)) E('P49', `doc "${id}": ${why}`);
   } else Wn('P49', 'ctx.wantsEmphasis is missing (kit < 1.31.0): read documents keep their emphasis');
+  // P56 (1.37.0, 水無瀬病院 #5 「マップで二重でやじるしがでる」): the map shows one player arrow - opened, the player moved inside the same room,
+  // opened again (js/map-svg.js baked a second, stale arrow into its static layer until 1.36.0)
+  if (await G('!!(g.tm && g.tm.open)')) {
+    const M = await G(`(async () => {
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms)), n = () => document.querySelectorAll('.ms-svg .ms-playerG').length, out = [];
+      const c = g.camera.position, x0 = c.x, z0 = c.z;
+      try {
+        g.tm.open('map'); await sleep(400); out.push(n()); g.tm.close(); await sleep(150);
+        const r0 = g.state.room; c.x += 0.6; c.z += 0.4; if (g.state.room !== r0) { c.x = x0 - 0.6; c.z = z0 - 0.4; }
+        g.tm.open('map'); await sleep(400); out.push(n()); g.tm.close(); await sleep(150);
+      } finally { c.x = x0; c.z = z0; }
+      return out;
+    })()`);
+    if (Array.isArray(M)) M.forEach((k, i) => { if (k !== 1) E('P56', `the map shows ${k} player arrows (${i ? 'opened again after a step in the same room' : 'first open'}); one is the live arrow (js/map-svg.js renderFloor marker: false)`); });
+  }
+  // P57 (1.37.0, 水無瀬病院 #16 「光が四角形に見える」): the bloom halo round one bright point is round, not a square tile. The game is set to the
+  // high tier (bloom on) for a moment; one tiny over-bright ball 3 m ahead is drawn alone through the post pass; the halo is measured at the
+  // same distance along the axes and the diagonals (a square / bilinear tent is much brighter on the diagonal)
+  if (await G('!!(g.look && g.look.setTier)')) {
+    const B = await G(`(async () => {
+      const T = g.THREE, L = g.look, tier0 = L.tier, R = g.renderer;
+      try {
+        if (L.tier !== 'high') L.setTier('high');
+        const P = L.post; if (!P || !P.bloomOn) return { skip: 'no bloom on the high tier' };
+        const S = new T.Scene(); S.background = new T.Color(0, 0, 0);
+        const cam = g.camera, fwd = new T.Vector3(0, 0, -1).applyQuaternion(cam.quaternion);
+        const ds = R.getDrawingBufferSize(new T.Vector2()), px = (2 * 3 * Math.tan((cam.fov * Math.PI) / 360)) / ds.y;   // one buffer pixel at 3 m
+        const mat = new T.MeshBasicMaterial({ toneMapped: false }); mat.color.setRGB(60, 60, 60);
+        const ball = new T.Mesh(new T.SphereGeometry(px * 0.6, 8, 6), mat); ball.position.copy(cam.position).addScaledVector(fwd, 3); S.add(ball);
+        P.render(S, cam, 0);
+        const gl = R.getContext(), w = ds.x, h = ds.y, buf = new Uint8Array(w * h * 4); gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+        ball.geometry.dispose(); mat.dispose();
+        const lum = (x, y) => { x = Math.round(x); y = Math.round(y); if (x < 0 || y < 0 || x >= w || y >= h) return 0; const i = (y * w + x) * 4; return buf[i] * 0.2126 + buf[i + 1] * 0.7152 + buf[i + 2] * 0.0722; };
+        const cx = w / 2, cy = h / 2, rows = [];
+        for (const d of [2, 3, 4, 5, 6, 8]) { const ax = (lum(cx + d, cy) + lum(cx - d, cy) + lum(cx, cy + d) + lum(cx, cy - d)) / 4, q = d / Math.SQRT2, dg = (lum(cx + q, cy + q) + lum(cx - q, cy + q) + lum(cx + q, cy - q) + lum(cx - q, cy - q)) / 4; rows.push([d, +ax.toFixed(1), +dg.toFixed(1)]); }
+        return { rows, w, h, small: !!P.small };
+      } finally { if (L.tier !== tier0) L.setTier(tier0); }
+    })()`);
+    if (B && B.rows) for (const [d, ax, dg] of B.rows) if (Math.max(ax, dg) > 12 && (dg > ax * 1.6 + 4 || ax > dg * 1.6 + 4)) { E('P57', `the bloom halo of a bright point is not round at ${d} px (axis ${ax}, diagonal ${dg}; buffer ${B.w}x${B.h}${B.small ? ' lowres' : ''}): lights show as squares (js/render-presets.js Post)`); break; }
+  }
   // P43 (1.22.0): pickups clear of other things
   { const O = await G(pickOverlapSource()); for (const x of (Array.isArray(O) ? O : []).slice(0, 12)) E('P43', `pickup "${x[0]}": "${x[1]}" cuts into it by ${JSON.stringify(x[2])} m at ${JSON.stringify(x[3])}`); }
   // P47 / P48 (1.28.0, 夜勤明けの街): every placed thing rests on something; known kinds have a body-sized size (tools/rest-check.mjs).
@@ -677,6 +721,8 @@ try {
     } catch (e) { Wn('P31', `${w}x${h}: the phone layout pass could not run: ${e.message}`); }
     finally { await q.close(); }
   }
+  // P58 (1.37.0, 水無瀬病院 #6 「音が聞こえたの前にしっかり音を出してください」): every thought about a sound said during this run came after a sound
+  { const C = await G(cueOrderSource()); if (C && C.missing) Wn('P58', 'ctx.cueLog is missing (kit < 1.37.0): sound-before-line order unchecked'); else for (const x of (Array.isArray(C) ? C : []).slice(0, 8)) E('P58', `「${x.text}」: ${x.why}`); }
   if (p.errors.length) for (const e of [...new Set(p.errors)].filter((x) => !/favicon/.test(x)).slice(0, 5)) Wn('P0', `page error: ${e.slice(0, 200)}`);
 } catch (e) { E('P0', `the check could not run: ${e.message}`); }
 finally { await p.close(); server.kill(); }

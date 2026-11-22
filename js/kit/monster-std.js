@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/monster-std.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit a4da8f61: js/monster-std.js — edit in game-kit and run tools/kit-sync.js */
 // The default monster pack (standard 1.5; rules S12 / S20). Driven by DATA: manifest data.monsters = data/monsters.json (schema/monsters.schema.json).
 //   { "early": { "stages": 2 },
 //     "monsters": [ { "id": "windmill", "look": "windmill", "phases": [ { "preset": "early", "untilStage": "L3" }, { "preset": "normal" } ],
@@ -273,15 +273,17 @@ export function installMonsters(ctx) {
       const R = ctx.world.rooms && ctx.world.rooms.get(h.room), L = buildHideLook(h, R && R.room); if (!L) continue;
       L.group.position.y = (R && R.y) || 0; ctx.world.group.add(L.group); L.group.updateMatrixWorld(true);
       for (const s of L.solids) ctx.world.colliders.push({ box: new THREE.Box3().setFromObject(s), off: false });
-      looks.set(h.id, { ...L, k: 0, target: 0 });
+      // 1.37.0 (水無瀬病院 #7): a shut locker is shut to the body too (its door's collider), except while it swings or you are inside it
+      const fc = L.front ? { box: new THREE.Box3().setFromObject(L.front), off: L.rest !== 1, name: `hidefront:${h.id}` } : null; if (fc) ctx.world.colliders.push(fc);
+      looks.set(h.id, { ...L, k: L.rest ?? 0, target: L.rest ?? 0, swing: 0, fc, h });
     }
     ctx.hideLooks = looks;
-    const leave = () => { if (ctx.hidden) { ctx.hidden = false; ctx.hideSpot = null; document.body.classList.remove('gf-hidden'); for (const l of looks.values()) l.target = 0; bus.emit('player:unhide', {}); } };
+    const leave = () => { if (ctx.hidden) { const id = ctx.hideSpot && ctx.hideSpot.id; ctx.hidden = false; ctx.hideSpot = null; document.body.classList.remove('gf-hidden'); for (const l of looks.values()) { l.target = 0; if (l.rest === 1 && l.h.id === id) l.swing = 1.6; } bus.emit('player:unhide', {}); } };
     ctx.leaveHide = leave;
-    ctx.systems.push({ id: 'hide', def: { update: (dt = 0.016) => { for (const l of looks.values()) if (l.k !== l.target) { l.k += Math.sign(l.target - l.k) * Math.min(Math.abs(l.target - l.k), dt * 3.2); l.setShut(l.k); } if (ctx.hidden && ctx.hideSpot && Math.hypot(camera.position.x - ctx.hideSpot.x, camera.position.z - ctx.hideSpot.z) > 1.1) leave(); } }, inst: null });
+    ctx.systems.push({ id: 'hide', def: { update: (dt = 0.016) => { for (const l of looks.values()) { if (l.swing > 0) { l.swing -= dt; if (l.swing <= 0) l.target = ctx.hidden && ctx.hideSpot && ctx.hideSpot.id === l.h.id ? 1 : l.rest; } if (l.k !== l.target) { l.k += Math.sign(l.target - l.k) * Math.min(Math.abs(l.target - l.k), dt * 3.2); l.setShut(l.k); } if (l.fc) l.fc.off = l.k < 0.9 || l.swing > 0 || (ctx.hidden && ctx.hideSpot && ctx.hideSpot.id === l.h.id) || Math.hypot(camera.position.x - l.h.x, camera.position.z - l.h.z) < 0.5; } if (ctx.hidden && ctx.hideSpot && Math.hypot(camera.position.x - ctx.hideSpot.x, camera.position.z - ctx.hideSpot.z) > 1.1) leave(); } }, inst: null });
     ctx.ext.registerInteract('hide', {
       prompt: (o) => (ctx.hidden ? '[E] 出る' : `[E] 隠れる：${(spots.get(o.id) || {}).label || '隠れる場所'}`),
-      run: (o) => { const h = spots.get(o.id); if (!h) return; if (ctx.hidden) return leave(); if (ctx.controlOpen && !ctx.controlOpen('hide')) return ctx.controlNotYet();   /* a gate (standard 1.10.11) */ ctx.hidden = true; ctx.hideSpot = h; camera.position.x = h.x; camera.position.z = h.z; document.body.classList.add('gf-hidden'); const l = looks.get(h.id); if (l) { l.target = 1; ctx.audio && ctx.audio.lockerDoor && ctx.audio.lockerDoor({ x: h.x, y: 1, z: h.z }, false); } bus.emit('player:hide', { id: h.id }); },
+      run: (o) => { const h = spots.get(o.id); if (!h) return; if (ctx.hidden) return leave(); if (ctx.controlOpen && !ctx.controlOpen('hide')) return ctx.controlNotYet();   /* a gate (standard 1.10.11) */ ctx.hidden = true; ctx.hideSpot = h; camera.position.x = h.x; camera.position.z = h.z; document.body.classList.add('gf-hidden'); const l = looks.get(h.id); if (l) { if (l.rest === 1 && l.k > 0.5) { l.target = 0; l.swing = 0.45; } else l.target = 1; ctx.audio && ctx.audio.lockerDoor && ctx.audio.lockerDoor({ x: h.x, y: 1, z: h.z }, false); } bus.emit('player:hide', { id: h.id }); },
     });
     bus.on('player:respawn', leave);
   }

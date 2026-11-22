@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/map-svg.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit a4da8f61: js/map-svg.js — edit in game-kit and run tools/kit-sync.js */
 // SVG floor map (rule U18 of docs/3d-game-rules.md). Game-agnostic: the input is the plan.json used by js/plan-check.js
 // (rooms / doors / stations; x east, z toward the bottom of the map, metres) plus runtime state.
 // Floors as tabs, room names, corridors, doors (locked ones marked), stairs, the player marker with heading,
@@ -161,7 +161,10 @@ export function renderFloor(plan, floor, opts = {}) {
     }
     out += `<g class="ms-pinG" data-pin="${esc(p.id)}">${p.label ? `<title>${esc(p.label)}</title>` : ""}<circle class="ms-pin${p.kind === "item" ? " ms-pin--item" : ""}${p.next ? " ms-pin--next" : ""}" cx="${X(px)}" cy="${Z(pz)}" r="5.5"/>${txt}</g>`;
   }
-  if (pos && (pos.floor || 0) === floor) {
+  // 1.37.0 (水無瀬病院 2026-11-22 #5 「マップで二重でやじるしがでる」): marker: false leaves the arrow out. createMapSvg bakes the static layer with
+  // marker: false and adds the live arrow itself; the baked one stayed where the player was when the layer was last rebuilt (a room change),
+  // so after walking inside one room, or opening the map again in the same room, two arrows showed (check-playtest P53)
+  if (pos && (pos.floor || 0) === floor && o.marker !== false) {
     const h = st.heading || 0;
     out += `<g class="ms-playerG" transform="translate(${X(pos.x)} ${Z(pos.z)}) rotate(${h}) scale(1.4)"><circle class="ms-player-ring" r="9"/><path class="ms-player" d="M0 -8 L5.5 6 L0 3 L-5.5 6 Z"/></g>`;
   }

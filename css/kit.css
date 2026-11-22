@@ -1,4 +1,4 @@
-/* game-kit cad79dd6: css/kit.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit a4da8f61: css/kit.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: shared styles for first-person browser games (windows, HUD, buttons, touch controls,
    status chips, steppers, kanban, app-like software screens, tabs, stamps, share buttons; at the end
    progression pg-*, sim UI nt-/tb-/dl-/ch-*, journal jr-* / stream veil st-* / hiding hd-*, chat cx-*).
@@ -2843,7 +2843,15 @@ body.touch .hb-tab { min-height: var(--gf-hit, 44px); } /* (U13) the notebook's 
 /* 1.35.3: beside the panel the buttons are one column (the 2-column list of a short window squeezed them into one character a line);
    a landscape phone puts the buttons (two columns, full width) above the panel instead */
 .pm.pm-wide .pm-list { display: flex; flex-direction: column; }
-@media (max-height: 480px) and (min-width: 641px) { .pm.pm-wide { grid-template-columns: 1fr; } .pm.pm-wide .pm-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; } .pm.pm-wide .pm-item { min-height: 44px; } }
+/* 1.37.1: a landscape phone shows the panel first, on the left, and the buttons small in two columns on the right - what you carry is
+   on the first screen with nothing to scroll (夜勤明けの街 1.4.1: the buttons above the panel pushed the weapons below the fold) */
+@media (max-height: 480px) and (min-width: 641px) {
+  .pm.pm-wide { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 10px; padding: 0; }
+  .pm.pm-wide .pm-panel { order: -1; padding: 8px 10px; }
+  .pm.pm-wide .pm-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; align-content: start; }
+  .pm.pm-wide .pm-item { min-height: 44px; padding: 0 10px; gap: 8px; font-size: 0.92em; }
+  .pm.pm-wide .pm-item .pm-ic svg { width: 18px; height: 18px; }
+}
 .pm-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--gf-space-3, 12px); }
 .pm-item, .pm-back { position: relative; box-sizing: border-box; width: 100%; min-height: 52px; display: flex; align-items: center; gap: var(--gf-space-3, 12px); padding: 0 var(--gf-space-4, 18px); border: 1px solid var(--gf-border, var(--line, #d8d2c2)); border-radius: var(--gf-radius, 12px); background: var(--gf-surface-2, #fff); color: var(--gf-text, inherit); font: inherit; font-size: 1.02em; text-align: left; cursor: pointer; }
 .pm-item:hover, .pm-back:hover { background: var(--gf-surface, #f4efe2); border-color: var(--gf-accent, #3a7a5a); }
@@ -3788,7 +3796,9 @@ body.touch #say.on { pointer-events: auto; }   /* a tap on the thought band open
 .mgx-code-opt.on { outline: 3px solid var(--gf-accent, #e8b040); outline-offset: 1px; font-weight: 700; }
 @media (max-width: 560px) { .mgx-code-row { grid-template-columns: 1fr; } .mgx-code-opts { justify-content: flex-start; } }
 /* 1.25.2 (鏡屋 P36, mirror-beam at 390x844): on a narrow screen a mini game's message has a fixed two-line box (a longer one scrolls in it) */
-@media (max-width: 560px) { .mgx .mgx-msg { height: 3.4em; min-height: 0; overflow-y: auto; } }
+/* 1.37.0 (水無瀬病院 P36, sort-items / tune-radio at 390x844 in a kit re-sync): the box is held, not only sized: it never grows or shrinks
+   in a flex column (flex none, max-height) and its size ignores its text (contain size), so a long line scrolls inside it */
+@media (max-width: 560px) { .mgx .mgx-msg { height: 3.4em; max-height: 3.4em; min-height: 0; flex: none; overflow-y: auto; contain: size layout; } }
 /* 1.25.2 photo-focus with a stick (cfg.stick, 鏡屋): gauges | the stick (up/down = size, left/right = focus) | the shutter */
 .mgx-photo-pad { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 14px; width: min(460px, 100%); }
 .mgx-photo-gauges { display: grid; gap: 10px; }

@@ -24,6 +24,11 @@
   "src": "69db66ab7a3157bd",
   "gz": true
  },
+ "miyake": {
+  "bin": "miyake.quads.bin",
+  "src": "8a2a5ac1b8c5dcbb",
+  "gz": true
+ },
  "mori": {
   "bin": "mori.quads.bin",
   "src": "5251314ede14e1bd",

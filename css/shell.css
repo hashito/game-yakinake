@@ -1,4 +1,4 @@
-/* game-kit cad79dd6: css/shell.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit a4da8f61: css/shell.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: the standard 3D shell (js/game-core.js): title screen, prompt, endings, pause menu, custom mini-game layer.
    Tokens only (css/theme.css); loaded after kit.css and theme.css. A game restyles it through tokens in css/theme-game.css. */
 #title { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; text-align: center; padding: var(--gf-win-margin, 16px); overflow-y: auto; overscroll-behavior: contain;
@@ -269,6 +269,8 @@ body.touch #say { bottom: max(12px, var(--gf-safe-b, 0px)); }
 .gf-ending-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px !important; }
 .gf-ending.all .gf-ending-text > *, .gf-ending.still .gf-ending-text > * { animation: none; opacity: 1; }
 .gf-ending.still .gf-ending-photo { animation: none; }
+.gf-ending-later { opacity: 0; animation: gf-end-zoom 40s ease-out var(--d, 0s) both, gf-end-fade 2.4s ease-out var(--d, 0s) both; }   /* 1.37.0: the next picture of a long epilogue */
+.gf-ending.all .gf-ending-later, .gf-ending.still .gf-ending-later { animation: none; opacity: 1; }
 @keyframes gf-end-zoom { from { transform: scale(1.02); } to { transform: scale(1.16); } }
 @keyframes gf-end-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes gf-end-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

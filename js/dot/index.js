@@ -338,8 +338,11 @@ export default async function dotLayer(ext, { manifest, data }) {
     }
     D.settle = settle;
 
+    // 1.4.1: the iron bars of the cellar cell (kit railing 'bars') take a flat iron colour (no painted texture), graded like the rest
+    const iron = new THREE.MeshLambertMaterial({ color: 0x3a3a36 }); iron.name = 'yk-cell-bars';
+    const ironBars = () => { scene.traverse((o) => { if (!/^prop:F_KCHIKA_BARS/.test(o.name)) return; o.traverse((m) => { if (m.isMesh && m.material && m.material !== iron && m.name !== 'prop-stub' && !(m.material.visible === false)) m.material = iron; }); }); };
     // ---- the palette over everything, and again while the world changes (doors, the dressing above) ----
-    const dotify = () => dotifyScene(THREE, scene, { pal: PAL });
+    const dotify = () => { ironBars(); return dotifyScene(THREE, scene, { pal: PAL }); };
     D.dotified = dotify();
     setInterval(() => { try { dotify(); } catch (e) { /* the next pass */ } }, 2000);
     // ---- light: never pure black, a small light round the player, the next goal glows ----

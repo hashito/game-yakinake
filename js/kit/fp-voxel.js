@@ -1,4 +1,4 @@
-/* game-kit 93a3e709: js/fp-voxel.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit b22a5219: js/fp-voxel.js — edit in game-kit and run tools/kit-sync.js */
 // First-person hands and weapons as real 3D dot models (1.35.0, 夜勤明けの街 #1 「手や武器も3Dドットで作成してください」).
 // The models are made of simple shapes (boxes, capsules, cylinders, ellipsoids; groups that turn) filled into a fine voxel grid
 // (4 mm by default), meshed with the sprite-stack mesher (js/sprite-stack-mesh.js) and drawn IN the scene, attached to the camera,
@@ -139,17 +139,36 @@ export function buildVoxelGeometry(THREE, spec) {
   return geo;
 }
 
-// blood specks over a part of a model (the head of the axe, the knuckles): a few voxels in the box, seeded
-function bloodSpec(box, vox, density, seed = 7) {
-  const shapes = [];
-  const [x0, u0, f0, x1, u1, f1] = box; let s = seed;
+// blood specks over a part of a model (the head of the axe, the knuckles): a few voxels in the box, seeded.
+// 1.37.1 (夜勤明けの街 1.4.1, an iPhone: the pipe's blood hung in the air up and right of the pipe): the box can be given in the frame
+// of the group the part is drawn in - blood: { box: [x0, u0, f0, x1, u1, f1], at, rx, ry, rz } with the group's own at / rx / ry / rz -
+// and every speck is kept only where it touches the model itself (a solid voxel of the weapon within two voxels), so blood is always ON
+// the weapon whatever its box says. A plain array is a box in the model frame, as before.
+export function bloodShapes(spec, density = 1, seed = 7) {
+  const B = Array.isArray(spec.blood) ? { box: spec.blood } : spec.blood; if (!B || !B.box) return null;
+  const vox = spec.vox || 0.004, [x0, u0, f0, x1, u1, f1] = B.box; let s = seed;
+  const R = rotM(B.rx, B.ry, B.rz), at = B.at || [0, 0, 0];
+  const toModel = (p) => { const d = [p[0] - at[0], p[1] - at[1], p[2] - at[2]]; return [R[0] * d[0] + R[1] * d[1] + R[2] * d[2] + at[0], R[3] * d[0] + R[4] * d[1] + R[5] * d[2] + at[1], R[6] * d[0] + R[7] * d[1] + R[8] * d[2] + at[2]]; };
+  const vol = voxelVolume({ vox, shapes: spec.shapes });
+  // the weapon's surface voxels (solid, with an empty neighbour) near each speck are coated: blood is a skin ON the weapon, never beside it
+  const solid = (X, Z, F) => X >= 0 && Z >= 0 && F >= 0 && X < vol.w && Z < vol.n && F < vol.d && vol.at(X, vol.d - 1 - F, Z) >= 0;
+  const surface = (X, Z, F) => solid(X, Z, F) && (!solid(X + 1, Z, F) || !solid(X - 1, Z, F) || !solid(X, Z + 1, F) || !solid(X, Z - 1, F) || !solid(X, Z, F + 1) || !solid(X, Z, F - 1));
   const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
   const n = Math.round(density * Math.max(4, ((x1 - x0) * (u1 - u0) * (f1 - f0)) / (vox * vox * vox) * 0.08));
+  const shapes = [], seen = new Set(), h = vox * 0.55;
+  if (!vol) return null;
   for (let i = 0; i < n; i++) {
-    const x = x0 + rnd() * (x1 - x0), u = u0 + rnd() * (u1 - u0), f = f0 + rnd() * (f1 - f0), r = vox * (0.6 + rnd() * 1.4);
-    shapes.push({ ell: [x, u, f], r: [r * (1 + rnd()), r, r * (1 + rnd())], c: rnd() < 0.5 ? '#5a0a0c' : '#7a1012' });
+    const p = toModel([x0 + rnd() * (x1 - x0), u0 + rnd() * (u1 - u0), f0 + rnd() * (f1 - f0)]), r = 0.8 + rnd() * 1.6, c = rnd() < 0.5 ? '#5a0a0c' : '#7a1012';
+    const cx = (p[0] - vol.lo[0]) / vox - 0.5, cz = (p[1] - vol.lo[1]) / vox - 0.5, cf = (p[2] - vol.lo[2]) / vox - 0.5, RR = Math.ceil(r) + 1;
+    for (let a = -RR; a <= RR; a++) for (let b = -RR; b <= RR; b++) for (let e = -RR; e <= RR; e++) {
+      const X = Math.round(cx) + a, Z = Math.round(cz) + b, F = Math.round(cf) + e;
+      if (Math.hypot(X - cx, Z - cz, F - cf) > r + 0.5 || !surface(X, Z, F)) continue;
+      const k = `${X},${Z},${F}`; if (seen.has(k)) continue; seen.add(k);
+      const x = vol.lo[0] + (X + 0.5) * vox, u = vol.lo[1] + (Z + 0.5) * vox, f = vol.lo[2] + (F + 0.5) * vox;
+      shapes.push({ box: [x - h, u - h, f - h, x + h, u + h, f + h], c });
+    }
   }
-  return { vox, shapes };
+  return shapes.length ? { vox, shapes } : null;
 }
 
 /**
@@ -181,7 +200,8 @@ export function createFpRig(THREE, camera, o = {}) {
       fg.position.set(spec.muzzle[0], spec.muzzle[1], -spec.muzzle[2]); fg.visible = false; g.add(fg); flash = fg;
     }
     let blood = null;
-    if (spec.blood) { const bg = buildVoxelGeometry(THREE, bloodSpec(spec.blood, spec.vox || 0.004, 1)); if (bg) { blood = new THREE.Mesh(bg, mat); onTop(blood); blood.visible = false; g.add(blood); } }
+    const bs = spec.blood ? bloodShapes(spec) : null;
+    if (bs) { const bg = buildVoxelGeometry(THREE, bs); if (bg) { blood = new THREE.Mesh(bg, mat); onTop(blood); blood.visible = false; g.add(blood); } }
     const p = { ...place, ...(spec.pose || {}) };
     g.userData.base = p; g.position.set(p.x, p.y, p.z);
     root.add(g);

@@ -1,4 +1,4 @@
-/* game-kit 93a3e709: js/fp-voxel-parts.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit b22a5219: js/fp-voxel-parts.js — edit in game-kit and run tools/kit-sync.js */
 // The shared first-person parts for js/fp-voxel.js (1.35.0, 夜勤明けの街 #1): a hand with its sleeve that closes round a grip or
 // a shaft or makes a fist, and the common weapons - the bare fist, a scalpel, a steel pipe, a fire axe, a nail gun, a pistol, a
 // pump shotgun, a hunting rifle - and the off hand with a pen light. fpParts({ sleeve, cuff, skin }) colours the sleeve (a white
@@ -65,12 +65,12 @@ export function fpParts(c = {}) {
       shapes: [...arm([0.0, -0.01, -0.01]), ...fist(o),
         { box: [-0.005, 0.0, 0.03, 0.005, 0.008, 0.115], c: '#b8c2c8', n: 0.15 }, { box: [-0.0035, 0.002, 0.04, 0.0035, 0.0065, 0.1], c: '#8a949a' },
         { group: [{ ell: [0, 0.006, 0.13], r: [0.0035, 0.009, 0.02], c: '#e2eaee' }, { box: [-0.0045, -0.006, 0.11, 0.0045, 0.0035, 0.16], c: '#000000', cut: true }], at: [0, 0.006, 0.115], rx: 0.1 }] },
-    pipe: { vox: V, pose: { x: 0.15, y: -0.24, z: -0.4 }, blood: [-0.022, 0.38, -0.03, 0.022, 0.5, 0.03],
+    pipe: { vox: V, pose: { x: 0.15, y: -0.24, z: -0.4 }, blood: { box: [-0.026, 0.34, 0.006, 0.026, 0.49, 0.064], at: [0, 0, 0.03], rx: 0.55, rz: 0.12 },
       shapes: [...arm([0.024, -0.02, -0.02]), { group: [
         { cyl: [0, -0.07, 0.035], r: 0.017, len: 0.58, axis: 'u', c: STEEL2, n: 0.35 }, { cyl: [0, -0.07, 0.035], r: 0.011, len: 0.6, axis: 'u', c: '#000000', cut: true },
         { cyl: [0, 0.46, 0.035], r: 0.021, len: 0.03, axis: 'u', c: '#5a5048', n: 0.3 },
         ...gripHand(o, { f: 0.035, u0: -0.05, u1: 0.03, w: 0.034 })], at: [0, 0, 0.03], rx: 0.55, rz: 0.12 }] },
-    axe: { vox: V, pose: { x: 0.16, y: -0.25, z: -0.42 }, blood: [-0.1, 0.4, -0.02, 0.02, 0.5, 0.06],
+    axe: { vox: V, pose: { x: 0.16, y: -0.25, z: -0.42 }, blood: { box: [-0.13, 0.38, 0.014, 0.03, 0.52, 0.056], at: [0, 0, 0.03], rx: 0.6, rz: 0.1 },
       shapes: [...arm([0.024, -0.02, -0.02]), { group: [
         { cyl: [0, -0.08, 0.035], r: 0.016, len: 0.56, axis: 'u', c: WOOD2, n: 0.3 }, { cyl: [0, -0.08, 0.035], r: 0.019, len: 0.02, axis: 'u', c: DARK },
         { box: [-0.02, 0.4, 0.016, 0.03, 0.5, 0.054], c: '#b0281e', n: 0.25 },

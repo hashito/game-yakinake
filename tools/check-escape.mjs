@@ -29,6 +29,12 @@ const mon = fs.existsSync(monFile) ? readJson(monFile) : null;
 const stagesFile = path.join(dir, 'data/stages.json');
 const stages = fs.existsSync(stagesFile) ? readJson(stagesFile) : null;
 
+// 1.37.1 (夜勤明けの街 1.4.1): a game whose monsters.json lists no monsters at all ("monsters": []) has no kit chaser - its enemies are
+// fought, not run from (a zombie FPS) - so there is no chase to prove; a game without the file still gets the default early chaser
+if (mon && Array.isArray(mon.monsters) && mon.monsters.length === 0 && !opt('monsters')) {
+  console.log(`check-escape: ${path.basename(path.resolve(dir))}  no chase monster (data/monsters.json "monsters": []) - nothing to check`);
+  process.exit(0);
+}
 const errors = [], warns = [];
 const bad = (m) => (flag('warn') ? warns : errors).push(m);
 

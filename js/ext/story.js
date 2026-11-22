@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { BOXES, RACK } from './loot.js';
 import { ROOF_WAVE } from './spawns.js';
 import { CATALOG } from './case-data.js';
-import { factionOf, TASK_OF } from './factions.js';
+import { factionOf, TASK_OF, FACTIONS } from './factions.js';
 
 const SAFE = [
   { room: 'H_TOU', x: 5.2, z: 3.2, y: 0.78, name: '当直室' },
@@ -46,6 +46,15 @@ export function installStory(ext, G) {
     return ctx.talk(id, { title: o.title || '', last: o.last || '続ける' });
   };
   const choose = (who, text, options) => ctx.choose({ who, text, options });
+  // 1.4.1: the consequences of a killing are SEEN, once each - the radio spreads it at once (the people say it again when you meet
+  // them), and on the roof the groups who will not come are named. G.consequences lists what was shown (play-routes checks it).
+  G.consequences = [];
+  const shown = (k) => { if (!G.consequences.includes(k)) G.consequences.push(k); };
+  G.on('person:killed', () => {
+    if (G.flags['rumor:radio']) return;
+    G.flags['rumor:radio'] = true;
+    setTimeout(() => { if (!ctx || ctx.state.ended) return; ctx.ui.toast('どこかで無線が鳴った。「……白衣の女が、人を殺した。近づくな」噂は、もう広まっている。'); shown('rumor'); }, 6000);
+  });
 
   // ---------------------------------------------------------------- the checkpoint: what a death goes back to
   // 1.4.0 (play test #11 「死んだら前のセーブポイントから再開」): a death goes back to the last 当直日誌 written - everything as it was then
@@ -250,7 +259,8 @@ export function installStory(ext, G) {
     genzo: { at: [132.6, 12.2], wave: 2 },
     chisato: { at: [134.2, 12.4], wave: 2 },
   };
-  G.roofAllies = () => allies();   // 1.3.0: the roof block loads just these people
+  G.roofAllies = () => allies();
+  G.roofState = () => ({ on: roof.on, t: roof.t, wave: roof.wave });   // 1.3.0: the roof block loads just these people
   function allies() {
     const f = G.flags, kept = f.alliance === 'joined' && !f.betrayed;
     const on = new Set();
@@ -269,6 +279,11 @@ export function installStory(ext, G) {
       if (A.gun) roof.guns.set(id, A.every * 0.5);
     }
     if (said) setTimeout(() => ctx.ui.toast(said), 3200);
+    if (w === 0) {
+      // the groups the player turned on or killed from: named once, as the first wave comes
+      const gone = ['mart', 'alliance', 'cult', 'hospital'].filter((f) => G.flags[`hostile:${f}`] || FACTIONS[f].members.some((id) => G.isDead && G.isDead(id)));
+      if (gone.length) setTimeout(() => { if (!ctx || ctx.state.ended) return; ctx.ui.say(`${gone.map((f) => FACTIONS[f].name).join('も、')}も、来ない。……私が、手を汚したから。`, 6, { urgent: true }); shown('roof-missing'); }, 7000);
+    }
   }
   ext.registerSystem('yk-roof', {
     update(dt) {

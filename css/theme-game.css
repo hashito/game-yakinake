@@ -19,6 +19,13 @@
 .yk-hp.low i { /* pair-ok */ background: #e04a34; animation: yk-hp-pulse 0.8s ease-in-out infinite; }
 @keyframes yk-hp-pulse { 50% { opacity: 0.6; } }
 html[data-gf-no-flash] .yk-hp.low i { animation: none; }
+/* 1.4.1: at 30 and under the body box itself turns red and blinks - a bigger bar, a bigger number, a red frame */
+.yk-status.yk-low { background: rgba(60, 6, 6, 0.92); color: #ffffff; box-shadow: 0 0 0 2px #e04a34, 0 0 18px rgba(224, 40, 30, 0.55); animation: yk-low-blink 0.9s steps(2, jump-none) infinite; }
+.yk-status.yk-low .yk-hp { /* pair-ok */ height: 24px; min-width: 150px; background: #3a1010; }
+.yk-status.yk-low .yk-hpn { font-size: 30px; }
+.yk-status.yk-low .yk-hpl { color: #ffd0c8; font-weight: 700; }
+@keyframes yk-low-blink { 50% { box-shadow: 0 0 0 2px #ff9080, 0 0 26px rgba(255, 60, 40, 0.85); } }
+html[data-gf-no-flash] .yk-status.yk-low, html[data-gf-calm] .yk-status.yk-low { animation: none; }
 /* #9: the next weapon and how to change to it */
 .yk-wnext { /* pair-ok */ display: flex; justify-content: space-between; gap: 8px; align-items: center; margin: 0; padding: 2px 6px; border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 4px; background: rgba(255, 255, 255, 0.06); color: #dde8e2; font: inherit; font-size: 13px; text-align: left; pointer-events: none; }
 .yk-wnext[hidden] { display: none; }
@@ -48,6 +55,22 @@ html[data-gf-no-flash] .yk-hp.low i { animation: none; }
 @media (orientation: landscape) and (max-height: 400px) { body.touch.yk-playing #say { top: 52px; bottom: auto; } }
 /* what the part under the sights does (the first zombies teach it) */
 /* hurt: the edge of the view goes red */
+/* 1.4.1: low on life (from 45, full at 10): a dark rim closing in, a red ring that swells with the heartbeat (--b), blood at the edges */
+.yk-dying { /* pair-ok */ position: fixed; inset: 0; pointer-events: none; z-index: 3; opacity: 0; transition: opacity 0.4s; --k: 0; --b: 0; }
+.yk-dying i { /* pair-ok */ position: absolute; inset: 0; display: block; }
+.yk-dk { /* pair-ok */ background: radial-gradient(ellipse at center, rgba(16, 0, 0, calc(var(--k) * 0.42)) calc(40% - var(--k) * 15%), rgba(0, 0, 0, 0.92) 100%); opacity: calc(0.35 + var(--k) * 0.65); }
+.yk-rd { /* pair-ok */ background: radial-gradient(ellipse at center, transparent calc(50% - var(--b) * 8%), rgba(150, 0, 0, 0.75) calc(80% - var(--b) * 6%), rgba(60, 0, 0, 0.95) 100%); opacity: calc(var(--k) * (0.45 + var(--b) * 0.55)); }
+.yk-sm { /* pair-ok */ opacity: 0; background:
+  radial-gradient(38% 20% at 0% 12%, rgba(90, 0, 0, 0.9), transparent 70%),
+  radial-gradient(14% 34% at 2% 70%, rgba(110, 4, 4, 0.85), transparent 70%),
+  radial-gradient(26% 16% at 100% 4%, rgba(80, 0, 0, 0.9), transparent 70%),
+  radial-gradient(18% 30% at 99% 58%, rgba(105, 6, 6, 0.85), transparent 72%),
+  radial-gradient(30% 14% at 30% 100%, rgba(85, 0, 0, 0.9), transparent 70%),
+  radial-gradient(22% 12% at 82% 100%, rgba(100, 2, 2, 0.85), transparent 70%),
+  radial-gradient(5% 9% at 6% 34%, rgba(120, 8, 8, 0.9), transparent 70%),
+  radial-gradient(4% 7% at 93% 30%, rgba(120, 8, 8, 0.9), transparent 70%); }
+.yk-dying.smear .yk-sm { opacity: calc(var(--k) * 0.95); }
+.yk-dying.smear.low .yk-sm { opacity: calc(var(--k) * 0.5); }
 .yk-blood { /* pair-ok */ position: fixed; inset: 0; pointer-events: none; z-index: 3; opacity: 0; background: radial-gradient(ellipse at center, transparent 42%, rgba(120, 10, 10, 0.55) 72%, rgba(70, 0, 0, 0.95) 100%); transition: opacity 0.18s; }
 /* #3: the struggle - big, in the middle, with the presses left and the time running out */
 .yk-grab { position: fixed; left: 50%; top: 24%; transform: translateX(-50%); display: none; flex-direction: column; align-items: center; gap: 4px; min-width: 260px; padding: 10px 20px 12px; border: 2px solid #ff8a6a; border-radius: 8px; background: #6e1414; color: #ffffff; font-size: 18px; font-weight: 700; z-index: 6; pointer-events: none; }
@@ -139,6 +162,26 @@ body:not(.yk-playing) .yk-status.yk-float { display: none; }
 .yk-pmcase .yk-it { cursor: default; }
 .yk-pmcase .yk-it:disabled { opacity: 1; }
 .yk-pm-open { min-height: 44px; }
+/* 1.4.1: the things by name and count (two columns), and a short phone held sideways leaves out the case picture (the list says it all) */
+.yk-pm-things { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 4px; }
+.yk-pm-things li { display: flex; justify-content: space-between; gap: 8px; padding: 3px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.07); color: var(--gf-text); font-size: 14px; }
+.yk-pm-things li span { font-weight: 700; font-variant-numeric: tabular-nums; }
+.yk-pm-none { margin: 0; font-size: 14px; color: var(--gf-text); }
+.yk-pm-pic { display: grid; gap: 6px; }
+@media (max-width: 640px) { .yk-pm-pic { display: none; } }
+@media (max-height: 480px) and (orientation: landscape) {
+  .yk-pm-pic { display: none; }
+  .yk-pm-guns { grid-template-columns: 1fr 1fr; }
+  .yk-pm-things { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  .yk-pmcase .yk-pm-fac { display: flex; flex-wrap: wrap; margin: 0; gap: 3px 6px; }
+  .yk-pmcase .yk-pm-fac li { gap: 6px; padding: 2px 8px; font-size: 13px; }
+  .yk-pmcase { gap: 5px; }
+  .yk-pm-now b { font-size: 17px; }
+  .yk-pm-guns li, .yk-pm-things li { padding: 2px 8px; font-size: 13px; }
+  .yk-pmcase h4 { margin: 2px 0 0; font-size: 13px; }
+}
+/* the shortest phones: the two small headings go, the people sit on one line after the things */
+@media (max-height: 360px) and (orientation: landscape) { .yk-pmcase h4 { display: none; } .yk-pm-hp { margin-top: -2px; } }
 
 /* 1.4.0 #13: under the sights when they point at a person who is not hostile (the weapon drops) */
 .yk-aimtag { position: fixed; left: 50%; top: calc(50% - 56px); transform: translateX(-50%); padding: 3px 10px; border-radius: 6px; background: rgba(10, 14, 16, 0.72); color: #f2ead8; font-size: 15px; font-weight: 700; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 30; white-space: nowrap; }

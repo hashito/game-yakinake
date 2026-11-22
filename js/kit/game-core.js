@@ -1,4 +1,4 @@
-/* game-kit cad79dd6: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit b22a5219: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -77,7 +77,7 @@ import { installTimedShot } from './timed-shot.js';
 import { VoiceQueue } from './voice-queue.js';
 import { installNpcAudit } from './npc-audit.js';
 
-export const CORE_VERSION = '1.36.1';
+export const CORE_VERSION = '1.37.2';
 // the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
 export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board', 'darkroom-develop', 'tape-splice', 'switchboard', 'steam-letter', 'puzzle-box', 'rubbing', 'knot-untangle', 'torn-paper', 'safe-listen', 'footprint-track'];
 const $ = (id) => document.getElementById(id);
@@ -335,8 +335,15 @@ export function createGame(cfg) {
   let audioHandoff = null;   // standard 1.16.4: the context opened behind the title for a game's own sound class (js/audio.js preopenContext)
   const unlockAudio = () => { safe(() => { ctx.audio.init(); ctx.audio.resume(); }); if (audioHandoff) { audioHandoff.release(); audioHandoff = null; } };
   addEventListener('pointerdown', unlockAudio, { once: true }); addEventListener('keydown', unlockAudio, { once: true });
-  const sound = (name, ...a) => safe(() => ctx.audio[name] && ctx.audio[name](...a));
+  // 1.37.0 (水無瀬病院 2026-11-22 #6 「音が聞こえたの前にしっかり音を出してください」): every sound and every thought line goes into ctx.cueLog
+  // ([kind, name / text, ms]); tools/cue-order.mjs checks that a line about a sound (音・鳴った・聞こえた・はねた ...) comes after a sound, not with
+  // or before it. ctx.cueThenSay(play, text, { lead }) plays the sound first and says the line `lead` seconds later.
+  const cueLog = ctx.cueLog = [];
+  const cue = (k, n) => { cueLog.push([k, String(n).slice(0, 60), Math.round(performance.now())]); if (cueLog.length > 400) cueLog.splice(0, 100); };
+  const sound = (name, ...a) => { cue('sound', name); return safe(() => ctx.audio[name] && ctx.audio[name](...a)); };
   ctx.sound = sound;
+  for (const k of ['noise', 'tone', 'noiseBurst', 'hum']) if (typeof audio[k] === 'function') { const f = audio[k].bind(audio); audio[k] = (...a) => { cue('sound', `${k}:${typeof a[0] === 'string' ? a[0] : ''}`); return f(...a); }; }
+  ctx.cueThenSay = (play, text, o = {}) => { safe(play); setTimeout(() => ctx.monologue(text, o.sec ?? Math.min(9, 2.4 + String(text).length * 0.09), o), Math.round((o.lead ?? 0.9) * 1000)); };
   // standard 1.9: the 'it saw you' effects (js/spot-fx.js): game.json "spotFx" for every monster, monsters.json "spotFx" per monster
   { const sfx = createSpotFx(ctx, manifest.spotFx || null); ctx.spotFx = (spec, o) => sfx.play(spec, o); }
   // the look of each stage from data: stages.json levels[].look + "show" rules, game.json "music" / "stationsWhenDone" (js/stage-look.js; more per stage: ext.on('stage:look'))
@@ -540,7 +547,7 @@ export function createGame(cfg) {
     Store.write(`${manifest.id}.endings.v1`, [...new Set([...(Store.read(`${manifest.id}.endings.v1`) || []), e.id])]);
     if (screen) screen.open(ctx, e);   // the game's own presentation (sequence, result card, share buttons)
     // standard 1.8.2 (F10): with no screen of its own a game still ends on the scene - the picture, the lines, the endings found so far
-    else showEndingScene(ctx, { photo: e.photo, kicker: e.kicker, title: e.title, text: e.text, roll: e.roll, endings: { all: endings, current: e.id }, buttons: [{ label: '最初から', primary: true, fn: () => location.reload() }] });   // 1.36.0: endings.json "roll": [{ photo, title, text }] - the end roll after the ending's own lines (札の家 2026-11-22 #12)
+    else showEndingScene(ctx, { photo: e.photo, scenes: e.scenes, kicker: e.kicker, title: e.title, text: e.text, roll: e.roll, endings: { all: endings, current: e.id }, buttons: [{ label: '最初から', primary: true, fn: () => location.reload() }] });   // 1.36.0: endings.json "roll": [{ photo, title, text }] - the end roll after the ending's own lines (札の家 2026-11-22 #12)
     bus.emit('ending:reach', { id: e.id });
   }
   ctx.checkEndings = checkEndings;
@@ -986,7 +993,7 @@ export function createGame(cfg) {
   const thoughtDir = String(manifest.thoughtVoices || '').replace(/[^/]*$/, '');
   ctx.monologue = (text, sec = 2.2, o) => {
     if (readingNow()) { afterQ.push(() => ctx.monologue(text, sec, o)); return; }   // 1.20.3: after the document / card is closed
-    ctx.readLog.push(['say', String(text).slice(0, 40), Date.now()]);
+    ctx.readLog.push(['say', String(text).slice(0, 40), Date.now()]); cue('say', text);
     const v = thoughtVoices && thoughtVoices[text];
     if (v && !ctx.qa) { safe(() => thoughtNode && thoughtNode.stop && thoughtNode.stop()); safe(() => { thoughtNode = ctx.voiceLine(thoughtDir + v.file, null, { prio: (o && o.prio) || 'hint' }); }); sec = Math.max(sec, (v.sec || 0) + 1); }
     return ui.say(esc(text), sec, o);

@@ -1,4 +1,4 @@
-/* game-kit cad79dd6: js/ending-scene.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit a4da8f61: js/ending-scene.js — edit in game-kit and run tools/kit-sync.js */
 // The ending as a scene (standard 1.8.1, feedback 2026-11-01 "最後にも写真を置いて手前に文字をつけるなど雰囲気を出して"): the picture fills the
 // screen and slowly comes closer, the kicker and the title stand in front of it, the epilogue appears a line at a time, and the stats and
 // the buttons come last. A click / Enter / Space shows the rest at once; reduced motion (ctx.calm or the OS setting) shows it all still.
@@ -14,6 +14,8 @@
 // Pure parts: endingTimeline(paragraphs, o) gives when each part appears (seconds); endingsList(all, found, current) the list with the unfound
 // ones masked; both tested in test/ending-scene.test.mjs.
 // Kit 1.16 (all-games rule A21): below the buttons, the share row (js/share-bar.js: X で共有 / 共有 / リンクをコピー / 他のゲームを遊ぶ).
+// 1.37.0 (水無瀬病院 2026-11-22 #19 「エンディングが短い」): a long epilogue changes its picture as it goes: scenes [{ at, photo }] (at = the
+// index of the line from which that picture shows; data/endings.json "scenes"), each fading in over the one before when its line appears.
 // share: false leaves it out (a game that puts its own row there); share: { ending: '名前', tags, line } overrides; game.json "share": false
 // or { "ending": false } turns it off for the game, { "endingName": true } puts the ending's title in the text (only when that gives nothing away).
 import { Store } from "./store.js";
@@ -63,7 +65,8 @@ export function showEndingScene(ctx, o = {}) {
   const el = document.createElement("div");
   el.id = "gf-ending"; el.className = `gf-ending ${still ? "still" : ""}`; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", o.title || "エンディング");
   const d = (s) => `style="--d:${s.toFixed(2)}s"`;
-  el.innerHTML = `${o.photo ? `<div class="gf-ending-photo" style="background-image:url('${esc(o.photo)}')"></div>` : ""}<div class="gf-ending-shade"></div>
+  const later = (o.scenes || []).filter((s) => s && s.photo && tl.lines[s.at] != null).map((s) => `<div class="gf-ending-photo gf-ending-later" style="background-image:url('${esc(s.photo)}');--d:${tl.lines[s.at].toFixed(2)}s"></div>`).join("");
+  el.innerHTML = `${o.photo ? `<div class="gf-ending-photo" style="background-image:url('${esc(o.photo)}')"></div>` : ""}${later}<div class="gf-ending-shade"></div>
     <div class="gf-ending-text">
       ${o.kicker ? `<p class="gf-ending-kicker" ${d(tl.kicker)}>${esc(o.kicker)}</p>` : ""}
       ${o.title ? `<h2 class="gf-ending-title" ${d(tl.title)}>${esc(o.title)}</h2>` : ""}

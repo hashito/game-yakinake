@@ -18,6 +18,8 @@ export const PEOPLE = [
   { id: 'mori', name: '森', at: ['P_KYU', 97.4, 2.6], h: 1.76, gun: 'pistol' },
   { id: 'noguchi', name: '野口', station: 'S_NOGUCHI', h: 1.66 },
   { id: 'hayase', name: '早瀬', at: ['O_CHU', 148, 3.6], h: 1.74 },
+  // 1.4.1: the man in the cult's cellar, behind iron bars (he talks through them; the bars keep him out of every fight)
+  { id: 'miyake', name: '三宅', station: 'S_MIYAKE', pos: [68.4, 35.9], h: 1.7, caged: true },
 ];
 
 export function installPeople(ext, G) {
@@ -43,8 +45,10 @@ export function installPeople(ext, G) {
     const R = plan.rooms.find((r) => r.id === room), y = W.floorY((R && R.floor) || 0);
     const f = createFigure(THREE, set, { height: P.h, material: mat, name: P.id });
     // stand a little behind the talk point, facing into the room
-    const cx = R.x + R.w / 2, cz = R.z + R.d / 2, yaw = Math.atan2(cx - x, cz - z);
-    f.root.position.set(x - Math.sin(yaw) * 0.15, y, z - Math.cos(yaw) * 0.15);
+    const cx = R.x + R.w / 2, cz = R.z + R.d / 2;
+    // a person with a place of their own (behind bars) stands there and faces the talk point
+    const yaw = P.pos ? Math.atan2(x - P.pos[0], z - P.pos[1]) : Math.atan2(cx - x, cz - z);
+    if (P.pos) f.root.position.set(P.pos[0], y, P.pos[1]); else f.root.position.set(x - Math.sin(yaw) * 0.15, y, z - Math.cos(yaw) * 0.15);
     f.root.rotation.y = yaw;
     f.root.name = `person:${P.id}`;
     ctx.scene.add(f.root);
@@ -171,7 +175,7 @@ export function installPeople(ext, G) {
   G.peopleTargets = () => {
     const out = [];
     for (const p of figs.values()) {
-      if (p.mode === 'dead' || p.hidden || !p.f.root.visible) continue;
+      if (p.mode === 'dead' || p.hidden || !p.f.root.visible || p.P.caged) continue;
       const o = p.f.root.position, low = p.mode === 'down' || (p.cover && p.cover.down);
       const ray = (r) => { const h = low ? p.P.h * 0.58 : hh(p); box.min.set(o.x - 0.28, o.y, o.z - 0.28); box.max.set(o.x + 0.28, o.y + h, o.z + 0.28); const q = r.intersectBox(box, hitP); return q ? { part: q.y > o.y + h - 0.28 ? 'head' : 'chest', dist: q.distanceTo(r.origin), point: q.clone() } : null; };
       out.push({ kind: 'person', id: p.P.id, name: p.P.name, alive: true, pos: o, guard: guardOf(p),

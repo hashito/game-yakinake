@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/render-presets.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit a4da8f61: js/render-presets.js — edit in game-kit and run tools/kit-sync.js */
 // One-call looks for three.js r170 games: renderer colour management / tone mapping / pixel-ratio cap, a procedural
 // PMREM environment (no file to download), a light rig with one shadow light, fog, cheap post (vignette, grain,
 // half-res bloom; a CSS overlay on phones), quality tiers (auto-detect + auto-downgrade + a settings <select>), a
@@ -277,8 +277,14 @@ export class Post {
   setSize() {
     const s = this.renderer.getDrawingBufferSize(new THREE.Vector2());
     this.rt.setSize(s.x, s.y);
-    const bw = Math.max(1, s.x >> 2);
-    const bh = Math.max(1, s.y >> 2);
+    // 1.37.0 (水無瀬病院 2026-11-22 #16 「光が四角形に見える」): in a pixel game drawn small (pixel.world "lowres": the pixel ratio under 1) the bloom
+    // at a quarter of that small buffer made each bright point a bilinear tent of 4-px texels - square contours, then enlarged with hard
+    // edges into blurry square tiles round every lamp and drop. There the bloom runs at the buffer's own size and is blurred twice (a round
+    // gaussian); check-playtest P54 measures the halo of one bright point (axis vs diagonal)
+    this.small = this.renderer.getPixelRatio() < 1;
+    const sh = this.small ? 0 : 2;
+    const bw = Math.max(1, s.x >> sh);
+    const bh = Math.max(1, s.y >> sh);
     this.bA.setSize(bw, bh);
     this.bB.setSize(bw, bh);
     this.bw = bw;
@@ -308,6 +314,14 @@ export class Post {
       this.blur.uniforms.tDiffuse.value = this.bB.texture;
       this.blur.uniforms.dir.value.set(0, k / this.bh);
       this.pass(this.blur, this.bA);
+      if (this.small) {   // a second, wider round: the halo of one bright pixel is a round soft disc, not a cross or a square
+        this.blur.uniforms.tDiffuse.value = this.bA.texture;
+        this.blur.uniforms.dir.value.set((k * 1.6) / this.bw, 0);
+        this.pass(this.blur, this.bB);
+        this.blur.uniforms.tDiffuse.value = this.bB.texture;
+        this.blur.uniforms.dir.value.set(0, (k * 1.6) / this.bh);
+        this.pass(this.blur, this.bA);
+      }
     }
     this.final.uniforms.time.value = time;
     this.pass(this.final, prev);

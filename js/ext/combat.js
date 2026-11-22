@@ -28,7 +28,7 @@ export function installCombat(ext, G) {
   let reloadMax = 1;
   // 1.2.0 #7: the hand sways - it lags the look and bobs with the steps (px of the 320 x 192 picture)
   const sway = { x: 0, y: 0, yaw: null, phase: 0, px: null, pz: null };
-  let beatT = 0, breathT = 0, lastSat = 1;
+  let beatT = 0, breathT = 0, lastSat = '', beatK = 0;
   let hintT = 0, cool = 0, reloading = 0, swing = 0, kick = 0, flashT = 0, grab = null, hurtFlash = 0, regen = 0;
   const heldNow = () => { const it = G.equip && G.case.byUid(G.equip); return it ? { it, c: CATALOG[it.id] } : { it: null, c: CATALOG.hands }; };
   G.held = heldNow;
@@ -66,6 +66,9 @@ export function installCombat(ext, G) {
   // world and the light, under the dot post-process; the motions are the 1.2.0 ones in 3D (sway, recoil, reload, strike, the light hand)
   let rig = null, rigId = '', bloodT = 0, buildRig = () => {};
   const blood = document.createElement('div'); blood.id = 'yk-blood'; blood.className = 'yk-blood';
+  // 1.4.1: low on life the view goes DARK and red, not pale - a dark rim, a red ring that swells on every heartbeat, and blood smeared at
+  // the edges (as the blood setting allows); the picture itself loses its colour and its light (a white wash read as a flash, not danger)
+  const dying = document.createElement('div'); dying.id = 'yk-dying'; dying.className = 'yk-dying'; dying.innerHTML = '<i class="yk-dk"></i><i class="yk-rd"></i><i class="yk-sm"></i>';
   const grabTag = document.createElement('div'); grabTag.id = 'yk-grab'; grabTag.className = 'yk-grab';
   // 1.2.1 (tougher zombies: the hits must read): four hard ticks round the sights for a moment on every hit - white on the body,
   // red and wider on the head, red and wide on a kill; with a crisp tick sound of its own (the 3D thud comes from the zombie)
@@ -91,8 +94,8 @@ export function installCombat(ext, G) {
       shownHp = hp;
       el.querySelector('.yk-hp i').style.width = `${hp}%`;
       el.querySelector('.yk-hpn').textContent = String(hp);
-      el.classList.toggle('yk-mid', hp < 60 && hp >= 30); el.classList.toggle('yk-low', hp < 30);
-      el.querySelector('.yk-hp').classList.toggle('low', hp < 30);
+      el.classList.toggle('yk-mid', hp < 60 && hp > 30); el.classList.toggle('yk-low', hp <= 30);
+      el.querySelector('.yk-hp').classList.toggle('low', hp <= 30);
     }
     el.querySelector('.yk-hp s').style.width = `${Math.max(hp, lagHp)}%`;
     const nx = nextWeapon(), key = `${nx ? nx.uid : ''}|${G.equip}`;
@@ -125,7 +128,7 @@ export function installCombat(ext, G) {
       };
     }
     muzzle = new THREE.PointLight(0xffc070, 0, 14, 1.6); muzzle.name = 'yk-muzzle'; ctx.scene.add(muzzle);
-    document.body.append(blood, grabTag, mark, aimTag);
+    document.body.append(dying, blood, grabTag, mark, aimTag);
     // the hands are built behind the first block card, not behind the title (1.4.0: building them and the weapons at game:ready made
     // the title slower and its heap 24 MB bigger on a throttled phone), and every weapon with them, one step at a time (a weapon built
     // when it is picked up stalled play for a moment); a game without that card builds them as play starts
@@ -371,11 +374,19 @@ export function installCombat(ext, G) {
       }
       // low on life: the heart is heard (faster the lower), the breath under 30, the colour drains from the view
       beatT -= dt;
-      if (G.hp < 45 && beatT <= 0) { beatT = 60 / (72 + (45 - G.hp) * 2.2); G.sfx('heart', { g: 0.5 + (45 - G.hp) / 60 }); }
+      if (G.hp < 45 && beatT <= 0) { beatT = 60 / (72 + (45 - G.hp) * 2.2); G.sfx('heart', { g: 0.5 + (45 - G.hp) / 60 }); beatK = 1; }
+      beatK = Math.max(0, beatK - dt * 3.2);
       breathT -= dt;
       if (G.hp < 30 && breathT <= 0) { breathT = 2.1 + Math.random() * 0.5; G.sfx('breath', { g: 0.35 + (30 - G.hp) / 60 }); }
-      { const sat = G.hp < 40 ? Math.max(0.25, G.hp / 40) : 1;
-        if (Math.abs(sat - lastSat) > 0.02 || (sat === 1 && lastSat !== 1)) { lastSat = sat; const v = document.getElementById('view'); if (v) v.style.filter = sat < 1 ? `saturate(${sat.toFixed(2)}) contrast(${(1 + (1 - sat) * 0.15).toFixed(2)})` : ''; } }
+      { const k = G.dead ? 0 : Math.max(0, Math.min(1, (45 - G.hp) / 35));   // 0 at 45, 1 at 10 and below
+        const calm = document.documentElement.hasAttribute('data-gf-calm') || document.documentElement.hasAttribute('data-gf-no-flash');
+        const beat = calm ? 0.4 : beatK * beatK;
+        dying.style.opacity = k > 0 ? '1' : '0';
+        dying.style.setProperty('--k', k.toFixed(3)); dying.style.setProperty('--b', beat.toFixed(3));
+        dying.classList.toggle('smear', G.gore !== 'off'); dying.classList.toggle('low', G.gore === 'low');
+        const f = k > 0 ? `saturate(${(1 - k * 0.8).toFixed(2)}) brightness(${(1 - k * 0.5 - beat * k * 0.1).toFixed(2)}) contrast(${(1 + k * 0.12).toFixed(2)})` : '';
+        // on the cover's backdrop, not on the canvas: the kit's approach effect owns the canvas filter and clears it every frame
+        if (f !== lastSat) { lastSat = f; dying.style.backdropFilter = f; dying.style.webkitBackdropFilter = f; } }
       // slow mending while nothing hurts (to 40 at most: real healing needs the case)
       regen += dt; if (regen > 8 && G.hp < 40) G.hp = Math.min(40, G.hp + dt * 0.8);
       // a struggle press counts at once, even while the last swing is still recovering (and does not swing)
