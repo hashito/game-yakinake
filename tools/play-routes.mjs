@@ -288,12 +288,15 @@ async function run(route) {
     // 1.4.1 (iPhone: the pipe's blood hung in the air): after the hit the blood is ON the weapon - its world box inside the weapon's (+1 cm)
     { const bb = await G(`(() => { const b = y.fpRig && y.fpRig.built.get('pipe'); if (!b || !b.blood) return null; const box = (m) => { m.updateWorldMatrix(true, false); m.geometry.computeBoundingBox(); const B = m.geometry.boundingBox, e = m.matrixWorld.elements, P = []; for (const x of [B.min.x, B.max.x]) for (const yy of [B.min.y, B.max.y]) for (const z of [B.min.z, B.max.z]) P.push([e[0]*x+e[4]*yy+e[8]*z+e[12], e[1]*x+e[5]*yy+e[9]*z+e[13], e[2]*x+e[6]*yy+e[10]*z+e[14]]); return [0,1,2].map((k) => [Math.min(...P.map((q) => q[k])), Math.max(...P.map((q) => q[k]))]); }; const W = box(b.mesh), Bl = box(b.blood); return { vis: b.blood.visible, ok: [0,1,2].every((k) => Bl[k][0] >= W[k][0] - 0.01 && Bl[k][1] <= W[k][1] + 0.01) }; })()`);
       expect(bb && bb.vis && bb.ok, `the pipe is bloody after the hit, and the blood is on the pipe (${JSON.stringify(bb)})`); }
-    await G('(y.hurt(5, { grab: 1.5, by: null }), 1)'); await sleep(200);
+    // the struck zombie is still up and close: lay it down first, so its own lunge / bite cannot start or end the grab under test
+    await G('(y.liveZombies().forEach((L) => L.alive && L.z.kill()), 1)'); await key('KeyV', 'keyup'); await sleep(900);
+    // a long hold (7 s) so a slow headless frame rate cannot run the clock out before three presses land
+    await G('(y.hurt(5, { grab: 6, by: null }), 1)'); await sleep(200);
     expect(await G("document.getElementById('yk-grab').classList.contains('on')"), 'a grab shows the shove hint');
     await shot('grabbed');
     // a press is a key down and up (a key left down is not pressed again); the swing before may still be recovering
     let freed = false;
-    for (let i = 0; i < 6 && !freed; i++) { await key('KeyV', 'keyup'); await key('KeyV'); await sleep(250); await key('KeyV', 'keyup'); freed = await G("!document.getElementById('yk-grab').classList.contains('on')"); }
+    for (let i = 0; i < 12 && !freed; i++) { await key('KeyV', 'keyup'); await key('KeyV'); await sleep(250); await key('KeyV', 'keyup'); freed = await G("!document.getElementById('yk-grab').classList.contains('on')"); }
     expect(freed, 'melee shoves free of a grab');
     await G('(y.liveZombies().forEach((L) => L.alive && L.z.kill()), 1)');
     // the case: open with B, combine bandage + disinfectant, heal

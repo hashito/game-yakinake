@@ -27,6 +27,7 @@
     "check:bake": "node tools/bake-stacks.mjs . --check",
     "play": "node tools/play-routes.mjs",
     "check:ammo": "node tools/ammo-budget.mjs",
+    "check:viewmodel": "node tools/check-viewmodel.mjs",
     "check:all": "npm run check && npm run check:ammo && npm run check:pixel && npm run check:pairs && npm run check:copy && node tools/check-playtest.mjs ."
   }
 }

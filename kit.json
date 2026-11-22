@@ -1,5 +1,5 @@
 {
-  "kit": "b22a5219",
+  "kit": "d0e6d25c",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -181,7 +181,7 @@
     "bake-prop-boxes.mjs"
   ],
   "hashes": {
-    "js\\kit\\game-core.js": "d19628d1b07a",
+    "js\\kit\\game-core.js": "12cf37982159",
     "js\\kit\\item-kinds.js": "1df558ca9be9",
     "js\\kit\\item-models.js": "8c5988e07991",
     "js\\kit\\prop-geo.js": "6015f33a97f7",
@@ -365,8 +365,8 @@
     "js\\kit\\block-loader.js": "9eae779a410c",
     "tools/bake-stacks.mjs": "56932cc25652",
     "tools/bake-prop-boxes.mjs": "3bd46492d944",
-    "js\\kit\\fp-voxel.js": "d44ed22d9939",
-    "js\\kit\\fp-voxel-parts.js": "41f7b611dab1",
+    "js\\kit\\fp-voxel.js": "20eddda24ecc",
+    "js\\kit\\fp-voxel-parts.js": "13d46a400731",
     "tools/cue-order.mjs": "28ab5482036a"
   },
   "textures": []
