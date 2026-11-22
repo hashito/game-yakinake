@@ -295,8 +295,31 @@ export function installCase(ext, G) {
   }
   C.redraw = draw;
 
+  // 1.4.0 (play test #8 「一時停止メニューで武器やアイテムが見えない」): the paused screen shows the case beside the menu - the grid with
+  // the pictures, the weapon in the hand, every gun's rounds (in it / spare) and the body - read only; 「ケースを開く」 opens the real one
+  // 1.4.0 #13: the groups met so far and how they stand to the player (友好 / 警戒 / 敵対)
+  const FACL = { friendly: '友好', wary: '警戒', hostile: '敵対', gone: '全滅' };
+  const facHtml = () => { const L = (G.facList ? G.facList() : []).filter((f) => G.flags && G.flags[`met:${f.id}`]); return L.length ? `<h4>人々</h4><ul class="yk-pm-fac">${L.map((f) => `<li class="s-${f.state}"><b>${esc(f.name)}</b><span>${FACL[f.state] || f.state}</span></li>`).join('')}</ul>` : ''; };
+  function pausePanel(el, pm, c, o2 = {}) {
+    const B = bagDim(), keep = cs, W = Math.max(120, Math.min(420, (el.clientWidth || 340) - 24));
+    cs = Math.max(18, Math.min(40, Math.floor(W / B.w)));
+    const eq = G.equip && C.byUid(G.equip), ec = eq ? CATALOG[eq.id] : null;
+    const guns = C.weapons().filter((w) => CATALOG[w.id].gun).map((w) => { const g = CATALOG[w.id].gun; return `<li${G.equip === w.uid ? ' class="on"' : ''}><b>${esc(CATALOG[w.id].name)}</b><span>${w.loaded} / ${g.mag}　予備 ${C.count(g.ammo)}</span></li>`; }).join('');
+    const meds = C.items.filter((i) => CATALOG[i.id].kind === 'med').reduce((m, i) => m + i.n, 0);
+    el.innerHTML = `<div class="yk-pmcase"><p class="yk-pm-now"><span>構えている物</span><b>${ec ? esc(ec.name) : '素手'}</b>${ec && ec.gun ? `<em>${eq.loaded} / ${ec.gun.mag}　予備 ${C.count(ec.gun.ammo)}</em>` : ''}</p>
+      <p class="yk-pm-hp"><span>体力</span><b>${Math.round(G.hp)} / 100</b><span>手当ての品 ${meds}</span></p>
+      ${guns ? `<ul class="yk-pm-guns">${guns}</ul>` : ''}${facHtml()}
+      <h4>${esc(B.name)}（${B.w}×${B.h}）</h4>${gridHtml(C.items, B.w, B.h, 'peek')}
+      <button type="button" class="pm-item yk-pm-open" data-open-case>ケースを開く（並べ替え・構える）</button></div>`;
+    cs = keep;
+    el.querySelectorAll('.yk-it').forEach((b) => { b.tabIndex = -1; b.disabled = true; });
+    el.querySelector('[data-open-case]').onclick = () => { pm.close(); setTimeout(() => C.open(), 0); };
+    // painted before the window had its size: once more at the real width
+    if (!o2.again) requestAnimationFrame(() => { if (el.isConnected && Math.abs((el.clientWidth || 0) - (W + 24)) > 30) pausePanel(el, pm, c, { again: true }); });
+  }
   // the blood setting lives in the menu's 設定 (not in the case)
   ext.registerUi('pause', {
+    renderPanel: (el, pm, c) => pausePanel(el, pm, c),
     renderSettings: (el) => {
       const row = document.createElement('div'); row.className = 'pm-row yk-gore-row';
       const paint = () => {

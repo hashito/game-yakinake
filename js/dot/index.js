@@ -27,7 +27,11 @@ const FURN = { bench: 'bench', locker: 'locker', desk: 'desk', steelDesk: 'steel
   filingCabinet: 'locker', cardboardBox: 'crate' };
 const FURN_ID = { F_CAR1: 'car-doors-open', F_CAR2: 'car-stalled-red', F_AMBU: 'ambulance', F_CAR3: 'car-stalled', F_CAR4: 'car-burnt', F_CAR5: 'car-doors-open',
   F_CAR6: 'car-stalled-red', F_BUS: 'bus-side', F_SHOTEN_CAR: 'car-burnt', F_HIRO_CAR: 'police-car', F_P_CAR: 'police-car', F_P_CAR2: 'police-car', F_PL_CAR: 'car-stalled',
-  F_MART_S1: 'shop-shelf', F_MART_S2: 'shop-shelf', F_YAMA_S1: 'shop-shelf', F_TOU_SOFA: 'sofa' };
+  F_MART_S1: 'shop-shelf', F_MART_S2: 'shop-shelf', F_YAMA_S1: 'shop-shelf', F_TOU_SOFA: 'sofa',
+  // 1.4.0 (#10 the street is one way; #5 #14 the mart and the 公民館): barricades and wrecks that close the wide parts, a shelf
+  // pulled down across the food court door, the stock of the mart and the shrine
+  F_URA_BAR1: 'barricade', F_URA_BAR2: 'sandbags', F_OD_BAR1: 'sandbags', F_OD_BAR2: 'barricade', F_OD_CAR7: 'car-burnt', F_SH_BAR1: 'barricade', F_SH_BAR2: 'sandbags',
+  F_HI_BAR: 'sandbags', F_MART_BAR: 'barricade', F_MFOOD_SH: 'collapsed-shelf', F_MBACK_C: 'crate', F_MCOLD_S: 'shelf', F_YAMAURA_S: 'shop-shelf' };
 // the stations' own things (the box the weapon comes out of, the safe, the radio): a part standing at the station
 const STATION_PART = { S_CART: 'crash-cart', S_TOOL: 'toolbox', S_SAFE: 'safe', S_RADIO: 'radio', S_BREAKER: 'breaker', S_BOARD: 'switchboard', S_TAPE: 'tape-deck',
   S_RACK: { k: 'gun-rack-full', after: [['T_RACK', () => (window.__yk && window.__yk.flags.rack === 'all' ? 'gun-rack-empty' : 'gun-rack-half')]] }, S_RIFLE: 'rifle-case',

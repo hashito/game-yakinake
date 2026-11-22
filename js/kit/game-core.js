@@ -1,4 +1,4 @@
-/* game-kit f33d12c8: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit cad79dd6: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -77,7 +77,7 @@ import { installTimedShot } from './timed-shot.js';
 import { VoiceQueue } from './voice-queue.js';
 import { installNpcAudit } from './npc-audit.js';
 
-export const CORE_VERSION = '1.34.0';
+export const CORE_VERSION = '1.36.1';
 // the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
 export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board', 'darkroom-develop', 'tape-splice', 'switchboard', 'steam-letter', 'puzzle-box', 'rubbing', 'knot-untangle', 'torn-paper', 'safe-listen', 'footprint-track'];
 const $ = (id) => document.getElementById(id);
@@ -187,6 +187,7 @@ export function createGame(cfg) {
     const extra = {};
     for (const p of ext.reg.persist.list()) { const v = p.serialize(ctx); if (v === null) return null; extra[p.id] = v; }   // null = do not save now
     if (Object.keys(extra).length) s.ext = extra;
+    s.gone = [...gone.keys()];   // 1.35.0: the pickups taken so far (a save gone back to puts the later ones back)
     return s;
   };
   ctx.snapshot = () => snapshot();
@@ -539,7 +540,7 @@ export function createGame(cfg) {
     Store.write(`${manifest.id}.endings.v1`, [...new Set([...(Store.read(`${manifest.id}.endings.v1`) || []), e.id])]);
     if (screen) screen.open(ctx, e);   // the game's own presentation (sequence, result card, share buttons)
     // standard 1.8.2 (F10): with no screen of its own a game still ends on the scene - the picture, the lines, the endings found so far
-    else showEndingScene(ctx, { photo: e.photo, kicker: e.kicker, title: e.title, text: e.text, endings: { all: endings, current: e.id }, buttons: [{ label: '最初から', primary: true, fn: () => location.reload() }] });
+    else showEndingScene(ctx, { photo: e.photo, kicker: e.kicker, title: e.title, text: e.text, roll: e.roll, endings: { all: endings, current: e.id }, buttons: [{ label: '最初から', primary: true, fn: () => location.reload() }] });   // 1.36.0: endings.json "roll": [{ photo, title, text }] - the end roll after the ending's own lines (札の家 2026-11-22 #12)
     bus.emit('ending:reach', { id: e.id });
   }
   ctx.checkEndings = checkEndings;
@@ -568,7 +569,13 @@ export function createGame(cfg) {
     stairs: { prompt: (o) => (o.locked && o.locked() ? `[E] ${lockedLabel(o.label || '階段', 'いまは使えません')}` : `[E] ${o.label || '階段を使う'}`),
       run: (o) => { if (o.locked && o.locked()) { ui.say(esc(o.hint || prog.lockText(o.unlock) || 'いまは、この階段を使えません。先に、いまの目標を進めましょう。'), 6, { urgent: true }); bus.emit('stairs:locked', { id: o.id, unlock: o.unlock }); return; } ctx.useStairs(o); } },
   };
-  function remove(kind, id) { const m = pickups.get(`${kind}:${id}`); if (!m) return; m.visible = false; world.group.remove(m); const i = world.interactables.indexOf(m); if (i >= 0) world.interactables.splice(i, 1); pickups.delete(`${kind}:${id}`); }
+  // 1.35.0 (夜勤明けの街 #11 「死んだら前のセーブポイントから再開」): a taken pickup is kept aside, so going back to a save made before it
+  // was taken (ctx.start({ restart, resume }) - a death back to the save, "try again" after an ending) puts it back where it lay
+  const gone = new Map();
+  function remove(kind, id) { const m = pickups.get(`${kind}:${id}`); if (!m) return; m.visible = false; world.group.remove(m); const i = world.interactables.indexOf(m); if (i >= 0) world.interactables.splice(i, 1); pickups.delete(`${kind}:${id}`); gone.set(`${kind}:${id}`, m); }
+  // back to a save: the pickups taken since it was made (not in its list of taken ones) lie where they lay again
+  function unremoveSince(keep) { if (!keep) return; const K = new Set(keep); for (const [k, m] of [...gone]) { if (K.has(k)) continue; m.visible = true; world.group.add(m); if (!world.interactables.includes(m)) world.interactables.push(m); pickups.set(k, m); gone.delete(k); } }
+  ctx.takenPickups = () => [...gone.keys()];
   ctx.removePickup = remove;
   const handlerOf = (kind) => ext.reg.interact.get(kind) || builtin[kind];
   let target = null;
@@ -687,7 +694,7 @@ export function createGame(cfg) {
   }
   for (const t of ext.tabs()) tm.registerTab({ id: t.id, label: t.label, icon: t.icon, after: t.after, render: (el) => t.render(el, ctx), badge: t.badge ? () => t.badge(ctx) : undefined, onShow: t.onShow ? () => t.onShow(ctx) : undefined, onKey: t.onKey, focus: t.focus });
   const pm = ctx.pm = createPauseMenu({
-    wm, tabMenu: tm, releaseNotes: rn, ...(uiDef('pause').renderSettings ? { renderSettings: (el, api) => uiDef('pause').renderSettings(el, api, ctx) } : {}), onTitle: () => (ctx.toTitle ? ctx.toTitle() : location.reload()), storage: safe(() => localStorage),
+    wm, tabMenu: tm, releaseNotes: rn, ...(uiDef('pause').renderSettings ? { renderSettings: (el, api) => uiDef('pause').renderSettings(el, api, ctx) } : {}), ...(uiDef('pause').renderPanel ? { renderPanel: (el, api) => uiDef('pause').renderPanel(el, api, ctx) } : {}), onTitle: () => (ctx.toTitle ? ctx.toTitle() : location.reload()), storage: safe(() => localStorage),
     canOpen: () => state.started && !state.ended && !ui.open && !MG.isActive() && !ctx.rnOpen && !tm.isOpen && !ctx.blockers.some((f) => f()),
     onSettings: (s) => { settings.calm = s.calm; root.dataset.gfCalm = s.calm || Q.has('calm') ? '1' : ''; settings.volume = s.volume; settings.hudAlpha = s.hudAlpha; ctx.calm = s.calm || Q.has('calm'); ctx.audio.volume = s.volume; safe(() => ctx.audio.setVolume(s.volume)); store.saveSettings(settings); bus.emit('settings:change', s); },
   });
@@ -1063,7 +1070,9 @@ ${it.desc}` : ''}`, ...(it.photo ? { img: it.photo } : {}) };
         prog.restore(snap.prog);
         state.tasks = [...(snap.tasks || [])]; state.flags = [...(snap.flags || [])];
         for (const id of state.doors) { const d = world.doors.get(id); if (d && d.open() && d.snap) d.snap(); }   // a restored door is already open (no swing on load)
+        unremoveSince(snap.gone);
         for (const id of state.inv) remove('item', id);
+        for (const k of snap.gone || []) { const [kind, ...r] = k.split(':'); remove(kind, r.join(':')); }
         if (snap.pos) { placeCamera(snap.pos.x, snap.pos.z, snap.pos.floor || 0); fp.yaw = snap.pos.yaw || 0; }
         ctx.checkpoint = snap.cp ? { ...snap.cp } : snap.pos ? { x: snap.pos.x, z: snap.pos.z, yaw: snap.pos.yaw || 0, floor: snap.pos.floor || 0 } : { ...world.spawn, floor: world.spawn.floor || 0 };
       } else { ctx.checkpoint = { ...world.spawn, floor: world.spawn.floor || 0 }; if (!o.keepSave && !TEST_MODE) store.clear(); }

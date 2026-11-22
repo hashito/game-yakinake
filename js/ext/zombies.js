@@ -13,6 +13,7 @@ export function installZombies(ext, G) {
   const pats = new Map();
   const live = new Map();    // spawn id -> { def, z, room, floor, alert, wp, lastGroan, home }
   G.killed = new Set();
+  G.killedAt = {};   // 1.4.0 #4: where each one fell (the bodies stay where they fell, after a save and a death too)
   let ctx = null, fx = null, rooms = [], roomById = new Map(), doorList = [];
   const touch = () => (ctx && ctx.isTouch) || matchMedia('(pointer: coarse)').matches;
   const MAX = () => (touch() ? 12 : 15);
@@ -122,16 +123,34 @@ export function installZombies(ext, G) {
   const BLOCK_OF = { O_PLAZA: 'P' };   // the plaza in front of the tower is still the police block's fight
   G.toughOf = (def) => def.p === 'giant' ? G.TOUGH.giant : def.room === 'O_ROOF' ? G.TOUGH.ROOF : G.TOUGH[BLOCK_OF[def.room] || String(def.room || '').charAt(0)] || 1;
   const toughen = (z, k) => { if (k === 1) return; for (const P of Object.values(z.parts)) { P.max = Math.round(P.max * k); P.hp = P.hp > 0 ? P.max : 0; } z.life = z.maxLife = Math.round(z.maxLife * k); z.tough = k; };
+  // 1.4.0 #6 「釘が効かないヘルメットや装備の個体。体の一部だけ」: armour on some parts (a helmet, a vest, pads). Nails, the scalpel, the
+  // fists and the pistol glance off it (a spark and a clink, no harm); the bar knocks through a little; the axe, the shotgun and the
+  // rifle go through at 60 %. The bare parts take everything. The riot police's own gear (their pattern) counts as armour too.
+  const ARMOR_KIT = {
+    helmet: ['head'], vest: ['chest', 'pelvis'], pads: ['shinL', 'shinR', 'foreArmL', 'foreArmR'],
+  };
+  const POWER = { nailgun: 'weak', scalpel: 'weak', hands: 'weak', pistol: 'weak', pipe: 'blunt', axe: 'strong', shotgun: 'strong', rifle: 'strong' };
+  // #12: how much blood a hit throws, by the weapon
+  const SPRAY = { shotgun: 2.4, rifle: 1.8, axe: 2.0, pistol: 1.0, pipe: 0.8, nailgun: 0.5, scalpel: 0.7, hands: 0.35 };
+  const armoredParts = (L) => {
+    const s = new Set(); for (const k of L.def.armor || []) for (const p of ARMOR_KIT[k] || []) s.add(p);
+    for (const [p, P] of Object.entries(L.z.parts)) if (P.armor < 0.5) s.add(p);
+    return s;
+  };
   function spawn(def) {
     const pat = pats.get(def.p); if (!pat) return null;
     const R = roomById.get(def.room); if (!R) return null;
     const floor = R.floor, y = ctx.world.floorY(floor);
-    const z = createZombie(pat, { position: [def.x, y, def.z], yaw: def.yaw ?? Math.PI, gore: G.gore, state: def.state || 'idle', missing: def.missing || [], lodDistance: touch() ? 7 : 9, sight: def.sight || 13 });
+    const dead = G.killed.has(def.id) || def.state === 'corpse', at = G.killedAt[def.id];
+    const state = dead ? 'corpse' : def.riser ? 'lie' : def.state || 'idle';
+    const z = createZombie(pat, { position: [at ? at[0] : def.x, y, at ? at[1] : def.z], yaw: at ? at[2] : def.yaw ?? Math.PI, gore: G.gore, state, missing: def.missing || [], lodDistance: touch() ? 7 : 9, sight: def.sight || 13 });
     // the person it was: height, stoop, the colour of the clothes and the skin, how far it has rotted
     const r = rnd(hash(def.id));
-    const tall = def.p === 'crawler' || def.p === 'giant' ? 1 : 0.9 + r() * 0.18;
+    // 1.4.0 #2 「大きくて強い個体」: a brute is half as big again, slow and heavy, three times as tough, hits harder and charges
+    const tall = def.brute ? 1.45 : def.p === 'crawler' || def.p === 'giant' ? 1 : 0.9 + r() * 0.18;
     z.root.scale.setScalar(tall);
-    toughen(z, G.toughOf(def));
+    toughen(z, G.toughOf(def) * (def.brute ? 3 : 1));
+    if (def.brute) { z.stats.walk = (z.stats.walk || 0.5) * 0.85; z.stats.damage = Math.round((z.stats.damage || 15) * 1.6); z.stats.grab = Math.max(z.stats.grab || 0, 1.1); z.stats.knockImmune = true; }
     z.body.rotation.x = (r() - 0.35) * 0.12;   // some lean forward, a few lean back
     const rot = def.rot ?? (/-rot|drowned|bloated/.test(def.p) ? 0.6 : /-dry|skeletal|burnt/.test(def.p) ? 0.3 : r() * 0.45);
     z.root.traverse((m) => {
@@ -148,7 +167,11 @@ export function installZombies(ext, G) {
     });
     ctx.scene.add(z.root);
     fx.watch(z);
-    const L = { def, z, room: def.room, floor, alert: 0, wp: null, groan: 2 + r() * 6, wander: r() * 4, home: [def.x, def.z], alive: true, r };
+    const L = { def, z, room: def.room, floor, alert: 0, wp: null, groan: 2 + r() * 6, wander: r() * 4, home: [def.x, def.z], alive: !dead, r, charge: 0, chargeCool: 3, step: 0 };
+    L.armor = armoredParts(L);
+    for (const p of L.armor) z.parts[p].armor = 1;   // the game's armour rule decides (hitZombie), not the kit's flat factor
+    if (def.armor && def.armor.length) addArmorLook(L);
+    if (dead) { L.alive = false; setTimeout(() => layBody(L, { quiet: true }), 50); }
     z.on('attack', (e) => {
       const p = ctx.camera.position;
       if (Math.hypot(p.x - z.pos[0], p.z - z.pos[2]) > 1.55 || ctx.floor !== L.floor) return;
@@ -168,16 +191,18 @@ export function installZombies(ext, G) {
       else if (k === 'spit') G.sfx3d('z-spit', z.root.position);
     });
     z.on('sever', (e) => { G.emit('zombie:sever', { id: def.id, parts: e.parts }); });
-    z.on('died', () => { L.alive = false; G.killed.add(def.id); G.emit('zombie:died', { id: def.id, p: def.p }); setTimeout(() => layBody(L), 1600); });
+    z.on('died', () => { L.alive = false; G.killed.add(def.id); G.emit('zombie:died', { id: def.id, p: def.p, brute: !!def.brute }); setTimeout(() => { G.killedAt[def.id] = [Math.round(z.pos[0] * 100) / 100, Math.round(z.pos[2] * 100) / 100, Math.round(z.yaw * 100) / 100]; layBody(L); }, 1600); });
     live.set(def.id, L);
     return L;
   }
   // 1.2.0 #6: a fallen one can be looked at ([E]): a low box over the body once it lies still, one short line of who it was
   const bodyBoxes = new Map(), bodyMat = new THREE.MeshBasicMaterial({ visible: false });
   const unbody = (id) => { const b = bodyBoxes.get(id); if (!b) return; b.removeFromParent(); const W = ctx && ctx.world, i = W ? W.interactables.indexOf(b) : -1; if (i >= 0) W.interactables.splice(i, 1); bodyBoxes.delete(id); };
-  const layBody = (L) => {
+  const layBody = (L, o = {}) => {
     const line = corpseLine(L.def); if (!line || !ctx || !live.has(L.def.id)) return;
     unbody(L.def.id);
+    // #12: a pool spreads under a fallen body (at once under one that lay there already)
+    if (fx && fx.pool && !L.pooled) { L.pooled = true; fx.pool([L.z.pos[0], ctx.world.floorY(L.floor), L.z.pos[2]], L.def.brute ? 1.5 : 1.0, o.quiet ? 0.01 : 9); }
     const z = L.z, c = new THREE.Vector3(); let n = 0;
     z.root.updateMatrixWorld(true);
     z.root.traverse((m) => { if (m.isBone && /chest|pelvis|spine|head/i.test(m.name)) { c.add(m.getWorldPosition(new THREE.Vector3())); n++; } });
@@ -197,8 +222,7 @@ export function installZombies(ext, G) {
 
   // which spawns are in the world now: their condition (a stage reached, a task done, a flag) holds and they are not dead
   const wanted = (def) => {
-    if (G.killed.has(def.id)) return false;
-    const st = ctx.state;
+    const st = ctx.state;   // 1.4.0 #4: the dead are wanted too - they lie where they fell
     if (def.stage && ctx.levelIndex(def.stage) > (ctx.prog ? ctx.prog.index : 0)) return false;
     if (def.after && !st.tasks.includes(def.after)) return false;
     if (def.flag && !G.flags[def.flag]) return false;
@@ -213,9 +237,20 @@ export function installZombies(ext, G) {
       if (ok && !L) spawn(def); else if (!ok && L && L.alive) despawn(def.id);
     }
   };
+  // the helmet, the vest, the pads: dark boxes on the bones (so the armour is seen before it is hit)
+  const armorMat = new THREE.MeshLambertMaterial({ color: 0x2a3036 }); armorMat.name = 'yk-armor';
+  const helmetMat = new THREE.MeshLambertMaterial({ color: 0xd8b020 }); helmetMat.name = 'yk-helmet';
+  function addArmorLook(L) {
+    const b = L.z.bones, kinds = L.def.armor || [];
+    const put = (bone, w, h, d, y, mat, dz = 0) => { if (!b[bone]) return; const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(0, y, dz); m.name = 'zombie-armor'; b[bone].add(m); };
+    if (kinds.includes('helmet')) { const riot = L.def.helmet === 'riot'; put('head', 0.25, riot ? 0.15 : 0.11, 0.27, riot ? 0.12 : 0.15, riot ? armorMat : helmetMat); if (!riot) put('head', 0.3, 0.025, 0.32, 0.1, helmetMat); }
+    if (kinds.includes('vest')) put('chest', 0.38, 0.4, 0.26, 0.14, armorMat);
+    if (kinds.includes('pads')) { for (const s of ['shinL', 'shinR']) put(s, 0.13, 0.22, 0.13, -0.12, armorMat, 0.02); }
+  }
   /** back to how the zombies were at the checkpoint: the dead stay dead, the rest stand where they started */
-  G.resetZombies = (killed) => {
+  G.resetZombies = (killed, at) => {
     G.killed = new Set(killed || []);
+    if (at) G.killedAt = { ...at };
     for (const id of [...live.keys()]) despawn(id);
     G.syncZombies();
   };
@@ -240,11 +275,81 @@ export function installZombies(ext, G) {
       if (!L.z.root.visible) continue;
       const z = L.z;
       out.push({ kind: 'zombie', id: L.def.id, alive: L.alive && !z.dead, corpse: z.dead, pos: z.root.position, dist: 0,
-        raycast: (r) => z.raycast(r), hit: (r, dmg, o) => { const res = z.hit(r, dmg, { ...o, corpse: false }); L.alert = 30; if (o && o.sever && res && res.part && !res.severed && !z.dead && z.parts[res.part] && z.parts[res.part].hp > 0 && res.part !== 'chest') { z.hit(res.part, z.parts[res.part].hp + 1); } return res; },
+        raycast: (r) => z.raycast(r), hit: (r, dmg, o = {}) => hitZombie(L, r, dmg, o),
         aimPoints: () => { const b = z.bones; const pts = []; for (const k of ['head', 'chest']) { if (b[k] && !z.missing.has(k)) { b[k].getWorldPosition(aim); pts.push(aim.clone().setY(aim.y + (k === 'head' ? 0.08 : 0.15))); } } if (!pts.length) pts.push(z.root.position.clone().setY(z.root.position.y + 0.3)); return pts; } });
     }
     return out;
   };
+
+  // a hit: a lying riser gets up; armour by the weapon (a glance: spark, clink, nothing else); the blood by the weapon
+  const tmpV = new THREE.Vector3();
+  function hitZombie(L, r, dmg, o) {
+    const z = L.z, w = o.weapon || 'hands';
+    if (z.lying && z.lying()) riseNow(L, true);
+    let part = typeof r === 'string' ? r : null, point = null;
+    if (!part) { const q = z.raycast(r); if (!q) return { part: null }; part = q.part; point = q.point; }
+    L.alert = 30;
+    if (L.armor.has(part) && !z.dead) {
+      const pw = POWER[w] || 'weak';
+      if (pw === 'weak') {
+        const p = point || (z.bones[part] ? z.bones[part].getWorldPosition(tmpV).clone() : z.root.position.clone());
+        if (fx) fx.flash(p, 1.4); G.sfx3d('hit-armor', z.root.position);
+        if (!G.flags['hint:armor']) { G.flags['hint:armor'] = true; setTimeout(() => ctx.ui.say(part === 'head' ? 'ヘルメットに弾かれた。むき出しの所を狙う。' : '防具に弾かれた。むき出しの所を狙う。', 5, { urgent: true }), 200); }
+        G.emit('armor:glance', { id: L.def.id, part, weapon: w });
+        return { part, armor: true };
+      }
+      dmg *= pw === 'blunt' ? 0.3 : 0.6;
+      G.sfx3d('hit-armor', z.root.position);
+    }
+    const res = z.hit(r, dmg, { ...o, corpse: false });
+    if (o.sever && res && res.part && !res.severed && !z.dead && z.parts[res.part] && z.parts[res.part].hp > 0 && res.part !== 'chest') z.hit(res.part, z.parts[res.part].hp + 1);
+    // #12: more blood the heavier the weapon (the kit throws a little on every hit already)
+    if (res && res.part && fx && G.gore !== 'off') {
+      const p = res.point || point || (z.bones[res.part] ? z.bones[res.part].getWorldPosition(tmpV).clone() : null);
+      if (p) { fx.spray(p, o.dir || [0, 0, 1], (SPRAY[w] || 0.6) * (L.armor.has(res.part) ? 0.4 : 1)); if (SPRAY[w] >= 1.8) fx.decal([p.x, ctx.world.floorY(L.floor), p.z], 0.2 + Math.random() * 0.15); }
+    }
+    return res;
+  }
+  // 1.4.0 #4: a riser - a body on the floor that is not dead. It gets up when the player passes close (3 m), or turns away from it
+  // nearby (7 m, 1.2 s), or a noise reaches it, or it is hit. First a twitch and a wet breath (0.9 s) - a fair warning - then up.
+  function riseNow(L, now = false) {
+    if (L.rising || !L.z.lying || !L.z.lying()) return;
+    L.rising = now ? 0.01 : 0.9; L.twitch = 0;
+    G.sfx3d(`z-groan-${1 + Math.floor(L.r() * 6)}`, L.z.root.position);
+    G.emit('zombie:twitch', { id: L.def.id });
+  }
+  G.riseNow = (id) => { const L = live.get(id); if (L) riseNow(L, true); };
+  const look = new THREE.Vector3();
+  function riserTick(L, d, dt) {
+    const z = L.z;
+    if (L.rising != null) {
+      L.rising -= dt; L.twitch += dt;
+      z.body.rotation.z = Math.sin(L.twitch * 40) * 0.04;   // the twitch
+      if (L.rising <= 0) { L.rising = null; z.body.rotation.z = 0; z.rise(); L.alert = 30; G.emit('zombie:rise', { id: L.def.id }); }
+      return;
+    }
+    const cam = ctx.camera; cam.getWorldDirection(look);
+    const to = new THREE.Vector3(z.pos[0] - cam.position.x, 0, z.pos[2] - cam.position.z), away = to.length() > 0.01 && look.setY(0).normalize().angleTo(to.normalize()) > 1.75;
+    L.awayT = away && d < 7 ? (L.awayT || 0) + dt : 0;
+    if (d < 3 || L.awayT > 1.2 || (L.alert > 9 && d < 12)) riseNow(L);
+  }
+  // 1.4.0 #2: a brute's heavy steps (a thud and a small shake when close) and its charge (a roar, a stop, then a rush in a line)
+  function bruteTick(L, d, dt, same) {
+    const z = L.z;
+    L.step -= dt;
+    if (L.step <= 0 && !z.dead && L.alert > 0) { L.step = 0.85; G.sfx3d('fall', z.root.position); if (d < 9 && G.shake) G.shake(0.12 * (1 - d / 9), 0.15); }
+    L.chargeCool -= dt;
+    if (!L.charge && same && L.chargeCool <= 0 && d > 3.2 && d < 10 && L.alive) { L.charge = -0.8; G.sfx3d('z-scream', z.root.position); G.emit('brute:charge', { id: L.def.id }); }
+    if (L.charge < 0) { L.charge += dt; z.update(0, null); if (L.charge >= 0) L.charge = 1.4; return true; }   // the stop before the rush
+    if (L.charge > 0) {
+      L.charge -= dt;
+      const p = ctx.camera.position, yaw = Math.atan2(p.x - z.pos[0], p.z - z.pos[2]);
+      z.yaw = yaw; z.pos[0] += Math.sin(yaw) * 3.4 * dt; z.pos[2] += Math.cos(yaw) * 3.4 * dt;
+      if (d < 1.3) { L.charge = 0; G.hurt(Math.round(z.stats.damage * 0.8), { grab: 1.2, reason: 'bitten', by: L }); }
+      if (L.charge <= 0) { L.charge = 0; L.chargeCool = 6 + L.r() * 3; }
+    }
+    return false;
+  }
 
   // ---------------------------------------------------------------- every frame
   let syncT = 0;
@@ -260,12 +365,16 @@ export function installZombies(ext, G) {
       // nearest first: the MAX nearest on this floor move and show; the rest wait unseen
       const list = [...live.values()].filter((L) => L.floor === fl).map((L) => ({ L, d: Math.hypot(L.z.pos[0] - p.x, L.z.pos[2] - p.z) })).sort((a, b) => a.d - b.d);
       for (const L of live.values()) if (L.floor !== fl) L.z.root.visible = false;
-      let shown = 0;
+      let shown = 0, bodies = 0;
       for (const { L, d } of list) {
-        const on = d < RADIUS && shown < MAX();
-        L.z.root.visible = on; if (!on) continue; shown++;
+        // the bodies on the floor have their own count (they do not push the living out of sight)
+        const lying = !L.alive || (L.z.lying && L.z.lying() && L.rising == null);
+        const on = d < RADIUS && (lying ? bodies < (touch() ? 8 : 12) : shown < MAX());
+        L.z.root.visible = on; if (!on) continue; if (lying) bodies++; else shown++;
         const z = L.z;
         if (busy) { z.update(0, null); continue; }   // a talk or a mini game: everything holds still
+        if (!L.alive) { z.update(dt, null); continue; }
+        if (L.def.riser && (L.rising != null || (z.lying && z.lying()))) { riserTick(L, d, dt); z.update(dt, null); continue; }
         if (L.def.chained && !G.flags['cult:loose']) { z.update(dt, null); z.pos[0] = L.home[0]; z.pos[2] = L.home[1]; continue; }   // on its chain
         // what it walks to: the player in the same room (or seen through an open door close by), the place of a noise, or its own room
         const same = proom && L.room === proom.id;
@@ -285,7 +394,23 @@ export function installZombies(ext, G) {
           if (L.wander <= 0) { L.wander = 4 + L.r() * 6; const R = roomById.get(L.room); L.wp = R && L.r() < 0.6 ? [R.x + 0.8 + L.r() * (R.w - 1.6), R.z + 0.8 + L.r() * (R.d - 1.6)] : null; }
           goal = L.wp;
         }
+        // 1.4.0 (play test #15 「部屋を開けっ放しを許している」): the player behind a shut door - it goes to the door and bangs on it
+        // (an open door it walks through: shut the door of a room to be safe in it)
+        if (!goal && !same && !near && proom && d < 7 && (L.alert > 0 || d < 4.5)) {
+          const sd = doorsBetween(L.room, proom.id).find((dd) => !doorOpen(dd)), R = roomById.get(L.room);
+          if (sd && R) {
+            const onX = Math.abs(sd.x - R.x) < 0.05 || Math.abs(sd.x - (R.x + R.w)) < 0.05;
+            goal = onX ? [sd.x + (R.x + R.w / 2 > sd.x ? 0.55 : -0.55), sd.z] : [sd.x, sd.z + (R.z + R.d / 2 > sd.z ? 0.55 : -0.55)];
+            L.bangT = (L.bangT || 0) - dt;
+            if (Math.hypot(goal[0] - z.pos[0], goal[1] - z.pos[2]) < 0.8 && L.bangT <= 0) {
+              L.bangT = 1.2 + L.r() * 0.8; G.sfx3d('bang', new THREE.Vector3(sd.x, p.y, sd.z)); G.emit('door:bang', { id: sd.id, z: L.def.id });
+              if (!G.flags['hint:bang']) { G.flags['hint:bang'] = true; ctx.ui.say('閉めた戸を、向こうから叩いている。開けたままなら、入ってきていた。', 5); }
+            }
+          }
+        }
         const ox = z.pos[0], oz = z.pos[2];
+        if (L.def.brute && bruteTick(L, d, dt, same)) { settle(L, ox, oz); z.root.position.set(z.pos[0], z.root.position.y, z.pos[2]); continue; }
+        if (L.charge > 0) { z.update(dt, { camera: cam }); settle(L, ox, oz); z.root.position.set(z.pos[0], z.root.position.y, z.pos[2]); continue; }
         if (goal) { tgt.position.set(goal[0], p.y, goal[1]); tgt.camera = cam; z.update(dt, tgt); if (L.wp && !chasing && Math.hypot(goal[0] - z.pos[0], goal[1] - z.pos[2]) < 0.6) L.wp = null; }
         else { tgt.camera = cam; z.update(dt, { camera: cam }); }
         settle(L, ox, oz);
@@ -306,7 +431,7 @@ export function installZombies(ext, G) {
   });
 
   ext.registerPersist('yk-zombies', {
-    serialize: () => ({ killed: [...G.killed] }),
-    restore: (s) => { G.killed = new Set((s && s.killed) || []); if (ctx && pats.size) G.resetZombies([...G.killed]); },
+    serialize: () => ({ killed: [...G.killed], at: G.killedAt }),
+    restore: (s) => { G.killed = new Set((s && s.killed) || []); G.killedAt = (s && s.at) || {}; if (ctx && pats.size) G.resetZombies([...G.killed], G.killedAt); },
   });
 }

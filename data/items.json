@@ -109,5 +109,38 @@
   "photo": "assets/photos/item-ROOFKEY.webp",
   "room": "O_KAICHO",
   "stage": "L7"
+ },
+ {
+  "id": "MARTKEY",
+  "name": "倉庫の南京錠の鍵",
+  "given": "T_NISHINA",
+  "desc": "丸福マートの倉庫の、搬入口の南京錠の鍵。",
+  "why": "フードコートの奥の倉庫から、裏の商店街へ出られる。",
+  "feeling": "仁科さんの手は、汗で濡れていた。",
+  "photo": "assets/photos/item-MARTKEY.webp",
+  "room": "S_MART",
+  "stage": "L4"
+ },
+ {
+  "id": "KLEADKEY",
+  "name": "白坂の部屋の合鍵",
+  "given": "T_TAEKO",
+  "desc": "掃除当番の妙子が持っていた、白坂の部屋の合鍵。",
+  "why": "白坂の部屋に入れる。机の引き出しに、地下室の鍵がある。",
+  "feeling": "妙子さんは、目を合わせなかった。",
+  "photo": "assets/photos/item-KLEADKEY.webp",
+  "room": "S_KHAN",
+  "stage": "L4"
+ },
+ {
+  "id": "CELLARKEY",
+  "name": "地下室の鍵",
+  "given": "T_KDESK",
+  "desc": "白坂の机の引き出しにあった、南京錠の鍵。札に「地下」。",
+  "why": "信者の寝所の床の上げ蓋を開けて、地下室へ降りられる。",
+  "feeling": "鍵の札に、三宅、と書き足してある。",
+  "photo": "assets/photos/item-CELLARKEY.webp",
+  "room": "S_KLEAD",
+  "stage": "L4"
  }
 ]

@@ -1,4 +1,4 @@
-/* game-kit f89b1fcd: js/dot-zombie.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 31bfcd8f: js/dot-zombie.js — edit in game-kit and run tools/kit-sync.js */
 // Dot zombies with parts that come off (docs/zombies.md). 50 patterns in assets/zombies/ (tools/sprite-stacks/zombie_export.py).
 // A zombie is 13 rigid sprite-stack pieces on the shared rig (11 parts: head, chest, pelvis, upper arms, forearms with
 // hands, thighs, shins with feet). A shot part comes off: a stump cap shows on the body, the piece falls as a gib and
@@ -654,6 +654,9 @@ export function createZombie(pattern, opts = {}) {
     if (stats.explode) z.emit('explode', { point: [...z.pos], radius: stats.explode });
   }
   z.kill = (dir) => { if (!z.dead) { z.life = 0; die(dir); } return z; };
+  /** a lying body ('lie') gets up and hunts; true when it was lying */
+  z.rise = () => { if (z.dead || z.state !== 'lie') return false; z.state = 'wake'; z.do('get-up'); z.emit('rise', {}); return true; };
+  z.lying = () => z.state === 'lie';
 
   // ---------------------------------------------------------------- the state machine
   const reach = opts.reach || (stats.knockImmune ? 1.4 : 1.0);
@@ -681,6 +684,7 @@ export function createZombie(pattern, opts = {}) {
         if (finished) { z.state = 'dead'; z.play(z.motion === 'die-back' ? 'corpse-back' : 'corpse-fwd', { anchor: true }); z.emit('corpse', {}); }
         break;
       case 'dead': break;
+      case 'lie': break;   // 1.35.0: lying like a corpse until z.rise()
       case 'eat':
         if (dist < sight * 0.5) { z.state = 'wake'; z.do('get-up'); }
         break;
@@ -774,6 +778,8 @@ export function createZombie(pattern, opts = {}) {
   if (start === 'eat') { z.state = 'eat'; z.do('eat'); }
   else if (start === 'wake') { z.state = 'wake'; z.do('wake'); }
   else if (start === 'corpse') { z.dead = true; z.state = 'dead'; z.do('corpse'); }
+  // 1.35.0 (夜勤明けの街 #4 「突然囲まれるのではなく死体が起き上がる」): 'lie' - a body on the floor that is not dead; z.rise() gets it up
+  else if (start === 'lie') { z.state = 'lie'; z.do('corpse'); }
   else if (!z.lower) { z.state = 'idle'; z.do(bodyOf(z.missing).legs === 2 ? 'idle' : 'move'); }
   return z;
 }
@@ -802,6 +808,10 @@ export function createGoreFx(THREE, scene, o = {}) {
   decalGeo.rotateX(-Math.PI / 2);
   const decalTex = pixelSplat(THREE);
   const decalMat = new THREE.MeshLambertMaterial({ map: decalTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
+  // 1.35.2: the splat is a 16 px hard-pixel tile - mark it as dot, or a pool under a body lying in the world from the start (1.35.0) reads as a
+  // photo texture to the dot check (check-playtest P33)
+  decalMat.userData.dot = 'fx'; dropMat.userData.dot = 'fx';
+  const wallGeo = new THREE.PlaneGeometry(1, 1);
   const decals = [];
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), pv = new THREE.Vector3();
   // 1.30.0: a small hit flash where a shot lands (a hard-pixel star, additive, 0.09 s; also with the gore off - it is not blood)
@@ -826,11 +836,30 @@ export function createGoreFx(THREE, scene, o = {}) {
         live.push({ p: [...p], v: [d[0] * 1.4 + (Math.random() - 0.5) * 1.6, 0.6 + Math.random() * 1.8, d[2] * 1.4 + (Math.random() - 0.5) * 1.6], t: 0, floor: o.floor || 0 });
       }
     },
+    /** 1.35.0 (夜勤明けの街 #12): a splat on a wall - point on the wall, normal [x, y, z] out of it */
+    wallDecal(point, normal, size = 0.3) {
+      if (gore === 'off' || !point || !normal) return;
+      const s = gore === 'low' ? size * 0.5 : size;
+      let m;
+      if (decals.length >= maxDecals) { m = decals.shift(); m.geometry = wallGeo; } else { m = new THREE.Mesh(wallGeo, decalMat); m.renderOrder = 1; scene.add(m); }
+      const p = point.isVector3 ? point : { x: point[0], y: point[1], z: point[2] };
+      m.position.set(p.x + normal[0] * 0.006, p.y + normal[1] * 0.006, p.z + normal[2] * 0.006);
+      m.rotation.set(0, Math.atan2(normal[0], normal[2]), Math.floor(Math.random() * 4) * Math.PI / 2);
+      m.scale.set(s, s, 1); m.userData.grow = null;
+      decals.push(m);
+    },
+    /** a pool that spreads slowly under a body (to size m over `t` s) */
+    pool(point, size = 1.0, t = 8) {
+      if (gore === 'off' || !point) return;
+      fx.decal(point, 0.1);
+      const m = decals[decals.length - 1]; if (!m) return;
+      m.userData.grow = { to: gore === 'low' ? size * 0.5 : size, t: 0, T: t };
+    },
     decal(point, size = 0.25) {
       if (gore === 'off' || !point) return;
       const s = gore === 'low' ? size * 0.6 : size;
       let m;
-      if (decals.length >= maxDecals) { m = decals.shift(); } else { m = new THREE.Mesh(decalGeo, decalMat); m.renderOrder = 1; scene.add(m); }
+      if (decals.length >= maxDecals) { m = decals.shift(); m.geometry = decalGeo; m.rotation.set(0, 0, 0); m.userData.grow = null; } else { m = new THREE.Mesh(decalGeo, decalMat); m.renderOrder = 1; scene.add(m); }
       m.position.set(point[0] + (Math.random() - 0.5) * 0.1, (o.floor || 0) + 0.003, point[2] + (Math.random() - 0.5) * 0.1);
       m.scale.set(s, 1, s);
       m.rotation.y = Math.floor(Math.random() * 4) * Math.PI / 2;
@@ -847,6 +876,7 @@ export function createGoreFx(THREE, scene, o = {}) {
       f.t = 0; f.life = 0.09; f.s = 0.16 * size; f.m.position.copy(p); f.m.material.rotation = Math.floor(Math.random() * 4) * Math.PI / 4; f.m.visible = true;
     },
     update(dt) {
+      for (const m of decals) { const g = m.userData.grow; if (!g) continue; g.t += dt; const k = Math.min(1, g.t / g.T); const s = 0.1 + (g.to - 0.1) * (1 - (1 - k) * (1 - k)); m.scale.set(s, 1, s); if (k >= 1) m.userData.grow = null; }
       for (const f of flashes) { if (f.t >= f.life) { f.m.visible = false; continue; } f.t += dt; const u = Math.min(1, f.t / f.life); f.m.scale.setScalar(f.s * (0.7 + u * 0.6)); f.m.material.opacity = 1 - u; }
       let k = 0;
       for (let i = live.length - 1; i >= 0; i--) {

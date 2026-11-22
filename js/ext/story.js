@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { BOXES, RACK } from './loot.js';
 import { ROOF_WAVE } from './spawns.js';
 import { CATALOG } from './case-data.js';
+import { factionOf, TASK_OF } from './factions.js';
 
 const SAFE = [
   { room: 'H_TOU', x: 5.2, z: 3.2, y: 0.78, name: '当直室' },
@@ -15,15 +16,65 @@ const SAFE = [
 
 export function installStory(ext, G) {
   let ctx = null;
+  // 1.4.0 #13: a person whose group the player turned on does not talk as before. At [E] the frightened give way (「持っていって」) and
+  // the task is done as by force (nothing soft-locks); the ones still fighting say nothing. Wraps every person's task registered here.
+  const WHO = Object.fromEntries(Object.entries(TASK_OF).map(([who, t]) => [t, who]));
+  const regTask0 = ext.registerTask;
+  ext.registerTask = (id, d) => {
+    const who = WHO[id];
+    if (who && d && d.run) {
+      const run = d.run;
+      d = { ...d, run: async (c, task) => {
+        const f = factionOf(who);
+        if (!f || !G.flags[`hostile:${f}`]) return run(c, task);
+        const p = G.person && G.person(who), name = p ? p.P.name : who;
+        if (p && ['fight', 'shoot'].includes(p.mode)) { ctx.ui.toast(`${name}さんは、話を聞く気がない。`); return false; }
+        ctx.ui.toast(`${name}「来ないで……持っていって。もう、関わらないで」`);
+        G.forceFlags && G.forceFlags(who);
+        return true;
+      } };
+    }
+    return regTask0(id, d);
+  };
   G.flags = {};
   const flag = (k, v = true) => { G.flags[k] = v; G.emit('flag', { k, v }); };
   const has = (id) => ctx.state.inv.includes(id);
-  const talk = (id, o = {}) => ctx.talk(id, { title: o.title || '', last: o.last || '続ける' });
+  // 1.4.0 #13: after a killing the people have heard of it (a rumour line before their own talk, once)
+  const RUMOR = { katagiri: 'rumor_katagiri', noguchi: 'rumor_noguchi', hayase: 'rumor_hayase' };
+  const talk = async (id, o = {}) => {
+    if (RUMOR[id] && (G.flags.blood || 0) > 0 && !G.flags[`rumor:${id}`]) { G.flags[`rumor:${id}`] = true; await ctx.talk(RUMOR[id], { title: '', last: '続ける' }); }
+    return ctx.talk(id, { title: o.title || '', last: o.last || '続ける' });
+  };
   const choose = (who, text, options) => ctx.choose({ who, text, options });
 
   // ---------------------------------------------------------------- the checkpoint: what a death goes back to
+  // 1.4.0 (play test #11 「死んだら前のセーブポイントから再開」): a death goes back to the last 当直日誌 written - everything as it was then
+  // (the case, the tasks, the flags, the dead, the pickups: the kit puts back what was taken since) - after the death card's 再開 button.
+  // The log save is kept apart from the running save (which is written all the time). Before the first log: the start of the game.
+  // On the roof (the last stand, a phase) a death starts the hold over, as before.
+  const LOGKEY = 'yakinake.logsave.v1';
+  const writeLogSave = () => { if (ctx.testMode) return; const s = ctx.snapshot(); if (!s) return; try { localStorage.setItem(LOGKEY, JSON.stringify({ ...s, v: 1, savedAt: Date.now() })); } catch (e) { /* private mode */ } };
+  const readLogSave = () => { try { return JSON.parse(localStorage.getItem(LOGKEY) || 'null'); } catch (e) { return null; } };
+  G.logSave = readLogSave; G.writeLog = () => writeLogSave();
   const snap = () => { G.cp = { case: G.case.snapshot(), killed: [...G.killed], flags: { ...G.flags } }; };
   ext.on('task:done', () => setTimeout(snap, 0));
+  ext.on('game:start', ({ resume }) => { setTimeout(() => { if (!resume || !readLogSave()) writeLogSave(); }, 600); });
+  ext.registerDeath({
+    run: async (c, reason) => {
+      const DS = G.manifest.deaths || {}, D = { ...(DS.default || {}), ...(DS[reason] || {}) };
+      c.bus.emit('player:dead', { reason });
+      const inRoof = !!c.phaseId && c.phaseId() === 'roof';
+      const log = !inRoof && readLogSave();
+      const sub = inRoof ? '屋上の守りを、最初からやり直す。' : log ? '最後に当直日誌に書いた所から、再開する。持ち物も、そのときのまま。' : 'はじめから、再開する。';
+      const { showDeath } = await import('../kit/moments.js');
+      await c.hold(() => showDeath(c, D.text || '噛まれた。', sub, { ...D, retry: '再開' }));
+      G.dead = false; G.hp = 100;
+      if (inRoof || c.testMode) { c.respawn(); G.hud && G.hud(); try { c.fp.lock(); } catch (e) { /* no lock */ } return; }
+      if (log) { c.store.save(log); c.start({ restart: true, resume: true, skipIntro: true, quiet: true }); }
+      else c.start({ restart: true, skipIntro: true });
+      G.emit('resumed', { from: log ? 'log' : 'start' });
+    },
+  });
   ext.on('player:respawn', () => {
     if (G.cp) { G.case.restore(G.cp.case); G.resetZombies(G.cp.killed); }
     G.hp = 100; G.hud && G.hud();
@@ -68,7 +119,10 @@ export function installStory(ext, G) {
     else { await talk('gondo_fight'); flag('mart', 'fight'); flag('mart:fight'); G.fight(['gondo', 'nishina']); }
     return true;
   } });
-  ext.registerTask('T_MARTLOCK', { canStart: () => (G.flags.mart === 'sneak' ? true : G.flags['mart:open'] ? 'もう、奥の戸から通れる。' : '権藤が見ている。今は無理だ。') });
+  // 1.4.0 (#5 #14): the back way is through the food court (fallen, smashed open) to the storeroom; 仁科's key opens the padlock at once
+  ext.registerTask('T_MARTLOCK', { canStart: () => (G.flags['mart:open'] ? 'もう、奥の戸から通れる。' : true),
+    run: async (c, task) => { if (has('MARTKEY')) ctx.ui.say('仁科さんの鍵で、南京錠を外した。', 3); else if (!(await ctx.runMinigame(task))) return false; if (!G.flags.mart || G.flags.mart === 'fight') flag('mart', G.flags.mart || 'sneak'); return true; } });
+  ext.registerTask('T_NISHINA', { canStart: () => (G.flags['mart:open'] ? 'もう、奥の戸から通れる。' : G.flags['hostile:mart'] ? '仁科は、もう口をきいてくれない。' : true), run: async () => { await talk('nishina'); flag('mart:nishina'); return true; } });
   let downs = new Set();
   G.on('person:down', async ({ id }) => {
     downs.add(id);
@@ -82,19 +136,31 @@ export function installStory(ext, G) {
       { id: 'talk', label: '医者として、奥さんを診る', primary: true },
       { id: 'fake', label: 'ついて行くふりをする' },
       { id: 'fight', label: '縄を切って、力ずくで通る' },
+      // 1.4.0 (#5 #14): what was found in the 公民館 changes how it can end - the man shut in the cellar, told in front of everyone
+      ...(G.flags['cult:miyake'] ? [{ id: 'split', label: '地下の三宅さんのことを、皆の前で話す', primary: true }] : []),
     ]);
     if (v === 'talk') { await talk('shirasaka_talk'); flag('cult', 'talked'); }
     else if (v === 'fake') { await talk('shirasaka_fake'); flag('cult', 'faked'); }
+    else if (v === 'split') { await talk('shirasaka_split'); flag('cult', 'split'); flag('cult:taken'); G.syncZombies(); setTimeout(() => { if (!ctx.state.tasks.includes('T_ROPE')) ctx.completeTask('T_ROPE'); }, 400); }
     else { await talk('shirasaka_fight'); flag('cult', 'fought'); flag('cult:loose'); G.noise(new THREE.Vector3(80, 0, 19), 20); }
     return true;
+  } });
+  ext.registerTask('T_TAEKO', { canStart: () => (G.flags['hostile:cult'] ? '妙子さんは、怯えて口をきかない。' : true), run: async () => { await talk('taeko'); flag('cult:taeko'); return true; } });
+  ext.registerTask('T_MIYAKE', { run: async () => {
+    await talk('miyake');
+    const v = await choose('私', '格子の錠を、開ける？', [{ id: 'free', label: '開ける', primary: true }, { id: 'no', label: '今はやめる' }]);
+    if (v !== 'free') return false;
+    await talk('miyake_free'); flag('cult:miyake'); return true;
   } });
   after('T_ROPE', () => { if (G.flags.cult === 'talked') flag('cult:taken'); G.syncZombies(); });
 
   // the station's alliance
   ext.registerTask('T_KATA', { run: async () => {
     await talk('katagiri');
-    const v = await choose('片桐', '手を組む？', [{ id: 'join', label: '手を組む', primary: true }, { id: 'no', label: '断る（自分でやる）' }]);
-    if (v === 'join') flag('alliance', 'joined'); else { await talk('katagiri_no'); flag('alliance', 'none'); }
+    const v = await choose('片桐', '手を組む？', [{ id: 'join', label: '手を組む', primary: true }, { id: 'no', label: '断る（自分でやる）' }, { id: 'rob', label: '武器を向けて、休憩室の物資を奪う' }]);
+    if (v === 'join') flag('alliance', 'joined');
+    else if (v === 'rob') { await talk('katagiri_rob'); flag('alliance', 'none'); flag('robbed'); G.turnHostile('alliance', { atk: true }); }
+    else { await talk('katagiri_no'); flag('alliance', 'none'); }
     return true;
   } });
   after('T_GEN', () => {
@@ -143,7 +209,17 @@ export function installStory(ext, G) {
     if (roof.allies && roof.allies.has('gondo')) { G.showPerson('gondo', false); G.showPerson('nishina', false); ctx.ui.toast('権藤さんたちは、娘さんのところへ戻っていった。'); } for (const L of G.liveZombies()) if (String(L.def.id).startsWith('Z_RF') && L.alive) L.z.kill(); return true; } });
   ext.registerTask('T_HELI', { run: async () => {
     let end = 'E2';
-    if (G.flags.alliance === 'joined' && !G.flags.betrayed) {
+    const A = roof.allies || allies();
+    if (G.violent && G.violent()) {
+      // 1.4.0 #13: a killing or an attack on people who were not hostile: with the station's people on the roof they still board
+      // (E7, the mixed way: hostile to one group, allied with another); alone, the pilot has heard of it and will not take the player
+      if (A.has('katagiri') || A.has('mori')) { await talk('heli_mixed'); end = 'E7'; }
+      else {
+        await talk('heli_refuse');
+        const v = await choose('私', 'パイロットは、首を振っている。', [{ id: 'down', label: '武器を下ろす', primary: true }, { id: 'force', label: 'パイロットに武器を向けて、乗る' }]);
+        if (v === 'force') { await talk('heli_force'); end = 'E6'; } else { await talk('heli_down'); end = 'E5'; }
+      }
+    } else if (G.flags.alliance === 'joined' && !G.flags.betrayed) {
       if (G.flags.cult === 'talked') end = 'E1';
       else {
         await talk('heli_hold');
@@ -161,7 +237,7 @@ export function installStory(ext, G) {
   // wave, as in E1). The ones with guns shoot the nearest of the risen now and then.
   const WAVES = [
     { from: 0, to: 28, every: 5, n: 5, say: '第一波。階段から、上がってくる。' },
-    { from: 40, to: 76, every: 3.4, n: 9, say: '第二波。さっきより、数が多い。' },
+    { from: 40, to: 76, every: 3.4, n: 9, giant: true, say: '第二波。さっきより、数が多い。大きいのが一体いる。' },
     { from: 88, to: 115, every: 2.8, n: 9, giant: true, say: '最後の波。大きな足音が、混じっている。' },
   ];
   const LULL = '途切れた。今のうちに、弾を込める。';
@@ -181,7 +257,8 @@ export function installStory(ext, G) {
     if (f.mart === 'trade') { on.add('gondo'); on.add('nishina'); }
     if (kept) { on.add('katagiri'); on.add('mori'); }
     if (kept && f.cult === 'talked') { on.add('shirasaka'); on.add('genzo'); on.add('chisato'); }
-    return on;
+    // 1.4.0 #13: nobody comes from a group the player turned on, and nobody who is dead
+    return new Set([...on].filter((id) => !(G.isDead && G.isDead(id)) && !f[`hostile:${factionOf(id)}`]));
   }
   function allyArrive(w) {
     let said = null;
@@ -209,8 +286,8 @@ export function installStory(ext, G) {
       if (w >= 0) roof.lull = false;
       if (W && roof.next <= 0 && roof.inWave < W.n && live.length < (ctx.isTouch ? 6 : 8)) {
         roof.next = W.every; roof.inWave++;
-        const k = roof.spawned++, p = W.giant && !roof.giant ? 'giant' : ROOF_WAVE[k % (ROOF_WAVE.length - 1)];
-        if (p === 'giant') roof.giant = true;
+        const k = roof.spawned++, p = W.giant && roof.giant !== w ? 'giant' : ROOF_WAVE[k % (ROOF_WAVE.length - 1)];
+        if (p === 'giant') roof.giant = w;
         G.extraZombie({ id: `Z_RF${k}`, room: 'O_ROOF', x: 143.6 - (k % 3) * 0.5, z: 10.5 + ((k % 2) - 0.5) * 0.8, p, yaw: -Math.PI / 2 });
       }
       // the ones with guns help: the nearest of the risen within reach, now and then (never the giant: that one is the player's)
@@ -248,8 +325,9 @@ export function installStory(ext, G) {
       const s = SAFE.find((x) => x.room === o.id);
       const v = await choose('私', `${s.name}の当直日誌と、保管箱。`, [{ id: 'write', label: '日誌に書く（ここから続けられる）', primary: true }, { id: 'store', label: '保管箱を開ける' }, { id: 'no', label: 'やめる' }]);
       if (v === 'write') {
+        if (G.shutShelter && G.shutShelter(s.room)) ctx.ui.toast('戸を閉めて、かんぬきをかけた。');
         const p = ctx.camera.position; ctx.checkpoint = { x: p.x, z: p.z, yaw: ctx.fp ? ctx.fp.yaw : 0, floor: ctx.floor || 0 };
-        snap(); G.hp = Math.max(G.hp, 60); ctx.save(); ctx.ui.toast(`当直日誌に書いた：${new Date().toTimeString().slice(0, 5)}　${s.name}`); G.hud && G.hud();
+        snap(); G.hp = Math.max(G.hp, 60); ctx.save(); writeLogSave(); ctx.ui.toast(`当直日誌に書いた：${new Date().toTimeString().slice(0, 5)}　${s.name}（死んだら、ここから再開）`); G.hud && G.hud();
       } else if (v === 'store') G.case.open({ store: true });
     },
   });
@@ -268,6 +346,9 @@ export function installStory(ext, G) {
       if (ctx.state.tasks.includes('T_CHISATO') && rid === 'H_ROKA' && !seen.has('lesson')) { seen.add('lesson'); talk('lesson'); }
       if (rid === 'P_URA' && !seen.has('byd')) { seen.add('byd'); talk('backyard'); }
       if (rid === 'O_BOSAI' && !seen.has('nog')) { seen.add('nog'); talk('noguchi'); }
+      // 1.4.0 (#5 #14): the quarrels heard on the way in (the mart's two; the 公民館's leader and the one who doubts)
+      if (rid === 'S_MART' && !seen.has('margue') && !G.flags['hostile:mart'] && !ctx.state.tasks.includes('T_GONDO')) { seen.add('margue'); talk('mart_argue'); }
+      if (rid === 'S_KOMIN' && !seen.has('cargue') && !G.flags['hostile:cult'] && !ctx.state.tasks.includes('T_CULT')) { seen.add('cargue'); talk('cult_argue'); }
     },
   });
   G.on('zombie:died', () => { G.kills = (G.kills || 0) + 1; });
@@ -282,10 +363,59 @@ export function installStory(ext, G) {
     L('D_PBUKI', () => !ctx.state.tasks.includes('T_BUKI'));
     L('D_PRYU', () => !ctx.state.tasks.includes('T_GEN'), '留置場の扉。電気の錠で閉まっている。中で、何かが鉄格子を叩いている。');
     L('D_OCHU', () => !ctx.state.tasks.includes('T_HAYASE'));
+    // 1.4.0 (#5 #14 #15): the rooms where people live are shut; the mart, the 公民館 and the room of the ones who want out answer a knock
+    for (const [k, K] of Object.entries(KNOCK)) L(K.door, () => !G.flags[`knock:${k}`], () => (G.flags[`hostile:${K.fac}`] ? '戸の向こうで、誰かが息をひそめている。' : '戸は閉まっている。中に人がいる。ノックした。'));
+    L('D_MSTAFF', () => true);
+    L('D_KSHIN', () => true);
+    L('D_KLEAD', () => !(has('KLEADKEY') || G.flags['hostile:cult'] || (G.isDead && G.isDead('shirasaka'))), () => (G.flags['cult:taeko'] ? '妙子さんの合鍵がある。' : '白坂の部屋。鍵がかかっている。'));
+    L('ST_KCHIKA', () => !has('CELLARKEY'), '床の上げ蓋。南京錠がかかっている。鍵は、白坂が持っているはず。');
     L('D_OROOF', () => !(has('ROOFKEY') || ctx.state.tasks.includes('T_FORCE')), () => (G.flags.hayase === 'gave' ? '鍵がかかっている。屋上の鍵は、早瀬が持ち逃げした。錠を壊すしかない。' : '屋上への扉。鍵がかかっている。'));
     // the lift runs once the server room is cooled (the plan's lift EV12)
     const ev = ctx.world.doors && ctx.world.doors.get('EV12'); if (ev) ctx.lockDoor('EV12', () => !ctx.state.tasks.includes('T_SERVER'), 'エレベーターは止まっている。非常電源が落ちている。');
   });
+
+  // 1.4.0 #15: a knock at a shut door where people live: they ask who it is, let the player in, and close the door behind
+  const KNOCK = { mart: { door: 'D_MART_F', talk: 'knock_mart', fac: 'mart', who: ['gondo', 'nishina'] }, cult: { door: 'D_KOMIN', talk: 'knock_cult', fac: 'cult', who: ['shirasaka', 'taeko'] }, khan: { door: 'D_KHAN', talk: 'knock_khan', fac: 'cult', who: ['taeko'] } };
+  const openDoor = (id) => { const w = ctx.world.doors && ctx.world.doors.get(id); if (!w || w.isOpen) return; w.locked = () => false; if (w.open()) { if (!ctx.state.doors.includes(id)) ctx.state.doors.push(id); ctx.bus.emit('door:open', { id }); } };
+  ext.on('door:locked', async ({ id }) => {
+    const k = Object.keys(KNOCK).find((x) => KNOCK[x].door === id); if (!k || G.flags[`knock:${k}`]) return;
+    const K = KNOCK[k]; G.sfx('knock');
+    const alive = K.who.filter((w) => !(G.isDead && G.isDead(w)));
+    if (!alive.length) { G.flags[`knock:${k}`] = true; ctx.ui.say('返事はない。戸は、押すと開いた。', 3); openDoor(id); return; }
+    if (G.flags[`hostile:${K.fac}`]) { K.tries = (K.tries || 0) + 1; if (K.tries >= 2) { G.flags[`knock:${k}`] = true; ctx.ui.say('体当たりで、戸を破った。', 3); G.noise(ctx.camera.position, 10); openDoor(id); } return; }
+    G.flags[`knock:${k}`] = true;
+    await new Promise((r) => setTimeout(r, 700));
+    await talk(K.talk); openDoor(id);
+  });
+  // the doors of the lived-in and safe rooms close again: the people inside close them when the player is through (one way or
+  // the other), and a safe room's door is shut behind the player who stays in it. Open, the zombies follow; shut, they bang on it.
+  const ROOMFAC = (rid) => (/^S_M/.test(rid) ? 'mart' : /^S_K/.test(rid) ? 'cult' : /^H_(NS|BYO)$/.test(rid) ? 'hospital' : rid === 'O_CHU' ? 'hayase' : rid === 'P_KYU' ? 'alliance' : rid === 'O_BOSAI' ? 'tower' : null);
+  let shelterDoors = [], shutT = 0;
+  const shelter = (r) => !!(r && (r.inhabited || r.safe));
+  ext.on('game:ready', (c) => {
+    const rooms = new Map(c.data.plan.rooms.map((r) => [r.id, r]));
+    shelterDoors = c.data.plan.doors.filter((d) => d.x != null && !(d.open && !d.unlock) && d.kind !== 'stairs' && d.kind !== 'lift' && shelter(rooms.get(d.a)) !== shelter(rooms.get(d.b)))
+      .map((d) => { const inner = shelter(rooms.get(d.a)) ? rooms.get(d.a) : rooms.get(d.b); return { d, inner, fac: ROOMFAC(inner.id), away: 0 }; });
+  });
+  G.shutShelter = (roomId) => { let n = 0; for (const S of shelterDoors) { if (S.inner.id !== roomId) continue; const w = ctx.world.doors.get(S.d.id); if (w && w.isOpen && w.close) { w.close(); const i = ctx.state.doors.indexOf(S.d.id); if (i >= 0) ctx.state.doors.splice(i, 1); n++; } } return n; };
+  ext.registerSystem('yk-shelter', {
+    update(dt) {
+      if (!ctx || !ctx.state.started || ctx.state.ended || (shutT -= dt) > 0) return; shutT = 0.4;
+      const p = ctx.camera.position, fl = ctx.floor || 0, here = G.roomAtP(p.x, p.z, fl);
+      for (const S of shelterDoors) {
+        const w = ctx.world.doors.get(S.d.id); if (!w || !w.isOpen || !w.close || (S.inner.floor || 0) !== fl) { S.away = 0; continue; }
+        const dd = Math.hypot(p.x - S.d.x, p.z - S.d.z); if (dd < 2.4) { S.away = 0; continue; }
+        const live = S.fac && FACMEMBERS[S.fac] && FACMEMBERS[S.fac].some((id) => !(G.isDead && G.isDead(id))) && !G.flags[`hostile:${S.fac}`];
+        const inside = here && here.id === S.inner.id;
+        if (!(live || (S.inner.safe && inside))) { S.away = 0; continue; }
+        S.away += 0.4; if (S.away < 1.2) continue; S.away = 0;
+        w.close(); const i = ctx.state.doors.indexOf(S.d.id); if (i >= 0) ctx.state.doors.splice(i, 1); G.sfx('shut');
+        const once = `shut:${S.d.id}`;
+        if (!G.flags[once]) { G.flags[once] = true; ctx.ui.toast(live ? `${S.inner.name}の戸が、内側から閉められた。` : '戸を閉めた。開けたままだと、ゾンビが入ってくる。'); }
+      }
+    },
+  });
+  const FACMEMBERS = { mart: ['gondo', 'nishina'], cult: ['shirasaka', 'taeko'], hospital: ['chisato', 'genzo'], hayase: ['hayase'], alliance: ['katagiri', 'mori'], tower: ['noguchi'] };
 
   ext.registerPersist('yk-story', {
     serialize: () => ({ flags: G.flags, seen: [...seen], downs: [...downs], ending: G.ending || null }),

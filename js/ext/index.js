@@ -2,6 +2,7 @@
 //   sound.js   the shots, strikes and the zombies' voices          case.js     the grid case, the storage box, loot, boxes
 //   combat.js  weapons, aiming, the body, the HUD                  zombies.js  the dot zombies (spawns.js: where they are)
 //   people.js  the people (dot figures) and the ones who fight     story.js    talks, choices, factions, saves, the roof, the endings
+//   factions.js the groups (友好 / 警戒 / 敵対), attacks on people and what follows from them (1.4.0)
 // The dot look of the world (furniture, cars, light) is js/dot/index.js.
 import { installSound } from './sound.js';
 import { installCase } from './case.js';
@@ -9,12 +10,14 @@ import { installCombat } from './combat.js';
 import { installZombies } from './zombies.js';
 import { installPeople } from './people.js';
 import { installStory } from './story.js';
+import { installFactions } from './factions.js';
 import { installBlocks } from './blocks.js';
 import { LOOT } from './loot.js';
 
-export default function (ext) {
+export default function (ext, env = {}) {
   const L = {};
   const G = {
+    manifest: env.manifest || {},
     lootDefs: LOOT,
     on: (ev, fn) => { (L[ev] = L[ev] || []).push(fn); },
     emit: (ev, e) => { for (const fn of L[ev] || []) { try { fn(e); } catch (err) { console.error('[yakinake]', ev, err); } } },
@@ -25,6 +28,7 @@ export default function (ext) {
   installZombies(ext, G);
   installPeople(ext, G);
   installStory(ext, G);
+  installFactions(ext, G);
   installBlocks(ext, G);
   G.targets = () => [...(G.zombieTargets ? G.zombieTargets() : []), ...(G.peopleTargets ? G.peopleTargets() : [])];
   // what stops a bullet: the walls, doors, floors and furniture of the world (not the pickups, the people or the marks)

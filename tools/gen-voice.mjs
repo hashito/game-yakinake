@@ -30,6 +30,8 @@ export const VOICES = {
   '市の放送': { speaker: 30, speed: 0.95 },
   '野口': { speaker: 52, speed: 0.95 },     // 野口, the office tower's security guard
   '早瀬': { speaker: 11, speed: 1.0 },      // 早瀬, the engineer on the server floor
+  '三宅': { speaker: 67, speed: 0.95 },     // 三宅, the member of the 黎明の会 shut in the cellar (1.4.0)
+  'パイロット': { speaker: 29, speed: 0.95 }, // the pilot of うみかぜ (the radio voice, now on the roof; 1.4.0)
 };
 const talk = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/talk.json'), 'utf8'));
 const lines = new Map();

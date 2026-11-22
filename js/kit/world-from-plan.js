@@ -1,4 +1,4 @@
-/* game-kit 91f5d7e8: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 93a3e709: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
 // The standard world builder (docs/standard-3d.md, layer "world"): plan.json (rooms, corridors, doors, stations) -> THREE objects,
 // colliders, doors that open and a room lookup. Boxes only: floors, ceilings, walls with door gaps and lintels, door panels, task
 // stations. The look is a flat palette per room kind + the preset lighting; richer looks (texture-library, props, env-props) are added
@@ -130,7 +130,9 @@ export function buildWorld(plan, o = {}) {
         else box(T, H, len, wallM, fixed, y0 + H / 2, mid, true, `wall:${r.id}:${edge}`);
         if (outdoor) {
           const nb = neighbourAt(r, edge, mid, rooms);
-          const look = r.edge || (nb ? 'hedge' : roomLook(r).edge || 'trees');   // rooms[].edge; between two rooms a hedge; outside: the room type's look, else trees
+          // rooms[].edge; between two rooms a hedge; outside: the room type's look, else trees. 1.35.0 'urban': building fronts on the
+          // outer edge and a barricade (wrecks, barriers, a fence) between two outdoor rooms - no edge of a street is an invisible wall
+          const look = r.edge === 'urban' ? (nb ? 'barricade' : 'urban') : r.edge || (nb ? 'hedge' : roomLook(r).edge || 'trees');
           edges.push({ room: r.id, edge, from: axis === 'x' ? [a, fixed] : [fixed, a], to: axis === 'x' ? [b, fixed] : [fixed, b], shared: !!nb, look, y: y0 });
         }
       }
@@ -530,6 +532,10 @@ const EDGE_MATS = {};
 const edgeMat = (k, c) => (EDGE_MATS[k] ||= new THREE.MeshStandardMaterial({ color: c, roughness: 0.95 }));
 export function dressEdges(group, edges, colliders = []) {
   const trees = [];
+  // 1.35.0: the many small boxes of the building fronts and barricades go into one instanced mesh per material (a street of
+  // fronts is hundreds of boxes: one draw call each would be too many on a phone)
+  const batches = new Map();
+  const inst = (w, h, d, mt, px, py, pz) => { let B = batches.get(mt); if (!B) batches.set(mt, (B = [])); B.push([w, h, d, px, py, pz]); };
   for (const e of edges) {
     const [x0, z0] = e.from, [x1, z1] = e.to, len = Math.hypot(x1 - x0, z1 - z0), alongX = Math.abs(x1 - x0) > Math.abs(z1 - z0);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, y = e.y || 0;
@@ -541,6 +547,37 @@ export function dressEdges(group, edges, colliders = []) {
       const n = Math.max(1, Math.round(len / 2));
       for (let i = 0; i <= n; i++) { const t = i / n; add(0.1, 1.1, 0.1, edgeMat('post', 0x4a3a2a), x0 + (x1 - x0) * t, y + 0.55, z0 + (z1 - z0) * t); }
       for (const hy of [0.45, 0.95]) add(alongX ? len : 0.05, 0.06, alongX ? 0.05 : len, edgeMat('post', 0x4a3a2a), cx, y + hy, cz);
+    } else if (e.look === 'urban') {
+      // 1.35.0 (夜勤明けの街 #7 「外について何もない空間に行けない感じ」): a row of building fronts just outside the edge - each its own
+      // width, height and colour, dark windows in rows, a shutter at street level now and then - so the edge reads as "buildings"
+      let t = 0, i = 0; const seed = Math.round(cx * 31 + cz * 17);
+      while (t < len - 0.2) {
+        const k = ((seed + i * 7919) % 97) / 97, w = Math.min(len - t, 4 + k * 4), h = 6 + ((seed + i * 131) % 5) * 1.1, d = 3;
+        const mid = t + w / 2, px = x0 + (x1 - x0) * (mid / len) + out[0] * (d / 2 + 0.05), pz = z0 + (z1 - z0) * (mid / len) + out[1] * (d / 2 + 0.05);
+        inst(alongX ? w - 0.1 : d, h, alongX ? d : w - 0.1, edgeMat(`bld${i % 4}`, [0x3a3632, 0x2e3236, 0x463e34, 0x34302e][i % 4]), px, y + h / 2, pz);
+        // the windows: dark panes on the face toward the street (a few lit), and a shutter or a door at the foot
+        const face = (fx, fz) => [px - out[0] * (d / 2 + 0.02) + fx, pz - out[1] * (d / 2 + 0.02) + fz];
+        const rows = Math.floor((h - 2.6) / 1.6), cols = Math.max(1, Math.floor(w / 1.6));
+        for (let rr = 0; rr < rows; rr++) for (let cc = 0; cc < cols; cc++) {
+          const along = -w / 2 + (cc + 0.5) * (w / cols), lit = ((seed + i * 13 + rr * 7 + cc * 3) % 23) === 0;
+          const [fx, fz] = face(alongX ? along : 0, alongX ? 0 : along);
+          inst(alongX ? 0.8 : 0.04, 0.9, alongX ? 0.04 : 0.8, edgeMat(lit ? 'win-lit' : 'win', lit ? 0x8a7a48 : 0x101418), fx, y + 3 + rr * 1.6, fz);
+        }
+        const [sx, sz] = face(0, 0);
+        inst(alongX ? Math.min(w - 0.8, 3) : 0.05, 2.4, alongX ? 0.05 : Math.min(w - 0.8, 3), edgeMat('shutter', 0x5a5e60), sx, y + 1.2, sz);
+        t += w; i++;
+      }
+    } else if (e.look === 'barricade') {
+      // between two outdoor rooms: concrete barriers, a wrecked car every few metres and a tall fence behind - plainly closed
+      const n = Math.max(1, Math.round(len / 2.2));
+      for (let j = 0; j < n; j++) {
+        const tt = (j + 0.5) / n, px = x0 + (x1 - x0) * tt, pz = z0 + (z1 - z0) * tt, car = j % 3 === 1;
+        if (car) { inst(alongX ? 3.6 : 1.7, 0.75, alongX ? 1.7 : 3.6, edgeMat('wreck', 0x4a2c26), px, y + 0.55, pz); inst(alongX ? 1.8 : 1.5, 0.55, alongX ? 1.5 : 1.8, edgeMat('wreck2', 0x2a2422), px, y + 1.2, pz); }
+        else inst(alongX ? 2.0 : 0.6, 0.85, alongX ? 0.6 : 2.0, edgeMat('barrier', 0x8a8a84), px, y + 0.42, pz);
+      }
+      const m = Math.max(1, Math.round(len / 2.5));
+      for (let j = 0; j <= m; j++) { const tt = j / m; inst(0.08, 2.4, 0.08, edgeMat('fence', 0x5a6064), x0 + (x1 - x0) * tt + out[0] * 0.7, y + 1.2, z0 + (z1 - z0) * tt + out[1] * 0.7); }
+      for (const hy of [0.2, 1.2, 2.3]) inst(alongX ? len : 0.05, 0.05, alongX ? 0.05 : len, edgeMat('fence', 0x5a6064), cx + out[0] * 0.7, y + hy, cz + out[1] * 0.7);
     } else if (e.look === 'trees') {
       const n = Math.max(1, Math.round(len / 2.4));
       for (let i = 0; i < n; i++) { const t = (i + 0.5) / n, k = ((i * 7919 + Math.round(cx * 13 + cz * 7)) % 100) / 100; trees.push([x0 + (x1 - x0) * t + out[0] * (1.3 + k), y, z0 + (z1 - z0) * t + out[1] * (1.3 + k), 0.8 + k * 0.5]); }
@@ -553,6 +590,14 @@ export function dressEdges(group, edges, colliders = []) {
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
     trees.forEach(([x, y, z, s], i) => { m4.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(s, s * 2.4, s)); tm.setMatrixAt(i, m4); m4.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(s, s, s)); cm.setMatrixAt(i, m4); });
     tm.name = 'edge:trees'; cm.name = 'edge:trees'; tm.castShadow = cm.castShadow = true; group.add(tm, cm);
+  }
+  if (batches.size) {
+    const unit = new THREE.BoxGeometry(1, 1, 1), m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
+    for (const [mt, list] of batches) {
+      const im = new THREE.InstancedMesh(unit, mt, list.length);
+      list.forEach(([w, h, d, px, py, pz], i) => { m4.compose(new THREE.Vector3(px, py, pz), q, new THREE.Vector3(w, h, d)); im.setMatrixAt(i, m4); });
+      im.name = 'edge:urban'; im.castShadow = false; im.receiveShadow = true; im.computeBoundingSphere(); group.add(im);
+    }
   }
   void colliders;
   return trees.length;

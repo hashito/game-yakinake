@@ -124,7 +124,7 @@
    "d": 13,
    "kind": "outdoor",
    "type": "street",
-   "edge": "none",
+   "edge": "urban",
    "lamp": "#f0a050"
   },
   {
@@ -136,19 +136,102 @@
    "d": 10,
    "kind": "outdoor",
    "type": "street",
-   "edge": "none",
+   "edge": "urban",
    "lamp": "#f0a050"
   },
   {
    "id": "S_MART",
-   "name": "丸福マート",
+   "name": "丸福マートの売り場",
    "x": 58,
    "z": 6,
    "w": 12,
-   "d": 10,
+   "d": 7,
    "kind": "room",
    "type": "shop",
+   "inhabited": true,
    "lamp": "#f4ecd0"
+  },
+  {
+   "id": "S_MBACK",
+   "name": "マートの従業員通路",
+   "x": 58,
+   "z": 13,
+   "w": 6,
+   "d": 3,
+   "kind": "room",
+   "type": "storage",
+   "inhabited": true,
+   "lamp": "#d8d0b8"
+  },
+  {
+   "id": "S_MSTOCK",
+   "name": "マートの倉庫",
+   "x": 64,
+   "z": 13,
+   "w": 6,
+   "d": 3,
+   "kind": "room",
+   "type": "storage",
+   "lamp": "#c8b890"
+  },
+  {
+   "id": "S_MSEC",
+   "name": "マートの警備室",
+   "x": 52,
+   "z": 6,
+   "w": 6,
+   "d": 5,
+   "kind": "room",
+   "type": "office",
+   "inhabited": true,
+   "lamp": "#c8d4dc"
+  },
+  {
+   "id": "S_MSTAFF",
+   "name": "マートの休憩室（権藤の娘）",
+   "x": 52,
+   "z": 11,
+   "w": 6,
+   "d": 5,
+   "kind": "room",
+   "type": "office",
+   "inhabited": true,
+   "lamp": "#e8d8b0"
+  },
+  {
+   "id": "S_MFOOD",
+   "name": "フードコート",
+   "x": 70,
+   "z": 6,
+   "w": 7,
+   "d": 10,
+   "kind": "room",
+   "type": "kitchen",
+   "lamp": "#a89878"
+  },
+  {
+   "id": "S_MCOLD",
+   "name": "マートの冷蔵室",
+   "x": 77,
+   "z": 6,
+   "w": 6,
+   "d": 6,
+   "kind": "room",
+   "type": "storage",
+   "lamp": "#a8c8d8"
+  },
+  {
+   "id": "S_MROOF",
+   "name": "マートの屋上",
+   "x": 52,
+   "z": 6,
+   "w": 18,
+   "d": 10,
+   "kind": "outdoor",
+   "floor": 1,
+   "type": "street",
+   "edge": "stone",
+   "lamp": "#f0a050"
   },
   {
    "id": "S_SHOTEN",
@@ -159,7 +242,7 @@
    "d": 6,
    "kind": "outdoor",
    "type": "street",
-   "edge": "none",
+   "edge": "urban",
    "lamp": "#e89a48"
   },
   {
@@ -175,6 +258,18 @@
    "lamp": "#f0d8a8"
   },
   {
+   "id": "S_YAMAURA",
+   "name": "山の店の奥の物置",
+   "x": 47,
+   "z": 28,
+   "w": 8,
+   "d": 4,
+   "kind": "room",
+   "type": "storage",
+   "safe": true,
+   "lamp": "#d8c098"
+  },
+  {
    "id": "S_SHOBO",
    "name": "消防団の倉庫",
    "x": 55,
@@ -186,15 +281,99 @@
    "lamp": "#d8b890"
   },
   {
-   "id": "S_KOMIN",
-   "name": "公民館",
-   "x": 64,
+   "id": "S_KMON",
+   "name": "公民館の門と受付",
+   "x": 66,
    "z": 22,
-   "w": 12,
-   "d": 9,
+   "w": 8,
+   "d": 3,
    "kind": "room",
    "type": "office",
+   "inhabited": true,
+   "lamp": "#e8b070"
+  },
+  {
+   "id": "S_KOMIN",
+   "name": "礼拝堂（もとの公民館ホール）",
+   "x": 64,
+   "z": 25,
+   "w": 12,
+   "d": 7,
+   "kind": "room",
+   "type": "office",
+   "inhabited": true,
    "lamp": "#f0b870"
+  },
+  {
+   "id": "S_KSHIN",
+   "name": "お還りさまの囲い",
+   "x": 76,
+   "z": 22,
+   "w": 7,
+   "d": 10,
+   "kind": "room",
+   "type": "storage",
+   "lamp": "#b88860"
+  },
+  {
+   "id": "S_KDAI",
+   "name": "公民館の炊事場",
+   "x": 60,
+   "z": 25,
+   "w": 4,
+   "d": 7,
+   "kind": "room",
+   "type": "kitchen",
+   "inhabited": true,
+   "lamp": "#e8d8b0"
+  },
+  {
+   "id": "S_KCELL",
+   "name": "信者の寝所",
+   "x": 64,
+   "z": 32,
+   "w": 6,
+   "d": 6,
+   "kind": "room",
+   "type": "office",
+   "inhabited": true,
+   "lamp": "#d8b888"
+  },
+  {
+   "id": "S_KHAN",
+   "name": "離れたい者の部屋",
+   "x": 70,
+   "z": 32,
+   "w": 3,
+   "d": 6,
+   "kind": "room",
+   "type": "office",
+   "inhabited": true,
+   "lamp": "#c8a878"
+  },
+  {
+   "id": "S_KLEAD",
+   "name": "白坂の部屋",
+   "x": 73,
+   "z": 32,
+   "w": 6,
+   "d": 6,
+   "kind": "room",
+   "type": "office",
+   "inhabited": true,
+   "lamp": "#e0c090"
+  },
+  {
+   "id": "S_KCHIKA",
+   "name": "公民館の地下室",
+   "x": 64,
+   "z": 32,
+   "w": 6,
+   "d": 6,
+   "kind": "room",
+   "floor": -1,
+   "type": "storage",
+   "lamp": "#8a7a60"
   },
   {
    "id": "S_HIROBA",
@@ -205,7 +384,7 @@
    "d": 16,
    "kind": "outdoor",
    "type": "street",
-   "edge": "none",
+   "edge": "urban",
    "lamp": "#8fb0e8"
   },
   {
@@ -317,7 +496,7 @@
    "d": 22,
    "kind": "outdoor",
    "type": "street",
-   "edge": "none",
+   "edge": "urban",
    "lamp": "#f0a050"
   },
   {
@@ -329,7 +508,7 @@
    "d": 10,
    "kind": "outdoor",
    "type": "street",
-   "edge": "none",
+   "edge": "urban",
    "lamp": "#e8eef8"
   },
   {
@@ -484,7 +663,7 @@
    "kind": "outdoor",
    "floor": 4,
    "type": "street",
-   "edge": "none",
+   "edge": "stone",
    "lamp": "#f8c8a0"
   },
   {
@@ -507,6 +686,8 @@
    "b": "H_ROKA",
    "x": 3,
    "z": 5,
+   "closable": true,
+   "shelter": true,
    "width": 1.4
   },
   {
@@ -614,25 +795,115 @@
    "x": 62,
    "z": 6,
    "look": "glass",
+   "knock": "mart",
    "width": 1.8
   },
   {
-   "id": "D_MART_B",
+   "id": "D_MSEC",
    "a": "S_MART",
+   "b": "S_MSEC",
+   "x": 58,
+   "z": 8.5,
+   "width": 1.4,
+   "reason": "the security office opens off the sales floor: the guard watches the floor and the stair to the roof"
+  },
+  {
+   "id": "D_MSTAFF",
+   "a": "S_MSEC",
+   "b": "S_MSTAFF",
+   "x": 55,
+   "z": 11,
+   "hint": "休憩室。中で、女の子が熱を出して寝ている。権藤が「入るな」と言った。",
+   "width": 1.4,
+   "reason": "the staff room is reached through the security office: the sick girl sleeps where the guard can hear her"
+  },
+  {
+   "id": "D_MBACK",
+   "a": "S_MART",
+   "b": "S_MBACK",
+   "x": 61,
+   "z": 13,
+   "width": 1.2,
+   "reason": "the staff corridor behind the sales floor (the back of a shop)"
+  },
+  {
+   "id": "D_MART_B",
+   "a": "S_MBACK",
    "b": "S_SHOTEN",
    "x": 62,
    "z": 16,
-   "hint": "権藤が、レジの前から見張っている。話をつけるまで、奥へは通してくれない。",
+   "hint": "従業員通路の裏口。権藤が、レジの前から見張っている。話をつけるまで、通してくれない。",
    "width": 1.6
   },
   {
+   "id": "D_MFOOD_O",
+   "a": "S_ODORI",
+   "b": "S_MFOOD",
+   "x": 71,
+   "z": 6,
+   "open": true,
+   "openReason": "the glass front of the food court is smashed in: it fell first, the mart people gave it up and shut it off from the sales floor",
+   "width": 1.8
+  },
+  {
+   "id": "D_MSTOCK",
+   "a": "S_MFOOD",
+   "b": "S_MSTOCK",
+   "x": 70,
+   "z": 14.5,
+   "width": 1.2,
+   "reason": "the food court kitchen back door into the storeroom (a shopping centre service side)"
+  },
+  {
+   "id": "D_MCOLD",
+   "a": "S_MFOOD",
+   "b": "S_MCOLD",
+   "x": 77,
+   "z": 9,
+   "hint": "冷蔵室。中から、何かが扉をこすっている。",
+   "width": 1.2,
+   "reason": "the cold room opens off the food court kitchen"
+  },
+  {
    "id": "D_MART_K",
-   "a": "S_MART",
+   "a": "S_MSTOCK",
    "b": "S_SHOTEN",
    "x": 68.5,
    "z": 16,
-   "hint": "搬入口の戸。内側からかんぬき、外に南京錠。",
+   "hint": "倉庫の搬入口の戸。内側から、南京錠でかんぬきが留めてある。",
    "width": 1.4
+  },
+  {
+   "id": "ST_MROOF",
+   "a": "S_MSEC",
+   "b": "S_MROOF",
+   "kind": "stairs",
+   "look": "flight",
+   "label": "屋上への階段",
+   "ends": {
+    "a": {
+     "x": 53.2,
+     "z": 7,
+     "arrive": [
+      54.4,
+      10
+     ],
+     "yaw": 3.142,
+     "label": "屋上へ上がる"
+    },
+    "b": {
+     "x": 53.2,
+     "z": 10.6,
+     "arrive": [
+      53.4,
+      8.2
+     ],
+     "yaw": 0,
+     "label": "警備室へ降りる"
+    }
+   },
+   "width": 1.4,
+   "reason": "the fire stair: one flight per floor"
   },
   {
    "id": "D_YAMA",
@@ -641,7 +912,18 @@
    "x": 51,
    "z": 22,
    "look": "glass",
+   "closable": true,
+   "shelter": true,
    "width": 1.6
+  },
+  {
+   "id": "D_YAMAURA",
+   "a": "S_YAMA",
+   "b": "S_YAMAURA",
+   "x": 51,
+   "z": 28,
+   "width": 1.2,
+   "reason": "the back store of a small shop, behind its counter"
   },
   {
    "id": "D_SHOBO",
@@ -655,10 +937,105 @@
   {
    "id": "D_KOMIN",
    "a": "S_SHOTEN",
-   "b": "S_KOMIN",
+   "b": "S_KMON",
    "x": 70,
    "z": 22,
+   "knock": "cult",
    "width": 1.8
+  },
+  {
+   "id": "D_KHALL",
+   "a": "S_KMON",
+   "b": "S_KOMIN",
+   "x": 70,
+   "z": 25,
+   "open": true,
+   "width": 1.8,
+   "reason": "the gate desk opens into the hall (a 公民館 entrance)"
+  },
+  {
+   "id": "D_KDAI",
+   "a": "S_KOMIN",
+   "b": "S_KDAI",
+   "x": 64,
+   "z": 28.5,
+   "open": true,
+   "width": 1.2,
+   "reason": "the kitchen opens off the hall (a 公民館 kitchen serves the hall)"
+  },
+  {
+   "id": "D_KSHIN",
+   "a": "S_KOMIN",
+   "b": "S_KSHIN",
+   "x": 76,
+   "z": 28.5,
+   "look": "glass",
+   "hint": "お還りさまの囲い。ガラス戸の向こうで、鎖が鳴っている。鍵は白坂が持っている。",
+   "width": 1.4,
+   "reason": "the pen is the old stage store, behind glass so the members can see it from the hall"
+  },
+  {
+   "id": "D_KCELL",
+   "a": "S_KOMIN",
+   "b": "S_KCELL",
+   "x": 67,
+   "z": 32,
+   "open": true,
+   "width": 1.2,
+   "reason": "the sleeping rooms open off the hall"
+  },
+  {
+   "id": "D_KHAN",
+   "a": "S_KCELL",
+   "b": "S_KHAN",
+   "x": 70,
+   "z": 33.2,
+   "knock": "khan",
+   "width": 1,
+   "reason": "the small room off the sleeping room"
+  },
+  {
+   "id": "D_KLEAD",
+   "a": "S_KOMIN",
+   "b": "S_KLEAD",
+   "x": 74.5,
+   "z": 32,
+   "hint": "白坂の部屋。鍵がかかっている。",
+   "width": 1,
+   "reason": "the leader room opens off the hall (the old manager office)"
+  },
+  {
+   "id": "ST_KCHIKA",
+   "a": "S_KCHIKA",
+   "b": "S_KCELL",
+   "kind": "stairs",
+   "look": "flight",
+   "label": "地下室への階段",
+   "hint": "床の上げ蓋。南京錠がかかっている。",
+   "ends": {
+    "a": {
+     "x": 64.9,
+     "z": 33.2,
+     "arrive": [
+      65.9,
+      36.4
+     ],
+     "yaw": 3.142,
+     "label": "寝所へ上がる"
+    },
+    "b": {
+     "x": 64.9,
+     "z": 36.8,
+     "arrive": [
+      65.6,
+      34.2
+     ],
+     "yaw": 0,
+     "label": "地下室へ降りる"
+    }
+   },
+   "width": 1.4,
+   "reason": "the fire stair: one flight per floor"
   },
   {
    "id": "D_SHO_HI",
@@ -688,6 +1065,8 @@
    "x": 100,
    "z": 6,
    "hint": "休憩室の戸は、中から机で押さえられている。",
+   "closable": true,
+   "shelter": true,
    "width": 1.4,
    "reason": "the break room opens off the lobby counter (a small station: the lobby is its hall)"
   },
@@ -788,6 +1167,8 @@
    "b": "O_BOSAI",
    "x": 145,
    "z": 3.5,
+   "closable": true,
+   "shelter": true,
    "width": 1.4,
    "reason": "an open-plan office floor: the side rooms and the fire stair open straight off it"
   },
@@ -1076,10 +1457,18 @@
   },
   {
    "id": "S_MARTLOCK",
-   "room": "S_MART",
+   "room": "S_MSTOCK",
    "x": 68.5,
    "z": 15.3,
    "label": "搬入口の南京錠"
+  },
+  {
+   "id": "S_NISHINA",
+   "room": "S_MART",
+   "x": 64.6,
+   "z": 9.4,
+   "label": "仁科",
+   "talk": true
   },
   {
    "id": "S_CAGE",
@@ -1108,6 +1497,29 @@
    "x": 70,
    "z": 29.2,
    "label": "白坂",
+   "talk": true
+  },
+  {
+   "id": "S_TAEKO",
+   "room": "S_KHAN",
+   "x": 71.5,
+   "z": 36.4,
+   "label": "妙子",
+   "talk": true
+  },
+  {
+   "id": "S_KDESK",
+   "room": "S_KLEAD",
+   "x": 77.6,
+   "z": 36.8,
+   "label": "白坂の机"
+  },
+  {
+   "id": "S_MIYAKE",
+   "room": "S_KCHIKA",
+   "x": 67.4,
+   "z": 35.4,
+   "label": "格子の向こうの男",
    "talk": true
   },
   {
@@ -1492,29 +1904,29 @@
    "id": "F_BUS",
    "room": "S_ODORI",
    "x": 70.4,
-   "z": 1,
+   "z": -0.2,
    "w": 2.6,
-   "d": 9.6,
+   "d": 7.2,
    "kind": "car",
    "rot": 0
   },
   {
    "id": "F_MART_S1",
    "room": "S_MART",
-   "x": 59,
-   "z": 12.5,
+   "x": 59.2,
+   "z": 9.6,
    "w": 0.45,
-   "d": 5,
+   "d": 4,
    "kind": "shelf",
    "rot": 90
   },
   {
    "id": "F_MART_S2",
    "room": "S_MART",
-   "x": 65.4,
-   "z": 11,
+   "x": 66.2,
+   "z": 10.6,
    "w": 0.45,
-   "d": 4,
+   "d": 3.2,
    "kind": "shelf",
    "rot": 90
   },
@@ -1534,11 +1946,134 @@
    "id": "F_MART_FRIDGE",
    "room": "S_MART",
    "x": 69.4,
-   "z": 11.6,
+   "z": 11.4,
    "w": 0.7,
    "d": 2,
    "kind": "fridge",
    "rot": -90
+  },
+  {
+   "id": "F_MART_BAR",
+   "room": "S_MART",
+   "x": 69.3,
+   "z": 9,
+   "w": 0.6,
+   "d": 1.8,
+   "kind": "crate"
+  },
+  {
+   "id": "F_MSEC_D",
+   "room": "S_MSEC",
+   "x": 56.4,
+   "z": 6.5,
+   "w": 1.6,
+   "d": 0.7,
+   "kind": "steelDesk"
+  },
+  {
+   "id": "F_MSEC_L",
+   "room": "S_MSEC",
+   "x": 57.6,
+   "z": 10.2,
+   "w": 0.5,
+   "d": 0.6,
+   "kind": "locker",
+   "rot": -90
+  },
+  {
+   "id": "F_MBACK_C",
+   "room": "S_MBACK",
+   "x": 58.8,
+   "z": 14.6,
+   "w": 0.8,
+   "d": 0.8,
+   "kind": "crate"
+  },
+  {
+   "id": "F_MFOOD_T1",
+   "room": "S_MFOOD",
+   "x": 72.6,
+   "z": 9.2,
+   "w": 1.2,
+   "d": 0.8,
+   "kind": "table"
+  },
+  {
+   "id": "F_MFOOD_T2",
+   "room": "S_MFOOD",
+   "x": 74.8,
+   "z": 12.4,
+   "w": 1.2,
+   "d": 0.8,
+   "kind": "table"
+  },
+  {
+   "id": "F_MFOOD_CNT",
+   "room": "S_MFOOD",
+   "x": 75.8,
+   "z": 7.4,
+   "w": 1.8,
+   "d": 0.6,
+   "kind": "counter",
+   "args": [
+    1.8
+   ]
+  },
+  {
+   "id": "F_MFOOD_SH",
+   "room": "S_MFOOD",
+   "x": 70.6,
+   "z": 9.5,
+   "w": 0.45,
+   "d": 2,
+   "kind": "shelf",
+   "rot": 90
+  },
+  {
+   "id": "F_MSTOCK_C",
+   "room": "S_MSTOCK",
+   "x": 65,
+   "z": 14.6,
+   "w": 0.8,
+   "d": 0.8,
+   "kind": "crate"
+  },
+  {
+   "id": "F_MSTOCK_P",
+   "room": "S_MSTOCK",
+   "x": 66.6,
+   "z": 14.8,
+   "w": 1.2,
+   "d": 1,
+   "kind": "pallet"
+  },
+  {
+   "id": "F_MCOLD_S",
+   "room": "S_MCOLD",
+   "x": 82.4,
+   "z": 9,
+   "w": 0.45,
+   "d": 3,
+   "kind": "shelf",
+   "rot": 90
+  },
+  {
+   "id": "F_MROOF_T",
+   "room": "S_MROOF",
+   "x": 61,
+   "z": 9,
+   "w": 1.6,
+   "d": 0.9,
+   "kind": "tank"
+  },
+  {
+   "id": "F_MROOF_C",
+   "room": "S_MROOF",
+   "x": 66.4,
+   "z": 13.4,
+   "w": 0.8,
+   "d": 0.8,
+   "kind": "crate"
   },
   {
    "id": "F_SHOTEN_V",
@@ -1548,6 +2083,79 @@
    "w": 0.7,
    "d": 0.7,
    "kind": "vendingMachine"
+  },
+  {
+   "id": "F_URA_BAR1",
+   "room": "S_URA",
+   "x": 36.6,
+   "z": 8.6,
+   "w": 2,
+   "d": 0.8,
+   "kind": "crate"
+  },
+  {
+   "id": "F_URA_BAR2",
+   "room": "S_URA",
+   "x": 40.2,
+   "z": 0.9,
+   "w": 0.8,
+   "d": 1.6,
+   "kind": "crate"
+  },
+  {
+   "id": "F_OD_BAR1",
+   "room": "S_ODORI",
+   "x": 48.8,
+   "z": -3,
+   "w": 1.6,
+   "d": 0.8,
+   "kind": "crate"
+  },
+  {
+   "id": "F_OD_BAR2",
+   "room": "S_ODORI",
+   "x": 66,
+   "z": -3,
+   "w": 2,
+   "d": 0.8,
+   "kind": "crate"
+  },
+  {
+   "id": "F_OD_CAR7",
+   "room": "S_ODORI",
+   "x": 58.6,
+   "z": 4.6,
+   "w": 4.2,
+   "d": 1.8,
+   "kind": "car",
+   "rot": 90
+  },
+  {
+   "id": "F_SH_BAR1",
+   "room": "S_SHOTEN",
+   "x": 54.8,
+   "z": 16.8,
+   "w": 1.8,
+   "d": 0.8,
+   "kind": "crate"
+  },
+  {
+   "id": "F_SH_BAR2",
+   "room": "S_SHOTEN",
+   "x": 68,
+   "z": 21,
+   "w": 1.8,
+   "d": 0.8,
+   "kind": "crate"
+  },
+  {
+   "id": "F_HI_BAR",
+   "room": "S_HIROBA",
+   "x": 85.6,
+   "z": 7.2,
+   "w": 2,
+   "d": 0.8,
+   "kind": "crate"
   },
   {
    "id": "F_SHOTEN_CAR",
@@ -1603,8 +2211,8 @@
   {
    "id": "F_KOMIN_B1",
    "room": "S_KOMIN",
-   "x": 66,
-   "z": 25,
+   "x": 66.4,
+   "z": 26.2,
    "w": 1.8,
    "d": 0.5,
    "kind": "bench"
@@ -1612,11 +2220,216 @@
   {
    "id": "F_KOMIN_B2",
    "room": "S_KOMIN",
-   "x": 74,
-   "z": 25,
+   "x": 73.6,
+   "z": 26.2,
    "w": 1.8,
    "d": 0.5,
    "kind": "bench"
+  },
+  {
+   "id": "F_KOMIN_B3",
+   "room": "S_KOMIN",
+   "x": 66.4,
+   "z": 28.4,
+   "w": 1.8,
+   "d": 0.5,
+   "kind": "bench"
+  },
+  {
+   "id": "F_KOMIN_B4",
+   "room": "S_KOMIN",
+   "x": 73.6,
+   "z": 28.4,
+   "w": 1.8,
+   "d": 0.5,
+   "kind": "bench"
+  },
+  {
+   "id": "F_KMON_D",
+   "room": "S_KMON",
+   "x": 67.6,
+   "z": 23.2,
+   "w": 1.4,
+   "d": 0.6,
+   "kind": "desk"
+  },
+  {
+   "id": "F_KDAI_C",
+   "room": "S_KDAI",
+   "x": 60.5,
+   "z": 28.5,
+   "w": 0.6,
+   "d": 3,
+   "kind": "counter",
+   "rot": 90,
+   "args": [
+    3
+   ]
+  },
+  {
+   "id": "F_KDAI_F",
+   "room": "S_KDAI",
+   "x": 63.2,
+   "z": 25.6,
+   "w": 0.7,
+   "d": 0.7,
+   "kind": "fridge"
+  },
+  {
+   "id": "F_KSHIN_C",
+   "room": "S_KSHIN",
+   "x": 82.2,
+   "z": 23,
+   "w": 0.8,
+   "d": 0.8,
+   "kind": "crate"
+  },
+  {
+   "id": "F_KCELL_B1",
+   "room": "S_KCELL",
+   "x": 67.4,
+   "z": 35.6,
+   "w": 1,
+   "d": 2,
+   "kind": "bed"
+  },
+  {
+   "id": "F_KCELL_B2",
+   "room": "S_KCELL",
+   "x": 69.2,
+   "z": 35.6,
+   "w": 1,
+   "d": 2,
+   "kind": "bed"
+  },
+  {
+   "id": "F_KHAN_B",
+   "room": "S_KHAN",
+   "x": 72.3,
+   "z": 33.4,
+   "w": 1,
+   "d": 2,
+   "kind": "bed"
+  },
+  {
+   "id": "F_KLEAD_D",
+   "room": "S_KLEAD",
+   "x": 77.6,
+   "z": 37.3,
+   "w": 1.4,
+   "d": 0.7,
+   "kind": "desk"
+  },
+  {
+   "id": "F_KLEAD_L",
+   "room": "S_KLEAD",
+   "x": 78.6,
+   "z": 33,
+   "w": 0.5,
+   "d": 0.6,
+   "kind": "locker",
+   "rot": -90
+  },
+  {
+   "id": "F_KCHIKA_C1",
+   "room": "S_KCHIKA",
+   "x": 69.3,
+   "z": 32.6,
+   "w": 0.8,
+   "d": 0.8,
+   "kind": "crate"
+  },
+  {
+   "id": "F_NS_RADIO",
+   "room": "H_NS",
+   "x": 12.6,
+   "z": 0.35,
+   "w": 1.2,
+   "d": 0.5,
+   "kind": "desk"
+  },
+  {
+   "id": "F_O_KAICHO_SB",
+   "room": "O_KAICHO",
+   "x": 152.6,
+   "z": 4.5,
+   "w": 1.7,
+   "d": 0.55,
+   "kind": "table",
+   "rot": 90
+  },
+  {
+   "id": "F_SHOTEN_STALL",
+   "room": "S_SHOTEN",
+   "x": 60.2,
+   "z": 16.5,
+   "w": 1.6,
+   "d": 0.6,
+   "kind": "table"
+  },
+  {
+   "id": "F_SHOTEN_CRATE",
+   "room": "S_SHOTEN",
+   "x": 67.6,
+   "z": 21.4,
+   "w": 0.7,
+   "d": 0.7,
+   "kind": "crate"
+  },
+  {
+   "id": "F_RF_C1",
+   "room": "O_ROOF",
+   "x": 131,
+   "z": 2.2,
+   "w": 0.9,
+   "d": 0.9,
+   "kind": "crate"
+  },
+  {
+   "id": "F_RF_C2",
+   "room": "O_ROOF",
+   "x": 143.2,
+   "z": 2.2,
+   "w": 0.9,
+   "d": 0.9,
+   "kind": "crate"
+  },
+  {
+   "id": "F_RF_C3",
+   "room": "O_ROOF",
+   "x": 131,
+   "z": 12.2,
+   "w": 0.9,
+   "d": 0.9,
+   "kind": "crate"
+  },
+  {
+   "id": "F_RF_C4",
+   "room": "O_ROOF",
+   "x": 142.6,
+   "z": 12.8,
+   "w": 0.9,
+   "d": 0.9,
+   "kind": "crate"
+  },
+  {
+   "id": "F_KCHIKA_C2",
+   "room": "S_KCHIKA",
+   "x": 68.3,
+   "z": 32.6,
+   "w": 0.8,
+   "d": 0.8,
+   "kind": "crate"
+  },
+  {
+   "id": "F_YAMAURA_S",
+   "room": "S_YAMAURA",
+   "x": 54.4,
+   "z": 30,
+   "w": 0.45,
+   "d": 2.4,
+   "kind": "shelf",
+   "rot": 90
   },
   {
    "id": "F_HIRO_CAR",
@@ -1934,79 +2747,6 @@
    "w": 1.6,
    "d": 0.8,
    "kind": "desk"
-  },
-  {
-   "id": "F_NS_RADIO",
-   "room": "H_NS",
-   "x": 12.6,
-   "z": 0.35,
-   "w": 1.2,
-   "d": 0.5,
-   "kind": "desk"
-  },
-  {
-   "id": "F_O_KAICHO_SB",
-   "room": "O_KAICHO",
-   "x": 152.6,
-   "z": 4.5,
-   "w": 1.7,
-   "d": 0.55,
-   "kind": "table",
-   "rot": 90
-  },
-  {
-   "id": "F_SHOTEN_STALL",
-   "room": "S_SHOTEN",
-   "x": 60.2,
-   "z": 16.5,
-   "w": 1.6,
-   "d": 0.6,
-   "kind": "table"
-  },
-  {
-   "id": "F_SHOTEN_CRATE",
-   "room": "S_SHOTEN",
-   "x": 67.6,
-   "z": 21.4,
-   "w": 0.7,
-   "d": 0.7,
-   "kind": "crate"
-  },
-  {
-   "id": "F_RF_C1",
-   "room": "O_ROOF",
-   "x": 131,
-   "z": 2.2,
-   "w": 0.9,
-   "d": 0.9,
-   "kind": "crate"
-  },
-  {
-   "id": "F_RF_C2",
-   "room": "O_ROOF",
-   "x": 143.2,
-   "z": 2.2,
-   "w": 0.9,
-   "d": 0.9,
-   "kind": "crate"
-  },
-  {
-   "id": "F_RF_C3",
-   "room": "O_ROOF",
-   "x": 131,
-   "z": 12.2,
-   "w": 0.9,
-   "d": 0.9,
-   "kind": "crate"
-  },
-  {
-   "id": "F_RF_C4",
-   "room": "O_ROOF",
-   "x": 142.6,
-   "z": 12.8,
-   "w": 0.9,
-   "d": 0.9,
-   "kind": "crate"
   }
  ],
  "start": "H_TOU",

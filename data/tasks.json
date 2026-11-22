@@ -470,20 +470,25 @@
  },
  {
   "id": "T_MARTLOCK",
-  "title": "権藤の目を盗んで、搬入口の南京錠を開ける",
+  "title": "倉庫の搬入口の南京錠を開けて、裏から抜ける",
   "stage": "L4",
-  "room": "S_MART",
+  "room": "S_MSTOCK",
   "station": "S_MARTLOCK",
-  "meaning": "話がつかないなら、**奥の搬入口**から抜ける（忍び込む）。",
-  "hint": "マートの**南東の奥**、搬入口の戸。",
+  "meaning": "権藤と話がつかないなら、**フードコート**を抜けて**倉庫の搬入口**から商店街へ出る（忍び込む）。仁科の鍵があれば、錠はすぐ開く。",
+  "hint": "大通りから、ガラスの割れた**フードコート**へ。奥の戸が**倉庫**。",
   "steps": [
    {
-    "text": "丸福マートへ",
+    "text": "大通りから、ガラスの割れたフードコートへ",
     "done": "room",
-    "room": "S_MART"
+    "room": "S_MFOOD"
    },
    {
-    "text": "南東の奥の南京錠の前に立つ",
+    "text": "奥の戸から、マートの倉庫へ",
+    "done": "room",
+    "room": "S_MSTOCK"
+   },
+   {
+    "text": "搬入口の南京錠の前に立つ",
     "done": "look",
     "emphasis": "station:S_MARTLOCK"
    },
@@ -505,6 +510,35 @@
     "seed": 3
    }
   }
+ },
+ {
+  "id": "T_NISHINA",
+  "title": "店長に隠れて、仁科と話す",
+  "stage": "L4",
+  "room": "S_MART",
+  "station": "S_NISHINA",
+  "meaning": "店の若い店員の**仁科**は、店長の権藤と揉めていた。**ここを出たい**らしい。",
+  "hint": "**丸福マートの売り場**、冷蔵ケースの前。",
+  "steps": [
+   {
+    "text": "丸福マートの売り場へ",
+    "done": "room",
+    "room": "S_MART"
+   },
+   {
+    "text": "仁科を見る",
+    "done": "look",
+    "emphasis": "station:S_NISHINA"
+   },
+   {
+    "text": "[E] で話す",
+    "done": "task"
+   }
+  ],
+  "optional": true,
+  "needs": [
+   "T_GONDO"
+  ]
  },
  {
   "id": "T_PACK",
@@ -655,6 +689,90 @@
     "look": "thread"
    }
   }
+ },
+ {
+  "id": "T_TAEKO",
+  "title": "離れたい者の部屋で、妙子と話す",
+  "stage": "L4",
+  "room": "S_KHAN",
+  "station": "S_TAEKO",
+  "meaning": "礼拝堂で、**妙子**は白坂に逆らっていた。**地下に閉じ込められた人**がいるらしい。",
+  "hint": "公民館の奥、**信者の寝所**の隣の小部屋。",
+  "steps": [
+   {
+    "text": "公民館の信者の寝所へ",
+    "done": "room",
+    "room": "S_KCELL"
+   },
+   {
+    "text": "隣の小部屋の妙子を見る",
+    "done": "look",
+    "emphasis": "station:S_TAEKO"
+   },
+   {
+    "text": "[E] で話す",
+    "done": "task"
+   }
+  ],
+  "optional": true
+ },
+ {
+  "id": "T_KDESK",
+  "title": "白坂の机の引き出しから、地下の鍵を出す",
+  "stage": "L4",
+  "room": "S_KLEAD",
+  "station": "S_KDESK",
+  "meaning": "妙子の合鍵で、**白坂の部屋**に入れる。机の引き出しに、**地下室の鍵**がある。",
+  "hint": "礼拝堂の奥、**白坂の部屋**の机。",
+  "steps": [
+   {
+    "text": "白坂の部屋へ",
+    "done": "room",
+    "room": "S_KLEAD"
+   },
+   {
+    "text": "机の前に立つ",
+    "done": "look",
+    "emphasis": "station:S_KDESK"
+   },
+   {
+    "text": "[E] で引き出しを開ける",
+    "done": "task"
+   }
+  ],
+  "optional": true,
+  "needs": [
+   "T_TAEKO"
+  ]
+ },
+ {
+  "id": "T_MIYAKE",
+  "title": "地下室の三宅を、格子から出す",
+  "stage": "L4",
+  "room": "S_KCHIKA",
+  "station": "S_MIYAKE",
+  "meaning": "鎖を外そうとした**三宅**が、地下室に閉じ込められている。出せば、**会の人たちに真実を言える**。",
+  "hint": "信者の寝所の床の**上げ蓋**から、地下室へ。",
+  "steps": [
+   {
+    "text": "寝所の上げ蓋から、地下室へ",
+    "done": "room",
+    "room": "S_KCHIKA"
+   },
+   {
+    "text": "格子の向こうの男を見る",
+    "done": "look",
+    "emphasis": "station:S_MIYAKE"
+   },
+   {
+    "text": "[E] で話す",
+    "done": "task"
+   }
+  ],
+  "optional": true,
+  "needs": [
+   "T_KDESK"
+  ]
  },
  {
   "id": "T_KATA",

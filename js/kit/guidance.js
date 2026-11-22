@@ -1,6 +1,6 @@
-/* game-kit 1d2a49bf: js/guidance.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit cad79dd6: js/guidance.js — edit in game-kit and run tools/kit-sync.js */
 // Guiding the player, from what several games built on their own (standard 1.13). All opt-in from game.json except ctx.lookTo and task "reach" / when().
-//   "pointer": true | { "range": 60 }     a diamond in the world over the next place: the station of the first required task that can start, or, from another
+//   "pointer": true | { "range": 60, "look": "loud", "color": "#d8cdb4" }   a small pale chevron (1.36.0; "loud": the old amber diamond) in the world over the next place: the station of the first required task that can start, or, from another
 //                                         room, the door to walk through. ctx.nextPlace() -> { task, room, x, y, z, door } | null (未然調書 1.6.0)
 //   "hud": { "quietFor": 60, "keep": ["guide"], "dimInDanger": true }
 //                                         a quiet first minute: only the goal chip and the STEP card; the rest fades in at quietFor seconds, a stage or the first
@@ -10,6 +10,10 @@
 //                                         Calm mode and reduced motion: no zoom. Returns a promise for the end.
 //   task "reach": { "x", "z", "r", "floor" } | { "room" }   tasks.json: the task is done when the player stands there (a lesson step, 五人分の朝's T_TUT1).
 //   ext.registerTask(id, { when(ctx) -> bool })   the same from code. Both wait until the task's stage and needs are met (a canStart text stays what [E] says).
+// 1.36.0: how quiet the default guide mark is (tools/check-playtest.mjs P53 holds every game's marks to it: on screen at most MARK_MAX_PX tall at 3 m
+// on a 720 px high view, opacity at most QUIET_MARK.opacity unless a game says pointer.look 'loud')
+export const QUIET_MARK = { scale: 0.6, opacity: 0.55 };
+export const MARK_MAX_PX = 30;
 export const pointerConfig = (p) => (!p ? null : { range: 60, ...(typeof p === 'object' ? p : {}) });
 export const hudConfig = (h) => (!h ? null : { quietFor: 0, keep: ['guide'], dimInDanger: false, ...(h === true ? { quietFor: 60, dimInDanger: true } : h) });
 
@@ -118,19 +122,22 @@ export function installGuidance(ctx, { manifest = {}, tasks = [], plan = null, s
     const T = ctx.THREE, c = document.createElement('canvas');
     c.width = c.height = 64;
     const g = c.getContext('2d');
-    g.translate(32, 32); g.rotate(Math.PI / 4); g.fillStyle = '#ffae12'; g.strokeStyle = '#1a1408'; g.lineWidth = 5; g.fillRect(-15, -15, 30, 30); g.strokeRect(-15, -15, 30, 30);
+    // 1.36.0 (札の家 2026-11-22 #2 「▼が派手すぎるのでもう少し小さくて質素な感じに」): the default mark is quiet - a small thin outlined
+    // chevron in a pale, low-saturation tone, half see-through, no black rim and no bright fill. pointer.look: 'loud' keeps the old amber diamond.
+    if (pc.look === 'loud') { g.translate(32, 32); g.rotate(Math.PI / 4); g.fillStyle = '#ffae12'; g.strokeStyle = '#1a1408'; g.lineWidth = 5; g.fillRect(-15, -15, 30, 30); g.strokeRect(-15, -15, 30, 30); }
+    else { g.strokeStyle = pc.color || '#d8cdb4'; g.lineWidth = 5; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath(); g.moveTo(16, 24); g.lineTo(32, 42); g.lineTo(48, 24); g.stroke(); }
     const tex = new T.CanvasTexture(c);
     if (T.SRGBColorSpace) tex.colorSpace = T.SRGBColorSpace;
     // 1.21.5 (鏡屋 → every dot game: 「▼や矢印が壁を透けて見える」): the mark is hidden by walls (depth test); at a door it floats in the opening
-    const mark = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthTest: pc.throughWalls ? false : true, depthWrite: false, toneMapped: false })   /* 1.22.0: pointer.throughWalls: true for the old look */);
-    mark.name = 'next-place'; mark.renderOrder = 999; mark.visible = false; ctx.scene.add(mark);
+    const mark = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, opacity: pc.look === 'loud' ? 1 : QUIET_MARK.opacity, depthTest: pc.throughWalls ? false : true, depthWrite: false, toneMapped: false })   /* 1.22.0: pointer.throughWalls: true for the old look */);
+    mark.name = 'next-place'; mark.userData.guideMark = true; mark.renderOrder = 999; mark.visible = false; ctx.scene.add(mark);
     let again = 0, now = null;
     sys.push((dt, active) => {
       if ((again -= dt) <= 0) { again = 0.25; now = active ? ctx.nextPlace() : null; }
       const P = camera.position, d = now ? Math.hypot(now.x - P.x, now.z - P.z) : 0;
       mark.visible = !!now && d > 0.9 && d < pc.range && active;
       if (!mark.visible) return;
-      const size = Math.max(0.2, d * (ctx.isTouch ? 0.075 : 0.055));   // keeps a least size on the screen across a room and on a phone
+      const k = pc.look === 'loud' ? 1 : QUIET_MARK.scale, size = Math.max(0.2 * k, d * (ctx.isTouch ? 0.075 : 0.055) * k);   // keeps a least size on the screen across a room and on a phone (1.36.0: smaller by default)
       mark.position.set(now.x, now.y + Math.sin(performance.now() / 300) * 0.03, now.z); mark.scale.set(size, size, 1);
     });
   }

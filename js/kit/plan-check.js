@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/plan-check.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 93a3e709: js/plan-check.js — edit in game-kit and run tools/kit-sync.js */
 // Floor-plan checks (W16/W17), pure data in -> findings out. No DOM, runs in Node and in the browser.
 // plan = { rooms:[{id,name,x,z,w,d,floor?,kind:'room'|'corridor'|'outdoor'|'stairs'}],
 //          doors:[{id,a,b,x?,z?,width,kind?:'door'|'stairs'|'lift'|'exit',reason?}],
@@ -17,6 +17,8 @@ export const CODES = {
   'no-corridor': 'room has no corridor access', 'dead-end': 'dead-end corridor / open route', 'exit-unreachable': 'exit not reachable', 'exits-few': 'fewer than 2 exits',
   'furniture-door': 'furniture blocks a door', 'route': 'monster route is broken', 'no-loop': 'no loop in the corridor network (monsters get cornered)',
   'ref': 'unknown id / bad reference',
+  'edge-invisible': 'an outdoor room edge is an invisible wall (edge "none" with nothing seen there)',
+  'open-shelter': 'a lived-in or safe room stands open to a dangerous place without a story reason',
 };
 const EPS = 0.31;
 const isHall = (r) => r.kind === 'corridor' || r.kind === 'stairs';
@@ -143,6 +145,17 @@ export function checkPlan(plan, opts = {}) {
     const p = rt.path || [];
     for (let i = 0; i + 1 < p.length; i++) if (!(adj.get(p[i]) || []).includes(p[i + 1])) E('route', `route ${rt.id}: ${p[i]} -> ${p[i + 1]} have no door`);
     if (p.length > 2 && p[0] !== p[p.length - 1] && !rt.open) W('dead-end', `route ${rt.id} does not return to its start (set "open":true if intended)`);
+  }
+  // 1.35.0 (夜勤明けの街 #7 「外について何もない空間に行けない感じ」): an outdoor room's edge must show why it stops there (trees, fence,
+  // stone, hedge, 'urban' fronts and barricades). edge "none" is an invisible wall unless the room says what closes it (edgeReason).
+  for (const r of rooms) if (r.kind === 'outdoor' && r.edge === 'none' && !r.edgeReason) E('edge-invisible', `outdoor room ${name(r)} has edge "none": its edges are invisible walls. Give it a look ('urban', 'fence', 'stone', ...) or an edgeReason`);
+  // 1.35.0 (夜勤明けの街 #15 「ゾンビだらけなのに部屋を開けっ放しを許している」): a room where people live or the player saves
+  // (rooms[].inhabited / rooms[].safe) is shut: a door from it to a room that is neither must not stand open (open: true) unless the
+  // story says why (door.openReason: the people there are dead, the place is overrun ...)
+  const shelter = (r) => !!(r && (r.inhabited || r.safe));
+  for (const d of doors) {
+    const a = byId.get(d.a), b = byId.get(d.b); if (!a || !b || d.kind === 'stairs' || d.kind === 'lift') continue;
+    if (shelter(a) !== shelter(b) && d.open && !d.openReason) E('open-shelter', `door ${d.id} (${name(a)} - ${name(b)}) stands open from a ${shelter(a) ? (a.safe ? 'safe' : 'lived-in') : (b.safe ? 'safe' : 'lived-in')} room: close it (and let the people inside open it) or give an openReason`);
   }
   const stats = { rooms: rooms.length, doors: doors.length, directPairs: pairSet.size, corridors: rooms.filter((r) => r.kind === 'corridor').length };
   info.push(`${stats.rooms} rooms, ${stats.doors} doors, ${stats.directPairs} direct room links`);

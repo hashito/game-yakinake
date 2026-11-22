@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: css/shell.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit cad79dd6: css/shell.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: the standard 3D shell (js/game-core.js): title screen, prompt, endings, pause menu, custom mini-game layer.
    Tokens only (css/theme.css); loaded after kit.css and theme.css. A game restyles it through tokens in css/theme-game.css. */
 #title { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; text-align: center; padding: var(--gf-win-margin, 16px); overflow-y: auto; overscroll-behavior: contain;
@@ -260,6 +260,9 @@ body.touch #say { bottom: max(12px, var(--gf-safe-b, 0px)); }
 .gf-ending-kicker { font-size: 13px; letter-spacing: 0.22em; color: #d9c9a3; }
 .gf-ending-title { font-family: var(--hk-serif, serif); font-size: clamp(26px, 6vw, 40px); font-weight: 600; letter-spacing: 0.08em; }
 .gf-ending-line { font-family: var(--hk-serif, serif); font-size: clamp(15px, 2.4vw, 18px); line-height: 2; }
+.gf-ending-roll { margin: 28px 0 4px !important; }   /* 1.36.0 end roll: each section its own picture, as large as the column (never a thumbnail) */
+.gf-ending-roll img { display: block; width: 100%; height: auto; max-height: 62vh; object-fit: cover; border-radius: 6px; filter: saturate(0.8) brightness(0.92); box-shadow: 0 6px 28px rgba(0, 0, 0, 0.7); }
+.gf-ending-roll-title { font-size: 13px; letter-spacing: 0.2em; color: #d9c9a3; }  /* pair-ok: on the dark shade */
 .gf-ending-stats { font-size: 13px; color: #bdb5a4; }
 .gf-ending-found { font-size: 13px; color: #bdb5a4; line-height: 1.7; }  /* pair-ok: on the dark shade */
 .gf-ending-found b { color: #f4ecd8; }  /* pair-ok */

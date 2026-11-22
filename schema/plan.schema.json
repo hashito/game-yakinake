@@ -86,9 +86,18 @@
               "hedge",
               "fence",
               "stone",
+              "urban",
               "none"
             ],
-            "description": "outdoor rooms: the look of the room's edges (the colliders stay); none = the game dresses world.edges itself"
+            "description": "outdoor rooms: the look of the room's edges (the colliders stay); urban (1.35.0) = building fronts on the outer edges and a barricade of wrecks and a fence between two outdoor rooms; none = the game dresses world.edges itself and says so in edgeReason (plan-check edge-invisible)"
+          },
+          "edgeReason": {
+            "type": "string",
+            "description": "1.35.0: with edge none - what closes the edges instead (the game's own dressing); without it edge none is an invisible wall (plan-check edge-invisible)"
+          },
+          "inhabited": {
+            "type": "boolean",
+            "description": "1.35.0: people live here (a shelter): its doors to the rest stay shut (plan-check open-shelter)"
           },
           "furnish": {
             "type": "boolean",
@@ -165,6 +174,10 @@
           "open": {
             "type": "boolean",
             "description": "an opening without a door panel, always open (e.g. between two outdoor areas)"
+          },
+          "openReason": {
+            "type": "string",
+            "description": "1.35.0: why an opening from a lived-in or safe room to a dangerous place stands open (the story: overrun, smashed in); without it plan-check open-shelter is an error"
           },
           "look": {
             "enum": ["swing", "slide", "fusuma", "glass", "none", "ladder", "flight"],

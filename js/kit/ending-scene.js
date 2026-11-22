@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/ending-scene.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit cad79dd6: js/ending-scene.js — edit in game-kit and run tools/kit-sync.js */
 // The ending as a scene (standard 1.8.1, feedback 2026-11-01 "最後にも写真を置いて手前に文字をつけるなど雰囲気を出して"): the picture fills the
 // screen and slowly comes closer, the kicker and the title stand in front of it, the epilogue appears a line at a time, and the stats and
 // the buttons come last. A click / Enter / Space shows the rest at once; reduced motion (ctx.calm or the OS setting) shows it all still.
@@ -20,12 +20,19 @@ import { Store } from "./store.js";
 import { mountShareBar } from "./share-bar.js";
 const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-export function endingTimeline(paras, o = {}) {
+// 1.36.0 (札の家 2026-11-22 #12 「もう少しエンドロールのテキストを増やして他のことも具体的に教えてください、画像も増やしてください」):
+// `roll` - after the epilogue, sections of the end roll, each its own picture and lines (what became of each person and thing):
+//   roll: [{ photo: 'assets/photos/roll-police.webp', title: '櫛田千草', text: 'line\nline' }]   (title optional)
+// Each picture appears, then its lines one by one; the stats and the buttons come after the last section (no timer closes anything).
+export function endingTimeline(paras, o = {}, roll = []) {
   const first = o.first ?? 1.6, per = o.perChar ?? 0.075, min = o.min ?? 1.8;
   let t = first + 1.2;   // the kicker at `first`, the title a little after
   const lines = paras.map((p) => { const at = t; t += Math.max(min, String(p).length * per); return at; });
-  return { kicker: first, title: first + 0.6, lines, stats: t + 0.4, buttons: t + 0.9 };
+  const rollAt = (roll || []).map((r) => { const pic = t + 0.6; t = pic + 1.4; const ls = rollLines(r).map((p) => { const at = t; t += Math.max(min, String(p).length * per); return at; }); return { pic, lines: ls }; });
+  return { kicker: first, title: first + 0.6, lines, roll: rollAt, stats: t + 0.4, buttons: t + 0.9 };
 }
+/** the lines of one end-roll section (its text split by \n) */
+export const rollLines = (r) => String((r && r.text) || "").split("\n").filter((p) => p.trim());
 
 /** the endings for the list: found (or the current one) by title, the rest as mask; all = [{ id, title }] */
 export function endingsList(all = [], found = [], current = null, mask = "？？？") {
@@ -48,7 +55,8 @@ export function endingShareOptions(manifest, o = {}) {
 export function showEndingScene(ctx, o = {}) {
   const paras = String(o.text || "").split("\n").filter((p) => p.trim());
   const still = !!(ctx && ctx.calm) || (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) || !!(ctx && ctx.qa);
-  const tl = endingTimeline(paras, o.timing);
+  const roll = Array.isArray(o.roll) ? o.roll.filter((r) => r && (r.photo || r.text)) : [];
+  const tl = endingTimeline(paras, o.timing, roll);
   const en = o.endings && o.endings.all ? endingsList(o.endings.all, o.endings.found || foundEndings(ctx && ctx.manifest && ctx.manifest.id), o.endings.current) : null;
   ctx && ctx.fp && ctx.fp.release && ctx.fp.release();
   const old = document.getElementById("gf-ending"); if (old) old.remove();
@@ -60,6 +68,7 @@ export function showEndingScene(ctx, o = {}) {
       ${o.kicker ? `<p class="gf-ending-kicker" ${d(tl.kicker)}>${esc(o.kicker)}</p>` : ""}
       ${o.title ? `<h2 class="gf-ending-title" ${d(tl.title)}>${esc(o.title)}</h2>` : ""}
       ${paras.map((p, i) => `<p class="gf-ending-line" ${d(tl.lines[i])}>${esc(p)}</p>`).join("")}
+      ${roll.map((r, k) => `${r.photo ? `<figure class="gf-ending-roll" ${d(tl.roll[k].pic)}><img src="${esc(r.photo)}" alt="${esc(r.title || "")}" loading="eager"></figure>` : ""}${r.title ? `<p class="gf-ending-roll-title" ${d(tl.roll[k].pic + 0.4)}>${esc(r.title)}</p>` : ""}${rollLines(r).map((p, i) => `<p class="gf-ending-line" ${d(tl.roll[k].lines[i])}>${esc(p)}</p>`).join("")}`).join("")}
       ${o.stats ? `<p class="gf-ending-stats" ${d(tl.stats)}>${esc(o.stats)}</p>` : ""}
       ${en && en.length > 1 ? `<p class="gf-ending-found" ${d(tl.stats)}>見つけた結末 ${en.filter((x) => x.found).length} / ${en.length}：${en.map((x) => (x.current ? `<b>${esc(x.title)}</b>` : esc(x.title))).join("　／　")}</p>` : ""}
       <div class="gf-ending-buttons" ${d(tl.buttons)}>${(o.buttons || []).map((b, i) => `<button type="button" class="btn ${b.primary ? "primary" : ""}" data-i="${i}">${esc(b.label)}</button>`).join("")}</div>

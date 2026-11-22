@@ -28,6 +28,15 @@ export const LOOT = [
   { id: 'L_YAMA_B', room: 'S_YAMA', x: 52.2, z: 25.6, item: 'bandage', n: 2, on: 'auto_S_YAMA_1', at: 0.4 },
   { id: 'L_KOMIN_C', room: 'S_KOMIN', x: 65.8, z: 29.8, item: 'canned', n: 1, on: 'F_KOMIN_T', at: 0.15 },
   { id: 'L_HI_P', room: 'S_HIROBA', x: 86.2, z: 18.2, item: 'p9', n: 8, on: 'F_HIRO_CAR', at: 0.25 },
+  { id: 'L_HI_N', room: 'S_HIROBA', x: 88.8, z: 9.2, item: 'nails', n: 18, on: 'F_HIRO_CAR', at: 0.7 },
+  // the mart and the 公民館 (1.4.0): nails by the big one in the food court, shells on the roof, food in the kitchen
+  { id: 'L_MF_N', room: 'S_MFOOD', x: 75.8, z: 7.4, item: 'nails', n: 16, on: 'F_MFOOD_CNT', at: 0.4 },
+  { id: 'L_MF_B', room: 'S_MFOOD', x: 72.6, z: 9.2, item: 'bandage', n: 1, on: 'F_MFOOD_T1', at: 0.5 },
+  { id: 'L_MR_S', room: 'S_MROOF', x: 66.4, z: 13.4, item: 'shell', n: 4, on: 'F_MROOF_C' },
+  { id: 'L_MR_N', room: 'S_MROOF', x: 61.0, z: 9.0, item: 'nails', n: 12, on: 'F_MROOF_T', at: 0.3 },
+  { id: 'L_MS_M', room: 'S_MSEC', x: 57.6, z: 10.2, item: 'aidkit', n: 1, on: 'F_MSEC_L' },
+  { id: 'L_KD_C', room: 'S_KDAI', x: 60.5, z: 28.5, item: 'canned', n: 2, on: 'F_KDAI_C', at: 0.5 },
+  { id: 'L_YU_N', room: 'S_YAMAURA', x: 54.4, z: 30, item: 'nails', n: 14, on: 'F_YAMAURA_S', at: 0.5 },
   { id: 'L_HI_B', room: 'S_HIROBA', x: 92.2, z: 20.2, item: 'bandage', n: 1, why: 'dropped by the sandbags' },
   // the police station
   { id: 'L_PL_P', room: 'P_LOBBY', x: 102.4, z: 12.6, item: 'p9', n: 8, on: 'auto_P_LOBBY_0', at: 0.3 },
@@ -37,6 +46,7 @@ export const LOOT = [
   { id: 'L_PT_B', room: 'P_TSU', x: 119.8, z: 4.6, item: 'bandage', n: 1, on: 'auto_P_TSU_0', at: 0.7 },
   { id: 'L_PR_P', room: 'P_ROKA', x: 119.4, z: 7.5, item: 'p9', n: 8, why: 'dropped in the corridor' },
   { id: 'L_PU_P', room: 'P_URA', x: 123.2, z: 6.0, item: 'p9', n: 8, on: 'F_P_CAR', at: 0.2 },
+  { id: 'L_PR_S', room: 'P_LOBBY', x: 99.0, z: 13.2, item: 'shell', n: 4, why: 'by the cell door: for the big one in the cells' },
   { id: 'L_PU_S', room: 'P_URA', x: 126.6, z: 21.0, item: 'shell', n: 4, why: 'by a body at the back' },
   // the tower
   { id: 'L_OL_P', room: 'O_LOBBY', x: 142.2, z: 2.6, item: 'p9', n: 8, on: 'F_O_CNT', at: 0.8 },
@@ -45,6 +55,7 @@ export const LOOT = [
   { id: 'L_OF_P', room: 'O_OFF', x: 143.6, z: 12.6, item: 'p9', n: 8, on: 'F_O_OFF_D4', at: 0.75 },
   { id: 'L_OF_C', room: 'O_OFF', x: 130.4, z: 1.2, item: 'canned', n: 1, on: 'F_O_OFF_D1', at: 0.2 },
   { id: 'L_OS_S', room: 'O_SRV', x: 151.0, z: 6.2, item: 'shell', n: 4, on: 'auto_O_SRV_0', at: 0.8 },
+  { id: 'L_SK_P', room: 'O_SHOK', x: 134, z: 9, item: 'p9', n: 8, on: 'F_O_SHOK_T2', at: 0.5 },
   { id: 'L_SK_W', room: 'O_SHOK', x: 141.6, z: 2.6, item: 'water', n: 1, on: 'F_O_SHOK_T1', at: 0.7 },
   { id: 'L_K2_P', room: 'O_KAI2', x: 147.0, z: 9.0, item: 'p9', n: 8, why: 'by a body on the stairs' },
   { id: 'L_YK_P', room: 'O_YAKU', x: 142.8, z: 2.2, item: 'p9', n: 8, on: 'F_O_YAKU_D', at: 0.3 },

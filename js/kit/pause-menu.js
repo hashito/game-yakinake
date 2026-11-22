@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/pause-menu.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 93a3e709: js/pause-menu.js — edit in game-kit and run tools/kit-sync.js */
 // The standard PAUSE MENU of the UI shell (rule U21): one window (js/win-manager.js) with generous margins and 44px+ buttons:
 // 再開 / 目標とタスク / 気になること / 地図 / 設定（揺れ・点滅を抑える・音量）/ 更新情報 / タイトルへ. Keyboard: ↑↓ (Home / End) move,
 // Enter acts, Esc resumes. The three tab entries open the tab menu (js/tab-menu.js) on that tab; 更新情報 shows the
@@ -9,6 +9,7 @@
 //   pm.registerItem({ id: "save", label: "セーブ", icon: "save", after: "map", run: (ctx) => save() });          // acts (closes the menu unless it returns false)
 //   pm.registerItem({ id: "help", label: "操作", render: (el, ctx) => { el.innerHTML = "..."; } });           // a sub-view with a back button
 //   createPauseMenu({ ..., renderSettings: (el, pm) => el.append(qualitySelect(look)) })   // (1.1) extra rows in the settings view
+//   createPauseMenu({ ..., renderPanel: (el, pm) => { el.innerHTML = "..."; } })            // (1.35) the game's status beside the list (carried things)
 //   pm.open(); pm.close(); pm.toggle(); pm.settings; pm.setSetting("volume", 0.4); pm.registerItem({ ..., hidden: () => bool })
 // Settings: { calm (揺れを抑える), noFlash (点滅を抑える), volume 0..1, hudAlpha "normal" | "dense" | "light" (HUD の透明度 -> html[data-gf-hud]) } are kept in storage ("gf.settings"); they also set
 // document.documentElement.dataset.gfCalm / gfNoFlash ("1" | absent) and --gf-volume, so CSS can react (shake / flash effects
@@ -124,7 +125,7 @@ export function createPauseMenu(o = {}) {
     },
     open(v = "menu") {
       view = v;
-      wm.open("pause-menu", {});
+      wm.open("pause-menu", typeof o.renderPanel === "function" ? { size: "l" } : {});
       return api;
     },
     close() {
@@ -156,12 +157,16 @@ export function createPauseMenu(o = {}) {
     const head = (t) => wm.setTitle(t);
     if (view === "menu") {
       head(L.title);
-      body.innerHTML = `<div class="pm"><ul class="pm-list" role="menu">${visible()
+      // (1.35.0, 夜勤明けの街 #8 「一時停止メニューで武器やアイテムが見えない」) o.renderPanel(el, api): the game's own status beside the
+      // list (what you carry, the weapon in the hand, the ammo), so the paused screen answers "what do I have" without another window
+      const panel = typeof o.renderPanel === "function";
+      body.innerHTML = `<div class="pm${panel ? " pm-wide" : ""}"><ul class="pm-list" role="menu">${visible()
         .map((i) => {
           const b = i.badge ? i.badge() : 0;
           return `<li role="none"><button type="button" role="menuitem" class="pm-item${i.primary ? " primary" : ""}" data-pm="${esc(i.id)}"><span class="pm-ic" aria-hidden="true">${iconOrText(i.icon || "", { size: 22 })}</span><span class="pm-lb">${esc(i.label)}</span>${b ? '<i class="pm-dot"></i>' : ""}</button></li>`;
         })
-        .join("")}</ul></div>`;
+        .join("")}</ul>${panel ? '<div class="pm-panel" data-pm-panel></div>' : ""}</div>`;
+      if (panel) { const el = body.querySelector("[data-pm-panel]"); try { o.renderPanel(el, api); } catch (e) { console.error(e); } }
       body.querySelectorAll("[data-pm]").forEach((b) => (b.onclick = () => api.activate(b.dataset.pm)));
       body.querySelector(".pm-item")?.focus({ preventScroll: true });
       return;

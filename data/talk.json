@@ -556,5 +556,317 @@
    "id": "lesson-1",
    "voice": "assets/voice/lesson-1.mp3"
   }
+ ],
+ "mart_argue": [
+  {
+   "who": "仁科",
+   "text": "店長、冷蔵室のお客さんたち、あのまま閉じ込めとくんすか。",
+   "id": "mart_argue-1",
+   "voice": "assets/voice/mart_argue-1.mp3"
+  },
+  {
+   "who": "権藤",
+   "text": "開けるな。あれは、もう客じゃない。娘のことだけ考えろ。",
+   "id": "mart_argue-2",
+   "voice": "assets/voice/mart_argue-2.mp3"
+  },
+  {
+   "who": "仁科",
+   "text": "考えてますよ。だから、薬のある病院まで、誰か行けばって……",
+   "id": "mart_argue-3",
+   "voice": "assets/voice/mart_argue-3.mp3"
+  },
+  {
+   "who": "私",
+   "text": "店の二人が、揉めている。若いほうは、ここを出たいらしい。",
+   "id": "mart_argue-4",
+   "voice": "assets/voice/mart_argue-4.mp3"
+  }
+ ],
+ "nishina": [
+  {
+   "who": "仁科",
+   "text": "先生、ちょっと。店長には内緒で。",
+   "id": "nishina-1",
+   "voice": "assets/voice/nishina-1.mp3"
+  },
+  {
+   "who": "仁科",
+   "text": "店長は、薬をもらえるまで誰も通さないって決めてます。でも俺は、もう、ここにいたくない。",
+   "id": "nishina-2",
+   "voice": "assets/voice/nishina-2.mp3"
+  },
+  {
+   "who": "仁科",
+   "text": "倉庫の搬入口の鍵です。フードコートを抜ければ、店長の目は届かない。……フードコートは、最初にやられた所です。気をつけて。",
+   "id": "nishina-3",
+   "voice": "assets/voice/nishina-3.mp3"
+  },
+  {
+   "who": "私",
+   "text": "鍵をもらった。フードコートを抜けて倉庫へ行けば、裏から商店街へ出られる。",
+   "id": "nishina-4",
+   "voice": "assets/voice/nishina-4.mp3"
+  }
+ ],
+ "knock_mart": [
+  {
+   "who": "仁科",
+   "text": "誰っすか！ ……白衣？ 病院の先生？",
+   "id": "knock_mart-1",
+   "voice": "assets/voice/knock_mart-1.mp3"
+  },
+  {
+   "who": "仁科",
+   "text": "入って、すぐ閉めてください。開けっぱなしだと、あいつら入ってくるんで。",
+   "id": "knock_mart-2",
+   "voice": "assets/voice/knock_mart-2.mp3"
+  }
+ ],
+ "knock_cult": [
+  {
+   "who": "白坂",
+   "text": "どなたです。……白衣の方ですね。お入りなさい。",
+   "id": "knock_cult-1",
+   "voice": "assets/voice/knock_cult-1.mp3"
+  },
+  {
+   "who": "白坂",
+   "text": "戸は、すぐに閉めて。お還りさまが、目を覚まします。",
+   "id": "knock_cult-2",
+   "voice": "assets/voice/knock_cult-2.mp3"
+  }
+ ],
+ "knock_khan": [
+  {
+   "who": "妙子",
+   "text": "……白坂さん？ ……違う。先生ね。入って、閉めて。",
+   "id": "knock_khan-1",
+   "voice": "assets/voice/knock_khan-1.mp3"
+  }
+ ],
+ "cult_argue": [
+  {
+   "who": "妙子",
+   "text": "三宅さんを、いつまで地下に入れておくんですか。鎖を外そうとしただけです。",
+   "id": "cult_argue-1",
+   "voice": "assets/voice/cult_argue-1.mp3"
+  },
+  {
+   "who": "白坂",
+   "text": "お還りさまを傷つけようとしたのです。夜明けまで、頭を冷やしてもらう。",
+   "id": "cult_argue-2",
+   "voice": "assets/voice/cult_argue-2.mp3"
+  },
+  {
+   "who": "妙子",
+   "text": "……はい。",
+   "id": "cult_argue-3",
+   "voice": "assets/voice/cult_argue-3.mp3"
+  },
+  {
+   "who": "私",
+   "text": "地下に、誰かが閉じ込められている。会の中も、一つではない。",
+   "id": "cult_argue-4",
+   "voice": "assets/voice/cult_argue-4.mp3"
+  }
+ ],
+ "taeko": [
+  {
+   "who": "妙子",
+   "text": "先生。白坂さんは、奥さんが戻ってきたと信じています。私も、最初は信じました。",
+   "id": "taeko-1",
+   "voice": "assets/voice/taeko-1.mp3"
+  },
+  {
+   "who": "妙子",
+   "text": "でも、三宅さんが地下に入れられてから、怖くなった。次は、疑った人が鎖につながれる。",
+   "id": "taeko-2",
+   "voice": "assets/voice/taeko-2.mp3"
+  },
+  {
+   "who": "妙子",
+   "text": "白坂さんの部屋の合鍵です。掃除は、私の役目だから。机の引き出しに、地下の鍵があります。",
+   "id": "taeko-3",
+   "voice": "assets/voice/taeko-3.mp3"
+  },
+  {
+   "who": "私",
+   "text": "白坂さんの部屋の合鍵をもらった。地下室の鍵は、机の引き出しの中。",
+   "id": "taeko-4",
+   "voice": "assets/voice/taeko-4.mp3"
+  }
+ ],
+ "miyake": [
+  {
+   "who": "三宅",
+   "text": "誰だ……白坂さんか？ ……違う。医者か？",
+   "id": "miyake-1",
+   "voice": "assets/voice/miyake-1.mp3"
+  },
+  {
+   "who": "三宅",
+   "text": "俺は三宅。鎖を外そうとして、ここに入れられた。お還りさまは、還ってなんかいない。死んでるんだ。みんな、本当は分かってる。",
+   "id": "miyake-2",
+   "voice": "assets/voice/miyake-2.mp3"
+  }
+ ],
+ "miyake_free": [
+  {
+   "who": "三宅",
+   "text": "ありがとう。……礼拝堂で、皆の前で、俺のことを言ってくれ。閉じ込められた者がいると知れば、皆、目が覚める。",
+   "id": "miyake_free-1",
+   "voice": "assets/voice/miyake_free-1.mp3"
+  },
+  {
+   "who": "三宅",
+   "text": "俺は、裏から出る。夜明けのヘリのことは聞いた。自分で行く。",
+   "id": "miyake_free-2",
+   "voice": "assets/voice/miyake_free-2.mp3"
+  },
+  {
+   "who": "私",
+   "text": "三宅さんを出した。白坂さんと話すとき、地下のことを皆の前で言える。",
+   "id": "miyake_free-3",
+   "voice": "assets/voice/miyake_free-3.mp3"
+  }
+ ],
+ "shirasaka_split": [
+  {
+   "who": "私",
+   "text": "地下に、三宅さんが閉じ込められていました。私が出しました。",
+   "id": "shirasaka_split-1",
+   "voice": "assets/voice/shirasaka_split-1.mp3"
+  },
+  {
+   "who": "妙子",
+   "text": "白坂さん。もうやめましょう。疑っただけで地下に入れられるなら、ここは、もう会じゃない。",
+   "id": "shirasaka_split-2",
+   "voice": "assets/voice/shirasaka_split-2.mp3"
+  },
+  {
+   "who": "白坂",
+   "text": "……妙子さんまで。",
+   "id": "shirasaka_split-3",
+   "voice": "assets/voice/shirasaka_split-3.mp3"
+  },
+  {
+   "who": "白坂",
+   "text": "分かりました。鎖の皆さんは、囲いへ戻します。縄も、ほどきましょう。……私は、ここに残ります。妻と。",
+   "id": "shirasaka_split-4",
+   "voice": "assets/voice/shirasaka_split-4.mp3"
+  },
+  {
+   "who": "私",
+   "text": "白坂さんは、残ると言った。会の人たちが、縄をほどきに行った。",
+   "id": "shirasaka_split-5",
+   "voice": "assets/voice/shirasaka_split-5.mp3"
+  }
+ ],
+ "katagiri_rob": [
+  {
+   "who": "私",
+   "text": "休憩室の物資を、全部出して。",
+   "id": "katagiri_rob-1",
+   "voice": "assets/voice/katagiri_rob-1.mp3"
+  },
+  {
+   "who": "片桐",
+   "text": "……そういう人だったんだ。森、下がって。",
+   "id": "katagiri_rob-2",
+   "voice": "assets/voice/katagiri_rob-2.mp3"
+  },
+  {
+   "who": "森",
+   "text": "先生、やめてください！ ここには市民が……",
+   "id": "katagiri_rob-3",
+   "voice": "assets/voice/katagiri_rob-3.mp3"
+  }
+ ],
+ "rumor_katagiri": [
+  {
+   "who": "片桐",
+   "text": "待って。その白衣の血……商店街のほうで、人が殺されたって無線で聞いた。先生じゃ、ないよね。",
+   "id": "rumor_katagiri-1",
+   "voice": "assets/voice/rumor_katagiri-1.mp3"
+  }
+ ],
+ "rumor_noguchi": [
+  {
+   "who": "野口",
+   "text": "無線で聞いた。白衣の女が、人を殺したって。……あんたか。それでも、脚は縫ってほしい。",
+   "id": "rumor_noguchi-1",
+   "voice": "assets/voice/rumor_noguchi-1.mp3"
+  }
+ ],
+ "rumor_hayase": [
+  {
+   "who": "早瀬",
+   "text": "下の無線、聞こえてたよ。人を殺してきたんだろ。なら、話は早い。",
+   "id": "rumor_hayase-1",
+   "voice": "assets/voice/rumor_hayase-1.mp3"
+  }
+ ],
+ "heli_refuse": [
+  {
+   "who": "パイロット",
+   "text": "うみかぜのパイロットです。……白衣に、血が。",
+   "id": "heli_refuse-1",
+   "voice": "assets/voice/heli_refuse-1.mp3"
+  },
+  {
+   "who": "パイロット",
+   "text": "地上から、無線が何本も入っています。「白衣の医者が、人を殺した」と。",
+   "id": "heli_refuse-2",
+   "voice": "assets/voice/heli_refuse-2.mp3"
+  },
+  {
+   "who": "パイロット",
+   "text": "申し訳ない。あなたは、乗せられない。",
+   "id": "heli_refuse-3",
+   "voice": "assets/voice/heli_refuse-3.mp3"
+  }
+ ],
+ "heli_force": [
+  {
+   "who": "私",
+   "text": "乗せて。撃つ。",
+   "id": "heli_force-1",
+   "voice": "assets/voice/heli_force-1.mp3"
+  },
+  {
+   "who": "パイロット",
+   "text": "……分かった。撃たないでくれ。乗れ。",
+   "id": "heli_force-2",
+   "voice": "assets/voice/heli_force-2.mp3"
+  }
+ ],
+ "heli_down": [
+  {
+   "who": "私",
+   "text": "……分かりました。",
+   "id": "heli_down-1",
+   "voice": "assets/voice/heli_down-1.mp3"
+  },
+  {
+   "who": "パイロット",
+   "text": "二便目は、警察と来ます。ここで、待っていてください。",
+   "id": "heli_down-2",
+   "voice": "assets/voice/heli_down-2.mp3"
+  }
+ ],
+ "heli_mixed": [
+  {
+   "who": "片桐",
+   "text": "先生、乗って。……でも、降りたら、下で何があったか全部話してもらう。私が聞いたことも。",
+   "id": "heli_mixed-1",
+   "voice": "assets/voice/heli_mixed-1.mp3"
+  },
+  {
+   "who": "私",
+   "text": "分かっています。",
+   "id": "heli_mixed-2",
+   "voice": "assets/voice/heli_mixed-2.mp3"
+  }
  ]
 }

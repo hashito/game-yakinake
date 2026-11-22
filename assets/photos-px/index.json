@@ -43,6 +43,18 @@
   "file": "end-e4.png",
   "src": "05b418621ea1f689"
  },
+ "end-e5.webp": {
+  "file": "end-e5.png",
+  "src": "58daf6382a617167"
+ },
+ "end-e6.webp": {
+  "file": "end-e6.png",
+  "src": "a150d15aa2e18d36"
+ },
+ "end-e7.webp": {
+  "file": "end-e7.png",
+  "src": "20e3285f0966b8ec"
+ },
  "face-chisato.webp": {
   "file": "face-chisato.png",
   "src": "2ee3d044b070c79c"
@@ -95,6 +107,10 @@
   "file": "item-ANTIBIO.png",
   "src": "32558df28de5ab9f"
  },
+ "item-CELLARKEY.webp": {
+  "file": "item-CELLARKEY.png",
+  "src": "8dbcb74ab8350697"
+ },
  "item-FIREKEY.webp": {
   "file": "item-FIREKEY.png",
   "src": "4ce58aa24ca68730"
@@ -111,9 +127,17 @@
   "file": "item-KEYRING.png",
   "src": "32ab29f778a1a402"
  },
+ "item-KLEADKEY.webp": {
+  "file": "item-KLEADKEY.png",
+  "src": "8fd35064999bd308"
+ },
  "item-LIFTKEY.webp": {
   "file": "item-LIFTKEY.png",
   "src": "8fa5f9aec8ab679d"
+ },
+ "item-MARTKEY.webp": {
+  "file": "item-MARTKEY.png",
+  "src": "cc94470b2209aa9a"
  },
  "item-PENLIGHT.webp": {
   "file": "item-PENLIGHT.png",

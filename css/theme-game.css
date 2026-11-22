@@ -6,18 +6,28 @@
 
 /* ---- HUD: body and weapon (top left, a kit HUD slot) ---- */
 .yk-status { display: grid; gap: 4px; min-width: 150px; padding: 6px 8px; border-radius: 6px; background: rgba(8, 12, 14, 0.78); color: #dde8e2; font-size: 14px; }
-.yk-hp { /* pair-ok */ height: 10px; border-radius: 3px; background: #26363a; overflow: hidden; }
-.yk-hp i { /* pair-ok */ display: block; height: 100%; background: #8aa3a0; transition: width 0.2s; }
-.yk-hp.low i { /* pair-ok */ background: #e04a34; }
+/* 1.4.0 #3: the body - a big bar with its number; the part just lost lingers pale behind it */
+.yk-hpbox { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 2px 8px; }
+.yk-hpl { font-size: 13px; color: #b8c8c2; }
+.yk-hpn { min-width: 2.2em; font-size: 22px; line-height: 1; font-weight: 800; color: #f6faf6; font-variant-numeric: tabular-nums; }
+.yk-status.yk-mid .yk-hpn { color: #ffd060; }
+.yk-status.yk-low .yk-hpn { color: #ff6a50; }
+.yk-hp { /* pair-ok */ position: relative; height: 16px; min-width: 120px; border-radius: 4px; background: #26363a; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18); }
+.yk-hp s { /* pair-ok */ position: absolute; left: 0; top: 0; bottom: 0; background: #f0e0c0; opacity: 0.75; }
+.yk-hp i { /* pair-ok */ position: absolute; left: 0; top: 0; bottom: 0; display: block; background: #6fbf7a; transition: width 0.12s; }
+.yk-status.yk-mid .yk-hp i { /* pair-ok */ background: #e0b030; }
+.yk-hp.low i { /* pair-ok */ background: #e04a34; animation: yk-hp-pulse 0.8s ease-in-out infinite; }
+@keyframes yk-hp-pulse { 50% { opacity: 0.6; } }
+html[data-gf-no-flash] .yk-hp.low i { animation: none; }
+/* #9: the next weapon and how to change to it */
+.yk-wnext { /* pair-ok */ display: flex; justify-content: space-between; gap: 8px; align-items: center; margin: 0; padding: 2px 6px; border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 4px; background: rgba(255, 255, 255, 0.06); color: #dde8e2; font: inherit; font-size: 13px; text-align: left; pointer-events: none; }
+.yk-wnext[hidden] { display: none; }
+.yk-wk { /* pair-ok */ padding: 0 5px; border-radius: 3px; background: #ffd890; color: #1a1408; font-weight: 700; font-size: 12px; }
 .yk-w { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
 .yk-wn { font-weight: 700; color: #f6faf6; }
 .yk-wa { color: #ffd890; font-variant-numeric: tabular-nums; }
 /* the weapon in the hand, bottom right of the view */
-.yk-weapon { position: fixed; right: 1%; bottom: 0; width: min(62vw, 94vh * 1.667, 780px); aspect-ratio: 320 / 192; height: auto; image-rendering: pixelated; pointer-events: none; z-index: 4; display: none; }
-body.yk-playing .yk-weapon { display: block; }
-html[data-input="touch"] .yk-weapon { right: 30%; width: min(42vw, 52vh * 1.667, 340px); height: auto; }
 /* 1.2.1: the bare fist is a big shape in the picture - smaller on a computer (it filled the lower right) */
-html:not([data-input="touch"]) .yk-weapon.yk-bare { width: min(44vw, 66vh * 1.667, 560px); }
 /* 1.2.1: the hit mark - four hard ticks round the sights */
 .yk-hitmark { position: fixed; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; z-index: 5; opacity: 0; }
 .yk-hitmark.on { opacity: 1; }
@@ -27,6 +37,7 @@ html:not([data-input="touch"]) .yk-weapon.yk-bare { width: min(44vw, 66vh * 1.66
 .yk-hitmark i:nth-child(3) { left: -13px; top: 3px; transform: rotate(45deg); }
 .yk-hitmark i:nth-child(4) { left: 9px; top: 3px; transform: rotate(-45deg); }
 .yk-hitmark.head i, .yk-hitmark.kill i { /* pair-ok */ background: #ff4a3a; }
+.yk-hitmark.armor i { /* pair-ok */ background: #8a949a; height: 6px; }
 .yk-hitmark.head i:nth-child(1), .yk-hitmark.kill i:nth-child(1) { left: -17px; top: -17px; }
 .yk-hitmark.head i:nth-child(2), .yk-hitmark.kill i:nth-child(2) { left: 13px; top: -17px; }
 .yk-hitmark.head i:nth-child(3), .yk-hitmark.kill i:nth-child(3) { left: -17px; top: 7px; }
@@ -37,9 +48,16 @@ html:not([data-input="touch"]) .yk-weapon.yk-bare { width: min(44vw, 66vh * 1.66
 @media (orientation: landscape) and (max-height: 400px) { body.touch.yk-playing #say { top: 52px; bottom: auto; } }
 /* what the part under the sights does (the first zombies teach it) */
 /* hurt: the edge of the view goes red */
-.yk-blood { /* pair-ok */ position: fixed; inset: 0; pointer-events: none; z-index: 3; opacity: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(110, 20, 20, 0.85) 100%); transition: opacity 0.3s; }
-.yk-grab { position: fixed; left: 50%; top: 22%; transform: translateX(-50%); padding: 8px 16px; border-radius: 6px; background: #6e1414; color: #ffffff; font-size: 18px; font-weight: 700; display: none; z-index: 6; pointer-events: none; }
-.yk-grab.on { display: block; }
+.yk-blood { /* pair-ok */ position: fixed; inset: 0; pointer-events: none; z-index: 3; opacity: 0; background: radial-gradient(ellipse at center, transparent 42%, rgba(120, 10, 10, 0.55) 72%, rgba(70, 0, 0, 0.95) 100%); transition: opacity 0.18s; }
+/* #3: the struggle - big, in the middle, with the presses left and the time running out */
+.yk-grab { position: fixed; left: 50%; top: 24%; transform: translateX(-50%); display: none; flex-direction: column; align-items: center; gap: 4px; min-width: 260px; padding: 10px 20px 12px; border: 2px solid #ff8a6a; border-radius: 8px; background: #6e1414; color: #ffffff; font-size: 18px; font-weight: 700; z-index: 6; pointer-events: none; }
+.yk-grab.on { display: flex; animation: yk-grab-shake 0.25s linear infinite; }
+html[data-gf-calm] .yk-grab.on { animation: none; }
+@keyframes yk-grab-shake { 25% { transform: translateX(calc(-50% - 3px)); } 75% { transform: translateX(calc(-50% + 3px)); } }
+.yk-grab b { font-size: 26px; letter-spacing: 0.05em; }
+.yk-grab span { font-size: 16px; }
+.yk-grab i { font-style: normal; font-size: 22px; letter-spacing: 0.2em; color: #ffd890; }
+.yk-grab u { /* pair-ok */ display: block; width: 100%; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #ffd890 calc(var(--k, 1) * 100%), rgba(255, 255, 255, 0.15) 0); }
 
 /* ---- the grid case: the grid fills the window, the chosen thing beside it ---- */
 .yk-case { display: grid; gap: 10px 18px; color: var(--gf-text); }
@@ -83,7 +101,8 @@ html:not([data-input="touch"]) .yk-weapon.yk-bare { width: min(44vw, 66vh * 1.66
 }
 /* touch: the status panel is the 手当て (bar) / 持ち替え (name) / 装填 (count) buttons */
 .yk-status.yk-tap { pointer-events: auto; }
-.yk-status.yk-tap .yk-hp { /* pair-ok */ height: 16px; cursor: pointer; }
+.yk-status.yk-tap .yk-hp { /* pair-ok */ height: 20px; cursor: pointer; }
+.yk-status.yk-tap .yk-wnext { /* pair-ok */ min-height: 34px; pointer-events: auto; cursor: pointer; background: rgba(255, 216, 144, 0.14); border-color: #ffd890; }
 .yk-status.yk-tap .yk-w { display: flex; gap: 6px; }
 .yk-status.yk-tap .yk-wn, .yk-status.yk-tap .yk-wa { /* pair-ok */ min-height: 28px; display: inline-flex; align-items: center; padding: 0 6px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); cursor: pointer; }
 .yk-status.yk-float { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 62px); left: calc(env(safe-area-inset-left, 0px) + 10px); z-index: 20; min-width: 0; }
@@ -104,3 +123,31 @@ body:not(.yk-playing) .yk-status.yk-float { display: none; }
 /* the title box stays solid over the dark roof picture (muted lines kept readable, contrast check at 1920x1080) */
 #title > .gf-title-box { background: var(--gf-bg, #eef1ef); color: var(--gf-title-text, var(--gf-text, #1d2527)); }
 #title > .gf-title-box .gf-sub, #title > .gf-title-box .gf-ver, #title #boot-status, #title #notes-btn { color: #39424a; }
+
+/* 1.4.0 #8: the case in the pause menu (read only) */
+.yk-pmcase { display: grid; gap: 8px; color: var(--gf-text); }
+.yk-pmcase h4 { margin: 4px 0 0; font-size: 14px; color: var(--gf-heading); }
+.yk-pm-now, .yk-pm-hp { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0; }
+.yk-pm-now span, .yk-pm-hp span { font-size: 13px; color: var(--gf-text); opacity: 0.8; }
+.yk-pm-now b { font-size: 20px; color: var(--gf-heading); }
+.yk-pm-now em { font-style: normal; font-size: 16px; font-weight: 700; color: var(--gf-text); }
+.yk-pm-hp b { font-size: 16px; }
+.yk-pm-guns { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.yk-pm-guns li { display: flex; justify-content: space-between; gap: 10px; padding: 4px 8px; border-radius: 6px; background: #1a2428; color: #e8f0ec; font-size: 14px; }
+.yk-pm-guns li.on { outline: 2px solid #7a96d0; }
+.yk-pmcase .yk-grid { margin: 0; }
+.yk-pmcase .yk-it { cursor: default; }
+.yk-pmcase .yk-it:disabled { opacity: 1; }
+.yk-pm-open { min-height: 44px; }
+
+/* 1.4.0 #13: under the sights when they point at a person who is not hostile (the weapon drops) */
+.yk-aimtag { position: fixed; left: 50%; top: calc(50% - 56px); transform: translateX(-50%); padding: 3px 10px; border-radius: 6px; background: rgba(10, 14, 16, 0.72); color: #f2ead8; font-size: 15px; font-weight: 700; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 30; white-space: nowrap; }
+.yk-aimtag.on { opacity: 1; }
+/* 1.4.0 #13: the groups in the pause menu */
+.yk-pm-fac { list-style: none; margin: 4px 0 10px; padding: 0; display: grid; gap: 4px; }
+.yk-pm-fac li { display: flex; justify-content: space-between; gap: 10px; padding: 5px 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--gf-text); font-size: 15px; }
+.yk-pm-fac li span { font-weight: 700; }
+.yk-pm-fac li.s-friendly span { color: #8fd08f; }
+.yk-pm-fac li.s-wary span { color: #e8c060; }
+.yk-pm-fac li.s-hostile span { color: #ff7a6a; }
+.yk-pm-fac li.s-gone span { color: #a0a0a0; }

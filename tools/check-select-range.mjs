@@ -58,7 +58,7 @@ if (!url) {
 // presets: "core" = the standard game-core games (window.__game: ctx.selectables() / ctx.pickNow()); default = the sorting-centre style (G.world.things, G.aim())
 const PRESET = opt("--preset", "things");
 const PRE = PRESET === "core"
-  ? { game: "window.__game", ready: "G.state && G.state.started", things: "const multi = ((G.data && G.data.plan && G.data.plan.rooms) || []).some((r) => r.floor); const fy = (f) => (G.world && G.world.floorY ? G.world.floorY(f) : f * 3.4); const floorOf = (y) => { let f = 0; while (f < 8 && fy(f + 1) <= y + 0.3) f++; return f; }; return G.selectables().map((t) => ({ id: t.id, floor: multi ? floorOf(t.min[1]) : undefined, v: { min: t.min, max: t.max }, min: t.min, max: t.max }));", aim: "const t = G.pickNow(); return t ? t.kind + ':' + t.id : null;" }
+  ? { game: "window.__game", ready: "G.state && G.state.started", things: "const multi = ((G.data && G.data.plan && G.data.plan.rooms) || []).some((r) => r.floor); const fy = (f) => (G.world && G.world.floorY ? G.world.floorY(f) : f * 3.4); const floorOf = (y) => { let f = 0; while (f > -4 && y + 0.3 < fy(f) - 1.0) f--; while (f < 8 && fy(f + 1) <= y + 0.3) f++; return f; }; return G.selectables().map((t) => ({ id: t.id, floor: multi ? floorOf(t.min[1]) : undefined, v: { min: t.min, max: t.max }, min: t.min, max: t.max }));", aim: "const t = G.pickNow(); return t ? t.kind + ':' + t.id : null;" }
   : {};
 const W = +opt("--width", 1280), H = +opt("--height", 720);
 const GAME = opt("--game", PRE.game || "(window.game || window.__game)");

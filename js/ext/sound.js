@@ -64,10 +64,18 @@ export function installSound(ext, G) {
     'hit-person': (o) => burst({ dur: 0.18, f: 300, gain: 0.5 * o.g, pan: o.pan }),
     sever: (o) => { burst({ dur: 0.35, f: 520, q: 2, gain: 0.6 * o.g, pan: o.pan, sweep: 0.4 }); },
     fall: (o) => burst({ dur: 0.3, f: 160, gain: 0.7 * o.g, pan: o.pan }),
+    // 1.4.0 #3: the body - the heart (lub-dub, low), the breath (a rough swell in and out), a gasp at a bite
+    heart: (o) => { thump(62, 44, 0.16, 0.7 * o.g); setTimeout(() => thump(56, 40, 0.14, 0.5 * o.g), 210); },
+    breath: (o) => { burst({ dur: 0.7, f: 900, type: 'bandpass', q: 0.8, gain: 0.16 * o.g, attack: 0.35 }); setTimeout(() => burst({ dur: 0.9, f: 650, type: 'bandpass', q: 0.8, gain: 0.13 * o.g, attack: 0.25 }), 820); },
+    // 1.4.0 #15: fists on a shut door (two or three heavy blows and the frame rattling), and a knock of the player's own
+    bang: (o) => { const n = 2 + Math.floor(Math.random() * 2); for (let i = 0; i < n; i++) setTimeout(() => { thump(95, 48, 0.2, 0.9 * o.g); burst({ dur: 0.12, f: 520, gain: 0.45 * o.g, pan: o.pan }); }, i * 230); },
+    shut: (o) => { thump(120, 60, 0.18, 0.7 * o.g); click(700, 0.04, 0.2); },
+    knock: (o) => { for (let i = 0; i < 3; i++) setTimeout(() => { thump(240, 160, 0.06, 0.5 * o.g); click(1100, 0.02, 0.12); }, i * 170); },
+    gasp: (o) => burst({ dur: 0.35, f: 1400, type: 'bandpass', q: 1.2, gain: 0.3 * o.g, attack: 0.03, sweep: 0.6 }),
   };
-  G.sfx = (name) => {
+  G.sfx = (name, o = {}) => {
     if (name === 'hurt') return G.sfx3d(`hurt-${1 + Math.floor(Math.random() * 2)}`, null);
-    if (SYN[name]) return SYN[name]({ g: 1, pan: 0 });
+    if (SYN[name]) return SYN[name]({ g: o.g ?? 1, pan: 0 });
   };
   // from a place in the world: quieter with distance (nothing past 24 m), panned by where it is
   G.sfx3d = (name, pos) => {

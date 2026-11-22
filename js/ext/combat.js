@@ -4,7 +4,12 @@
 //   { kind, pos: Vector3, raycast(ray) -> { part, dist, point } | null, hit(ray|part, dmg, o) -> result, alive }
 import * as THREE from 'three';
 import { CATALOG } from './case-data.js';
-import { drawWeapon, KICK, FP_SIZE } from './weapon-art.js';
+import { createFpRig } from '../kit/fp-voxel.js';
+import { fpParts } from '../kit/fp-voxel-parts.js';
+// how far each gun kicks (1 = the pistol); how each weapon strikes (the guns: a shove with the gun)
+const KICK = { nailgun: 0.4, pistol: 1, rifle: 1.5, shotgun: 2.2 };
+const STRIKE = { scalpel: 'stab', pipe: 'chop', axe: 'chop', hands: 'shove' };
+const FP_IDS = ['hands', 'scalpel', 'pipe', 'axe', 'nailgun', 'pistol', 'shotgun', 'rifle'];
 import { KINDS, isRead } from '../kit/toast-lane.js';
 
 // few notices (UI rule): one at a time at the top, short, then gone
@@ -23,6 +28,7 @@ export function installCombat(ext, G) {
   let reloadMax = 1;
   // 1.2.0 #7: the hand sways - it lags the look and bobs with the steps (px of the 320 x 192 picture)
   const sway = { x: 0, y: 0, yaw: null, phase: 0, px: null, pz: null };
+  let beatT = 0, breathT = 0, lastSat = 1;
   let hintT = 0, cool = 0, reloading = 0, swing = 0, kick = 0, flashT = 0, grab = null, hurtFlash = 0, regen = 0;
   const heldNow = () => { const it = G.equip && G.case.byUid(G.equip); return it ? { it, c: CATALOG[it.id] } : { it: null, c: CATALOG.hands }; };
   G.held = heldNow;
@@ -52,28 +58,53 @@ export function installCombat(ext, G) {
 
   // ---------------------------------------------------------------- HUD: body, weapon, ammo; the weapon in the hand; the part under the sights
   const el = document.createElement('div'); el.id = 'yk-status'; el.className = 'yk-status';
-  el.innerHTML = '<div class="yk-hp"><i></i></div><div class="yk-w"><b class="yk-wn"></b><span class="yk-wa"></span></div>';
-  const view = document.createElement('canvas'); view.id = 'yk-weapon'; view.width = FP_SIZE[0]; view.height = FP_SIZE[1]; view.className = 'yk-weapon';
+  // 1.4.0 (play test #3 「体力の減り具合をわかりやすく大きく」): the body is a big bar with its number, the lost part lingers a moment
+  // (so a bite reads as a chunk); (#9 「武器の切り替え方がわからない」): under the weapon, the next one and how to change to it
+  el.innerHTML = '<div class="yk-hpbox"><span class="yk-hpl">体力</span><b class="yk-hpn">100</b><div class="yk-hp"><s></s><i></i></div></div><div class="yk-w"><b class="yk-wn"></b><span class="yk-wa"></span></div><button type="button" class="yk-wnext" tabindex="-1"><span class="yk-wk"></span><span class="yk-wnx"></span></button>';
+  // 1.4.0 (play test #1 「手や武器も3Dドットで作成してください」): the hand and the weapon are 3D dot models in the scene, on the camera
+  // (kit js/fp-voxel.js + js/fp-voxel-parts.js: 4 mm voxels, the doctor's white coat sleeve, the fingers round each grip), lit by the
+  // world and the light, under the dot post-process; the motions are the 1.2.0 ones in 3D (sway, recoil, reload, strike, the light hand)
+  let rig = null, rigId = '', bloodT = 0;
   const blood = document.createElement('div'); blood.id = 'yk-blood'; blood.className = 'yk-blood';
   const grabTag = document.createElement('div'); grabTag.id = 'yk-grab'; grabTag.className = 'yk-grab';
   // 1.2.1 (tougher zombies: the hits must read): four hard ticks round the sights for a moment on every hit - white on the body,
   // red and wider on the head, red and wide on a kill; with a crisp tick sound of its own (the 3D thud comes from the zombie)
   const mark = document.createElement('div'); mark.id = 'yk-hitmark'; mark.className = 'yk-hitmark'; mark.innerHTML = '<i></i><i></i><i></i><i></i>';
   let markT = 0;
+  // 1.4.0 #13: the weapon drops while it points at a person who is not hostile, with a word under the sights
+  const aimTag = document.createElement('div'); aimTag.id = 'yk-aimtag'; aimTag.className = 'yk-aimtag';
+  let lowK = 0, aimAt = null, aimT = 0;
   function hitMark(res) {
+    if (res.armor) { mark.className = 'yk-hitmark on armor'; markT = 0.14; return; }   // a glance off armour: grey ticks, no crack
     const kind = res.killed ? 'kill' : res.part === 'head' ? 'head' : 'body';
     mark.className = `yk-hitmark on ${kind}`; markT = kind === 'body' ? 0.12 : 0.2;
     G.sfx(kind === 'body' ? 'hit-tick' : 'hit-crack');
   }
   const bestRes = (a, b) => { const r = (x) => (!x || !x.part ? 0 : x.killed ? 3 : x.part === 'head' ? 2 : 1); return r(b) > r(a) ? b : a; };
+  let shownHp = -1, lagHp = 100, lagT = 0, hudKey = '';
+  const nextWeapon = () => { const ws = G.case ? G.case.weapons() : []; if (ws.length < 2) return null; const i = ws.findIndex((w) => w.uid === G.equip); return ws[(i + 1 + ws.length) % ws.length]; };
   function hud() {
     const h = heldNow();
-    el.querySelector('.yk-hp i').style.width = `${Math.max(0, G.hp)}%`;
-    el.querySelector('.yk-hp').classList.toggle('low', G.hp < 35);
+    const hp = Math.max(0, Math.round(G.hp));
+    if (hp !== shownHp) {
+      if (hp < shownHp) { lagT = 0.9; lagHp = Math.max(lagHp, shownHp); } else if (hp > lagHp) lagHp = hp;
+      shownHp = hp;
+      el.querySelector('.yk-hp i').style.width = `${hp}%`;
+      el.querySelector('.yk-hpn').textContent = String(hp);
+      el.classList.toggle('yk-mid', hp < 60 && hp >= 30); el.classList.toggle('yk-low', hp < 30);
+      el.querySelector('.yk-hp').classList.toggle('low', hp < 30);
+    }
+    el.querySelector('.yk-hp s').style.width = `${Math.max(hp, lagHp)}%`;
+    const nx = nextWeapon(), key = `${nx ? nx.uid : ''}|${G.equip}`;
+    if (key !== hudKey) {
+      hudKey = key;
+      const b = el.querySelector('.yk-wnext'); b.hidden = !nx;
+      if (nx) { el.querySelector('.yk-wk').textContent = ctx && ctx.isTouch ? '持ち替え' : '[Q]・ホイール'; el.querySelector('.yk-wnx').textContent = `次：${CATALOG[nx.id].name}`; }
+    }
     el.querySelector('.yk-wn').textContent = h.c.name;
     el.querySelector('.yk-wa').textContent = h.c.gun ? `${h.it.loaded} / ${G.case.count(h.c.gun.ammo)}${reloading > 0 ? '　装填中' : ''}` : '';
-    view.classList.toggle('yk-bare', !h.it || h.it.id === 'hands');
-    drawWeapon(view, h.it ? h.it.id : 'hands', { swing, kick, flash: flashT > 0, reload: reloading > 0 ? 1 - reloading / reloadMax : 0, swayX: sway.x, swayY: sway.y, light: !!(ctx && ctx.lightOn) });
+    const wid = h.it ? h.it.id : 'hands';
+    if (rig && wid !== rigId) { rigId = wid; rig.set(FP_IDS.includes(wid) ? wid : 'hands'); rig.bloody(bloodT > 0 ? 1 : 0); }
   }
   G.hud = hud;
   ext.on('game:ready', (c) => {
@@ -90,11 +121,21 @@ export function installCombat(ext, G) {
       };
     }
     muzzle = new THREE.PointLight(0xffc070, 0, 14, 1.6); muzzle.name = 'yk-muzzle'; ctx.scene.add(muzzle);
-    document.body.append(view, blood, grabTag, mark);
+    document.body.append(blood, grabTag, mark, aimTag);
+    rig = createFpRig(THREE, ctx.camera, { ...fpParts({ sleeve: '#b4bbb8', cuff: '#98a19d' }), self: 0.16 });
+    rig.visible = false;
+    if (ctx.isTouch) rig.root.position.x = -0.035;   // a phone's buttons stand on the right: the hand a little in from the edge
+    rig.set('hands'); rigId = '';
+    G.fpRig = rig;
+    // the other weapons are built one at a time while the game is idle (a first change of weapon does not stall)
+    const idle = (f) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(f, { timeout: 3000 }) : setTimeout(f, 300));
+    const queue = [...FP_IDS];
+    const step = () => { const id = queue.shift(); if (!id) return; try { rig.prebuild([id]); } catch (e) { console.warn('[yakinake] fp', id, e); } idle(step); };
+    idle(step);
     if (ctx.isTouch) {   // a phone has no 装填 / 持ち替え / 手当て buttons (the right column stays short): the status panel takes them
       el.classList.add('yk-tap');
       const tap = (sel, f) => el.querySelector(sel).addEventListener('click', (e) => { e.stopPropagation(); if (!ctx.blocked || !ctx.blocked()) f(); });
-      tap('.yk-hp', () => quickHeal()); tap('.yk-wn', () => cycle(1)); tap('.yk-wa', () => reload());
+      tap('.yk-hpbox', () => quickHeal()); tap('.yk-wn', () => cycle(1)); tap('.yk-wa', () => reload()); tap('.yk-wnext', () => cycle(1));
     }
     place();
     hud();
@@ -109,7 +150,7 @@ export function installCombat(ext, G) {
     if (phone || !ctx.registerHudPart) document.body.append(el); else ctx.registerHudPart('yk-status', { slot: 'tl', order: 60, el });
   }
   addEventListener('resize', () => { if (ctx) setTimeout(place, 50); });
-  ext.on('game:start', () => { document.body.classList.add('yk-playing'); place(); hud(); });
+  ext.on('game:start', () => { document.body.classList.add('yk-playing'); if (rig) rig.visible = true; place(); hud(); });
 
   // ---------------------------------------------------------------- input
   const want = { fire: false, melee: false };
@@ -120,6 +161,7 @@ export function installCombat(ext, G) {
     else if (c === 'KeyV') { k.handled = true; want.melee = true; }
     else if (c === 'KeyR') { k.handled = true; reload(); }
     else if (c === 'KeyQ') { k.handled = true; cycle(1); }
+    else if (grab && c === 'Space') { k.handled = true; want.melee = true; }
     else if (c === 'KeyH') { k.handled = true; quickHeal(); }
     else if (/^Digit[1-5]$/.test(c)) { const ws = G.case.weapons(); const w = ws[+c.slice(5) - 1]; if (w) { k.handled = true; G.equipUid(w.uid); } }
   });
@@ -130,6 +172,18 @@ export function installCombat(ext, G) {
   });
   addEventListener('mouseup', (e) => { if (e.button === 0) want.fire = false; });
   addEventListener('contextmenu', (e) => { if (document.pointerLockElement) e.preventDefault(); });
+  // #9: the wheel changes the weapon too (one step a notch, not faster than every 0.15 s)
+  let wheelAt = 0;
+  addEventListener('wheel', (e) => {
+    if (!ctx || !ctx.state.started || !document.pointerLockElement || (ctx.blocked && ctx.blocked())) return;
+    const now = performance.now(); if (now - wheelAt < 150 || !e.deltaY) return; wheelAt = now; cycle(e.deltaY > 0 ? 1 : -1);
+  }, { passive: true });
+  // #9: the first time there are two weapons to change between, how to change them (once a game)
+  G.on('case:change', () => {
+    if (!ctx || !ctx.state.started || !G.case || G.case.weapons().length < 2 || !G.flags || G.flags['hint:switch']) return;
+    G.flags['hint:switch'] = true;
+    setTimeout(() => ctx.ui.say(ctx.isTouch ? '武器が二つになった。持ち替えは、左上の「持ち替え」を押す。' : '武器が二つになった。持ち替えは [Q] かマウスのホイール、数字の 1〜5。', 7), 900);
+  });
   function cycle(d) {
     const ws = G.case.weapons(); if (!ws.length) return ctx.ui.say('構える物がない。', 2);
     const i = ws.findIndex((w) => w.uid === G.equip); G.equipUid(ws[(i + d + ws.length) % ws.length].uid);
@@ -162,11 +216,37 @@ export function installCombat(ext, G) {
     return ray.ray;
   }
   // walls first: what the shot can reach
+  let wallNormal = null;
   const wallHit = (r, far) => {
     ray.ray.copy(r); ray.far = far;
     const hits = ray.intersectObjects(G.solidMeshes(), false);
+    wallNormal = hits.length && hits[0].face ? hits[0].face.normal.clone().transformDirection(hits[0].object.matrixWorld) : null;
     return hits.length ? hits[0].distance : far;
   };
+  // 1.4.0 #13: the person under the sights (the first thing the centre ray meets before a wall), if any
+  function personAimed(maxD) {
+    const cam = ctx.camera; cam.getWorldDirection(fwd);
+    const r = new THREE.Ray(cam.getWorldPosition(new THREE.Vector3()), fwd.clone());
+    const wall = wallHit(r, maxD); let best = null;
+    for (const t of G.targets()) { if (!t.alive) continue; const q = t.raycast(r); if (q && q.dist < wall && (!best || q.dist < best.q.dist)) best = { t, q }; }
+    return best && best.t.kind === 'person' ? best : null;
+  }
+  // the first shot or blow at a person who is not hostile asks 「撃つ？」 (and once more at one who has given up): a stray click never
+  // hurts anyone, and the violence is plainly the player's choice
+  let asking = false;
+  function askFirst(melee) {
+    const a = personAimed(melee ? 2.6 : 30); if (!a || !a.t.guard) return false;
+    want.fire = false; want.melee = false; if (asking) return true; asking = true;
+    const down = a.t.guard === 'ask-down', act = melee ? '殴る' : '撃つ';
+    const text = down ? `${a.t.name}さんは、降参している。それでも、${act}？` : `${a.t.name}さんに、武器を向けている。本当に${act}？`;
+    ctx.choose({ who: '私', text, options: [{ id: 'no', label: 'やめる', primary: true }, { id: 'yes', label: down ? `それでも、${act}` : act }] }).then((v) => {
+      asking = false;
+      if (v === 'yes') { G.personOk(a.t.id, down); G.emit('person:confirmed', { id: a.t.id, down }); ctx.ui.say(down ? 'もう、止まれない。' : '撃てば、もう戻れない。', 2.4); }
+      try { ctx.fp.lock(); } catch (e) { /* no lock */ }
+    });
+    return true;
+  }
+  G.askFirst = askFirst;
   function shoot() {
     const h = heldNow(), g = h.c.gun;
     if (h.it.loaded <= 0) { G.sfx('empty'); cool = 0.25; if (G.case.count(g.ammo)) reload(); else ctx.ui.say(`弾がない。${CATALOG[g.ammo].name}を探す。`, 3, { urgent: true }); return; }
@@ -184,7 +264,14 @@ export function installCombat(ext, G) {
       for (const t of G.targets()) { if (!t.alive && !t.corpse) continue; const q = t.raycast(r); if (q && q.dist < wall) hits.push({ t, q }); }
       hits.sort((a, b) => a.q.dist - b.q.dist);
       const pierce = g.pierce || 1;
-      for (const { t } of hits.slice(0, pierce)) { const res = t.hit(r, g.dmg * (1 - Math.min(0.5, hits.length && t.dist ? 0 : 0)), { force: n > 1 ? 0.5 : 1, dir: [r.direction.x, r.direction.y, r.direction.z] }); if (res && res.part) { anyHit = true; best = bestRes(best, res); } }
+      for (const { t, q } of hits.slice(0, pierce)) {
+        const res = t.hit(r, g.dmg, { force: n > 1 ? 0.5 : 1, dir: [r.direction.x, r.direction.y, r.direction.z], weapon: h.it.id });
+        if (res && res.part) {
+          anyHit = true; best = bestRes(best, res);
+          // 1.4.0 #12: a body shot close to a wall splashes it (the blood setting decides how much)
+          if (!res.armor && t.kind === 'zombie' && wallNormal && wall - q.dist < 2.2 && G.zfx && G.zfx.wallDecal && Math.abs(wallNormal.y) < 0.5) G.zfx.wallDecal(r.at(wall - 0.01, new THREE.Vector3()), [wallNormal.x, wallNormal.y, wallNormal.z], (KICK[h.it.id] || 0.6) * 0.32);
+        }
+      }
       if (!hits.length && wall < 40) G.emit('shot:wall', { point: r.at(wall - 0.02, new THREE.Vector3()) });
     }
     if (anyHit) { G.emit('shot:hit'); hitMark(best); }
@@ -203,21 +290,36 @@ export function installCombat(ext, G) {
       // a body right in front counts even when the ray slips past it (a strike is a wide arc)
       if (!best && t.pos.distanceTo(ctx.camera.position) < m.reach * 0.75) { const to = t.pos.clone().setY(ctx.camera.position.y).sub(ctx.camera.position).normalize(); if (to.angleTo(fwd) < 0.6) best = { t, q: { part: 'chest', dist: 0.8 } }; }
     }
-    if (grab) { grab = null; grabTag.classList.remove('on'); G.sfx('shove'); ctx.ui.say('振りほどいた。', 2); }
     if (!best) return;
-    const res = best.t.hit(best.q.point ? r : best.q.part, m.dmg, { force: m.knock, dir: [r.direction.x, 0, r.direction.z], melee: true, sever: m.sever });
-    if (res && res.part) { G.sfx(h.it && h.it.id === 'scalpel' ? 'stab' : 'thud'); G.noise(ctx.camera.position, 3); hitMark(res); }
+    const res = best.t.hit(best.q.point ? r : best.q.part, m.dmg, { force: m.knock, dir: [r.direction.x, 0, r.direction.z], melee: true, sever: m.sever, weapon: h.it ? h.it.id : 'hands' });
+    if (res && res.part) {
+      G.sfx(h.it && h.it.id === 'scalpel' ? 'stab' : 'thud'); G.noise(ctx.camera.position, 3); hitMark(res);
+      // 1.4.0 #12: blood on the blade / the knuckles after a strike that drew it (with the blood setting on), for a while
+      if (!res.armor && best.t.kind === 'zombie' && G.gore !== 'off') { bloodT = G.gore === 'low' ? 15 : 45; if (rig) rig.bloody(1); }
+    }
   }
 
   // ---------------------------------------------------------------- the body: hurt by zombies and people
+  // 1.4.0 #3 「襲われたらヤバい感じ」: a grab is a struggle - press 殴る ([V] / right button / Space) three times before the teeth
+  // come down, or the bite takes a big chunk (22). Every hurt shakes the view (less with 揺れを抑える), and the edges go red.
+  const NEED = 3, BITE = 22;
+  const paintGrab = () => { grabTag.innerHTML = `<b>つかまれた！</b><span>${ctx.isTouch ? '「殴る」を連打' : '[V]・右クリック・スペースを連打'}</span><i>${'●'.repeat(grab.n)}${'○'.repeat(NEED - grab.n)}</i><u style="--k:${Math.max(0, grab.t / grab.t0).toFixed(3)}"></u>`; };
+  const freeGrab = (won) => {
+    if (!grab) return; const by = grab.by; grab = null; grabTag.classList.remove('on');
+    if (won) { G.sfx('shove'); ctx.ui.say('振りほどいた。', 2); if (by && by.z && !by.z.dead) { try { by.z.hit('chest', 1, { force: 1, dir: [by.z.pos[0] - ctx.camera.position.x, 0, by.z.pos[2] - ctx.camera.position.z] }); } catch (e) { /* the body is gone */ } } G.emit('grab:free', {}); }
+  };
+  let shakeT = 0, shakeK = 0; const shakeOff = { y: 0, p: 0 };
+  G.shake = (k, t = 0.35) => { shakeK = Math.max(shakeK, k * (ctx && ctx.calm ? 0.3 : 1)); shakeT = Math.max(shakeT, t); };
   G.hurt = (dmg, o = {}) => {
     if (!ctx || ctx.state.ended || G.dead) return;
     G.hp -= dmg; hurtFlash = 1; regen = 0; G.sfx('hurt');
-    if (o.grab && !grab) { grab = { t: o.grab + 0.6, by: o.by }; grabTag.textContent = ctx.isTouch ? 'つかまれた！「殴る」で振りほどく' : 'つかまれた！[V]か右クリックで振りほどく'; grabTag.classList.add('on'); }
+    if (dmg > 0) { G.shake(Math.min(1, 0.25 + dmg / 30)); if (dmg >= 15) G.sfx('gasp'); }
+    if (o.grab && !grab) { const t0 = Math.max(1.7, o.grab + 1.1); grab = { t: t0, t0, by: o.by, n: 0 }; paintGrab(); grabTag.classList.add('on'); G.sfx('gasp'); G.emit('grab:start', {}); }
     hud();
     if (G.hp <= 0) { G.dead = true; G.hp = 0; grab = null; grabTag.classList.remove('on'); ctx.die(o.reason || 'bitten'); }
   };
-  ext.on('player:respawn', () => { G.dead = false; G.hp = Math.max(G.hp, 100); grab = null; grabTag.classList.remove('on'); hud(); });
+  ext.on('player:respawn', () => { G.dead = false; G.hp = Math.max(G.hp, 100); grab = null; grabTag.classList.remove('on'); lagHp = 100; hud(); });
+  G.grabbed = () => (grab ? { n: grab.n, need: NEED, t: grab.t } : null);
 
   // ---------------------------------------------------------------- every frame
   ext.registerSystem('yk-combat', {
@@ -229,6 +331,7 @@ export function installCombat(ext, G) {
       if ((hintT -= dt) <= 0) { hintT = 0.25; dropStaleHints(); }
       if (muzzle && muzzle.intensity > 0) muzzle.intensity = flashT > 0 ? muzzle.intensity : Math.max(0, muzzle.intensity - dt * 400);
       swing = Math.max(0, swing - dt * 3); kick = Math.max(0, kick - dt * 6);
+      if (bloodT > 0) { bloodT -= dt; if (bloodT <= 0 && rig) rig.bloody(0); }
       { const cam = ctx.camera.position, yaw = ctx.fp ? ctx.fp.yaw : 0;
         if (sway.yaw == null) { sway.yaw = yaw; sway.px = cam.x; sway.pz = cam.z; }
         let dy = yaw - sway.yaw; if (dy > Math.PI) dy -= 2 * Math.PI; if (dy < -Math.PI) dy += 2 * Math.PI;
@@ -239,17 +342,42 @@ export function installCombat(ext, G) {
         const k = 1 - Math.exp(-dt * 10);
         sway.x += (lagX + Math.sin(sway.phase) * 7 * step - sway.x) * k;
         sway.y += (Math.abs(Math.cos(sway.phase)) * 9 * step - sway.y) * k; }
-      hurtFlash = Math.max(0, hurtFlash - dt * 1.6); blood.style.opacity = String(Math.min(0.85, hurtFlash * 0.7 + (G.hp < 35 ? 0.25 + Math.sin(performance.now() / 300) * 0.08 : 0)));
+      if ((aimT -= dt) <= 0) { aimT = 0.12; const a = !busy && personAimed(14); aimAt = a && a.t.guard ? a.t : null;
+        aimTag.textContent = aimAt ? (aimAt.guard === 'ask-down' ? `${aimAt.name}さんは、降参している` : `${aimAt.name}さん（撃たない）`) : ''; aimTag.classList.toggle('on', !!aimAt); }
+      lowK += ((aimAt ? 1 : 0) - lowK) * Math.min(1, dt * 8);
+      if (rig) { rig.root.position.y = -0.11 * lowK; rig.root.rotation.x = -0.6 * lowK; }
+      if (rig) { const h = heldNow(), id = h.it ? h.it.id : 'hands'; rig.update(dt, { swayX: sway.x, swayY: sway.y, kick: kick * (KICK[id] || 1) / 1.6, swing, strike: STRIKE[id] || 'shove', reload: reloading > 0 ? 1 - reloading / reloadMax : 0, light: !!ctx.lightOn, flash: flashT > 0, level: ctx.lightOn ? 0.92 : 0.62 }); }
+      // the red edge: a flash on every hurt, and a rim that deepens as the life goes (pulsing with the heart under 30)
+      hurtFlash = Math.max(0, hurtFlash - dt * 1.4);
+      { const low = Math.max(0, (60 - G.hp) / 60), pulse = G.hp < 30 ? Math.sin(performance.now() / 260) * 0.08 : 0;
+        blood.style.opacity = String(Math.min(0.95, hurtFlash * 0.75 + low * 0.7 + pulse)); }
       if (reloading > 0) { reloading -= dt; if (reloading <= 0) { const h = heldNow(); if (h.c.gun) { const need = h.c.gun.mag - h.it.loaded; h.it.loaded += G.case.take(h.c.gun.ammo, need); G.sfx('reloaded'); } } }
-      if (grab) { grab.t -= dt; G.hp -= dt * 5; if (G.hp <= 0) G.hurt(0, { reason: 'bitten' }); if (grab && grab.t <= 0) { grab = null; grabTag.classList.remove('on'); } }
+      if (grab) {
+        grab.t -= dt; G.hp -= dt * 4; if (G.hp <= 0) G.hurt(0, { reason: 'bitten' });
+        if (grab && grab.t <= 0) { freeGrab(false); G.hurt(BITE, { reason: 'bitten' }); G.shake(1, 0.5); if (!G.dead) ctx.ui.say('噛まれた。', 2, { urgent: true }); }
+        else if (grab) paintGrab();
+      }
+      lagT -= dt; if (lagT <= 0 && lagHp > G.hp) lagHp = Math.max(G.hp, lagHp - dt * 60);
+      // the shake: a jolt of the look that dies away (taken back every frame, so the aim does not drift)
+      if (ctx.fp) {
+        ctx.fp.yaw -= shakeOff.y; ctx.fp.pitch -= shakeOff.p; shakeOff.y = shakeOff.p = 0;
+        if (shakeT > 0) { shakeT -= dt; const a = shakeK * Math.max(0, shakeT) * 0.12; shakeOff.y = (Math.random() - 0.5) * a; shakeOff.p = (Math.random() - 0.5) * a; ctx.fp.yaw += shakeOff.y; ctx.fp.pitch += shakeOff.p; if (shakeT <= 0) shakeK = 0; }
+      }
+      // low on life: the heart is heard (faster the lower), the breath under 30, the colour drains from the view
+      beatT -= dt;
+      if (G.hp < 45 && beatT <= 0) { beatT = 60 / (72 + (45 - G.hp) * 2.2); G.sfx('heart', { g: 0.5 + (45 - G.hp) / 60 }); }
+      breathT -= dt;
+      if (G.hp < 30 && breathT <= 0) { breathT = 2.1 + Math.random() * 0.5; G.sfx('breath', { g: 0.35 + (30 - G.hp) / 60 }); }
+      { const sat = G.hp < 40 ? Math.max(0.25, G.hp / 40) : 1;
+        if (Math.abs(sat - lastSat) > 0.02 || (sat === 1 && lastSat !== 1)) { lastSat = sat; const v = document.getElementById('view'); if (v) v.style.filter = sat < 1 ? `saturate(${sat.toFixed(2)}) contrast(${(1 + (1 - sat) * 0.15).toFixed(2)})` : ''; } }
       // slow mending while nothing hurts (to 40 at most: real healing needs the case)
       regen += dt; if (regen > 8 && G.hp < 40) G.hp = Math.min(40, G.hp + dt * 0.8);
-      // a shove frees a grab at once, even while the last swing is still recovering (the swing itself follows when it can)
-      if (grab && want.melee && !busy) { grab = null; grabTag.classList.remove('on'); G.sfx('shove'); ctx.ui.say('振りほどいた。', 2); }
+      // a struggle press counts at once, even while the last swing is still recovering (and does not swing)
+      if (grab && want.melee && !busy) { want.melee = false; grab.n++; G.sfx('shove'); G.shake(0.3, 0.15); if (grab.n >= NEED) freeGrab(true); else paintGrab(); }
       if (!busy && cool <= 0) {
         const h = heldNow();
-        if (want.melee) { want.melee = false; strike(); }
-        else if (want.fire) { if (h.c.gun) { shoot(); if (!(h.c.gun.rate < 0.35)) want.fire = false; } else { want.fire = false; strike(); } }
+        if (want.melee) { if (!askFirst(true)) { want.melee = false; strike(); } }
+        else if (want.fire) { if (h.c.gun) { if (!askFirst(false)) { shoot(); if (!(h.c.gun.rate < 0.35)) want.fire = false; } } else if (!askFirst(true)) { want.fire = false; strike(); } }
       } else if (busy) { want.fire = false; want.melee = false; }
       hud();
     },

@@ -4,7 +4,10 @@
 // ending it must reach. "combat" checks the shooter itself with real keys: a shot to the legs makes a crawler, a shot to the head
 // kills, melee, grab and shove, the case (equip, combine, heal), death -> the last checkpoint with the case as it was.
 // "offroute" presses things out of order (locked doors, tasks before their needs, a full case) and walks into side rooms.
-//   node tools/play-routes.mjs [--route E1|E2|E3|E4|mart-fight|combat|offroute|all] [--mobile] [--shots dir]
+// 1.4.0 (#13): E5 / E6 kill a person who was not hostile and go alone (the pilot refuses: step back / take it by force), E7 the mixed
+// way (hostile to the mart, allied with the station); "attack" attacks one of every group off the route: the 「撃つ？」 confirm stops the
+// first shot, the hit turns the group, the others answer (fight / shoot / flee), a killed person's task is done by force (no soft-lock).
+//   node tools/play-routes.mjs [--route E1|E2|E3|E4|E5|E6|E7|mart-fight|combat|offroute|attack|all] [--mobile] [--shots dir]
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,9 +22,12 @@ const ROUTES = {
   E4: { pref: ['trade', 'fight', 'join', 'share', 'give', 'go'], end: 'E4' },
   E2: { pref: ['sneak', 'talk', 'no', 'refuse'], end: 'E2' },
   'mart-fight': { pref: ['fight', 'talk', 'join', 'all', 'expose'], end: 'E2', fight: true },
+  E5: { pref: ['sneak', 'talk', 'no', 'refuse', 'down'], end: 'E5', kill: 'nishina' },
+  E6: { pref: ['sneak', 'talk', 'no', 'refuse', 'force'], end: 'E6', kill: 'nishina' },
+  E7: { pref: ['sneak', 'talk', 'join', 'share', 'expose'], end: 'E7', kill: 'nishina' },
 };
 const which = arg('--route', 'all');
-const list = which === 'all' ? [...Object.keys(ROUTES), 'combat', 'offroute'] : which.split(',');
+const list = which === 'all' ? [...Object.keys(ROUTES), 'combat', 'offroute', 'attack'] : which.split(',');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const port = 20000 + Math.floor(Math.random() * 20000);
 const server = spawn(process.execPath, [path.join(import.meta.dirname, 'serve.js'), '--port', String(port)], { stdio: 'ignore' });
@@ -63,6 +69,45 @@ async function run(route) {
   const press = async (name) => { await dismiss(); const a = await approach(name); if (a !== 'ok') { log('cannot reach', name, a, JSON.stringify(await G("({ blocked: g.blocked && g.blocked(), wm: g.wm.current, ui: !!g.ui.open, target: g.target && g.target.id, floor: g.floor, blockers: (g.blockers || []).map((f) => !!f()), mg: !!g.mgOpen, rn: !!g.rnOpen, started: g.state.started, ended: g.state.ended, ov: [...document.querySelectorAll('[class*=mg-], .reading, .lane')].filter((e) => e.offsetParent).map((e) => e.className).slice(0, 4), dead: !!g.state.dead, hold: !!g.holding })"))); return false; } await p.key('KeyE'); await sleep(400); return true; };
   // clear the zombies near the player (the play scripts are about the story; "combat" checks the fighting)
   const calm = () => G('(y.liveZombies().forEach((L) => { if (L.alive && L.z && L.z.root && L.z.root.position.distanceTo(g.camera.position) < 12) L.z.kill(); }), 1)');
+  // 1.4.0 #13: people
+  const J = JSON.stringify;
+  const arm = () => G("(() => { if (!y.case.items.some((i) => i.id === 'pistol')) y.case.add('pistol', 1, { loaded: 8 }); y.case.add('p9', 40); const w = y.case.items.find((i) => i.id === 'pistol'); if (w) { w.loaded = 8; y.equipUid(w.uid, { quiet: true }); } return 1; })()");
+  const pState = (id) => G(`(() => { const p = y.person(${J(id)}); return p ? { mode: p.mode, hp: Math.round(p.hp), max: p.max, room: p.room, floor: p.floor, vis: p.f.root.visible } : null; })()`);
+  // stand 2.4 m from a person, in their room, facing them (their block loads first)
+  // stand 1.6-2.4 m from a person, on their room's open side, so nothing stands between
+  const stand = async (id) => {
+    await G(`(() => { const p = y.person(${J(id)}); if (!p) return 0; const o = p.f.root.position, R = g.data.plan.rooms.find((r) => r.id === p.room); let dx = R.x + R.w / 2 - o.x, dz = R.z + R.d / 2 - o.z; const L = Math.hypot(dx, dz) || 1; dx /= L; dz /= L; const k = Math.min(2.4, Math.max(1.6, L)); g.teleport({ x: Math.min(R.x + R.w - 0.5, Math.max(R.x + 0.5, o.x + dx * k)), z: Math.min(R.z + R.d - 0.5, Math.max(R.z + 0.5, o.z + dz * k)), floor: p.floor, yaw: 0 }); return 1; })()`);
+  };
+  const goTo = async (id, room, x, z, floor = 0) => {
+    // blocks load by the stage reached: off the route, the person's block is loaded as the stage would
+    await G(`(() => { const b = y.blockOfRoom(${J(room)}); if (b && y.blocks && y.blocks.current !== b) y.blocks.ensure(b, {}); return 1; })()`); await sleep(300);
+    await G(`(g.teleport({ x: ${x}, z: ${z}, floor: ${floor}, yaw: 0 }), 1)`); await sleep(500); await dismiss(); await sleep(600);
+    // the person's block may still be loading (its screen comes up a moment after the teleport): wait for them, pressing はじめる
+    for (let i = 0; i < 120 && !(await G(`!!y.person(${J(id)})`)); i++) { if (!(await blockGo())) await sleep(500); }
+    await dismiss();
+    await stand(id);
+    await frames(3);
+  };
+  const aimAt = async (id) => { const a = await G(`(() => { const p = y.person(${J(id)}); if (!p) return null; const o = p.f.root.position, low = p.mode === 'down' || p.mode === 'dead' || (p.cover && (p.cover.down || p.cover.ph === 'down')); return [o.x, o.y + p.P.h * (low ? 0.42 : 0.82), o.z]; })()`); if (a) await lookAt(...a); return a; };
+  const fireOnce = async () => { await key('Fire'); await frames(3); await key('Fire', 'keyup'); await sleep(350); await dismiss(); };
+  // shoot a person until `until` (an expression on p) holds; the confirm is answered `answer`; the player kept alive meanwhile
+  const shootPerson = async (id, until, answer = 'yes', max = 40) => {
+    const keep = await p.eval('JSON.stringify(window.__pref)'); await p.eval(`window.__pref = [${J(answer)}]; 1`);
+    for (let i = 0; i < max; i++) {
+      if (await G(`(() => { const p = y.person(${J(id)}); return !p || (${until}); })()`)) break;
+      await G('(y.hp = 100, y.dead = false, 1)'); await arm(); if (i % 3 === 2) { await stand(id); await frames(2); } await aimAt(id); await fireOnce(); await key('KeyR'); await sleep(150);
+    }
+    await p.eval(`window.__pref = ${keep}; 1`);
+    return G(`(() => { const p = y.person(${J(id)}); return !p || (${until}); })()`);
+  };
+  // fight off whoever is hostile now (the ones who fight or shoot) until they give up
+  const fightAll = async () => {
+    for (let i = 0; i < 6; i++) {
+      const foe = await G("(() => { const t = y.peopleTargets().find((t) => t.alive && !t.guard && t.aimPoints().length); return t ? t.id : null; })()");
+      if (!foe) return;
+      await shootPerson(foe, "p.mode === 'down' || p.mode === 'dead'", 'no', 30);
+    }
+  };
   try {
     await p.goto(`${base}?qa=1${mobile ? '&touch=1' : ''}`);
     await p.waitFor("window.__game && document.getElementById('start-btn') && !document.getElementById('start-btn').disabled", 120000);
@@ -81,6 +126,7 @@ async function run(route) {
 
     if (route === 'combat') await combat();
     else if (route === 'offroute') await offroute();
+    else if (route === 'attack') await attack();
     else await story(R);
   } catch (e) { failed++; log('ERROR', e.message); }
   const errs = p.errors.filter((e) => !/favicon|404/.test(e));
@@ -115,13 +161,23 @@ async function run(route) {
         const done = await G(`g.state.tasks.includes(${JSON.stringify(t.id)})`);
         if (!done && !t.optional) log('not done', t.id, await G("document.getElementById('prompt').textContent"));
         else if (done) { log('task', t.id); if (args.includes('--all-shots') || ['T_GONDO', 'T_CULT', 'T_KATA', 'T_RACK', 'T_HAYASE', 'T_HOLD', 'T_HELI'].includes(t.id)) await shot(t.id); }
+        // 1.4.0 #13: the violence routes kill a person who was not hostile (confirmed), then fight off the rest of the group
+        if (t.id === 'T_GONDO' && R.kill && !fought) {
+          fought = true;
+          await goTo(R.kill, 'S_MART', 63, 9); await shot('kill_aim');
+          expect(await shootPerson(R.kill, "p.mode === 'dead'"), `${R.kill} is shot (confirmed 撃つ) and killed (confirmed again once he gives up)`);
+          expect(await G(`!!y.flags['hostile:mart'] && !!y.flags['dead:${R.kill}'] && (y.flags.blood || 0) >= 1`), 'the mart turns hostile; the killing is counted');
+          await shot('killed'); await fightAll();
+          await sleep(600);
+          expect(await G("!!y.flags['mart:open']"), 'the mart beaten: its back door opens (no soft-lock)');
+        }
         // the mart fight: shoot 権藤 and 仁科 until they give up
         if (t.id === 'T_GONDO' && R.fight && !fought) {
           fought = true;
           expect(await G("y.flags['mart:fight'] === true || y.flags.mart === 'fight'"), 'the mart fight starts');
           await G("(() => { const it = y.case.add('pistol', 1, { loaded: 8 }); y.case.add('p9', 40); const w = y.case.items.find((i) => i.id === 'pistol'); if (w) y.equipUid(w.uid); return 1; })()");
           for (let i = 0; i < 80 && !(await G("!!y.flags['mart:open']")); i++) {
-            const t2 = await G("(() => { const t = y.peopleTargets().find((t) => t.alive); if (!t) return null; const p = t.aimPoints()[0]; return [p.x, p.y, p.z]; })()");
+            const t2 = await G("(() => { const t = y.peopleTargets().find((t) => t.alive && !t.guard && t.aimPoints().length); if (!t) return null; const p = t.aimPoints()[0]; return [p.x, p.y, p.z]; })()");
             if (!t2) break;
             await lookAt(...t2); await key('Fire'); await frames(3); await key('Fire', 'keyup'); await key('KeyR'); await sleep(250);
           }
@@ -243,16 +299,74 @@ async function run(route) {
     await dismiss();
     await G('(y.hurt(50, {}), 1)'); const h0 = await G('y.hp'); await key('KeyH'); await sleep(300);
     expect((await G('y.hp')) > h0, `[H] heals (${h0} -> ${await G('Math.round(y.hp)')})`);
-    // death -> the last checkpoint, the case as it was there
+    // 1.4.0 #11: death -> the death card waits for 再開 (no auto-advance) -> back to the last 当直日誌, the case as it was written there
     const before = await G('y.case.items.map((i) => i.id).sort().join(",")');
-    await G('(y.cp = { case: y.case.snapshot(), killed: [...y.killed], flags: { ...y.flags } }, 1)');
+    await G('(y.writeLog(), 1)');
     await G("(y.case.add('medkit', 1), 1)");
+    await G('(g.qa = false, 1)');   // ?qa presses the card's button by itself: off here, to see that it waits
     await G("(y.hurt(500, { reason: 'bitten' }), 1)");
-    await sleep(600); await shot('death');
-    await p.waitFor('!__game.state.dead && window.__yk.hp >= 100', 15000).catch(() => {});
-    await sleep(500);
-    expect((await G('y.case.items.map((i) => i.id).sort().join(",")')) === before, 'after a death the case is as it was at the checkpoint');
+    await sleep(1500); await shot('death');
+    const card = '(() => { const b = document.querySelector(".gf-mo-card button"); return !!b && b.textContent.includes("再開"); })()';
+    expect(await p.waitFor(card, 8000).then(() => true, () => false), 'the death card shows a 再開 button');
+    await sleep(2500);
+    expect(await p.eval(card), 'the death card is still waiting for its button (no auto-advance)');
+    await p.eval('document.querySelector(".gf-mo-card button")?.click(), 1'); await G('(g.qa = true, 1)');
+    await p.waitFor('(() => { const b = document.querySelector(".gf-block-load.on .gf-bl-go"); if (b && !b.disabled) b.click(); return !!window.__yk && !window.__yk.dead && __game.state.started && !document.querySelector(".gf-block-load.on") && !document.querySelector(".gf-mo-card"); })()', 60000).catch(() => {});
+    await sleep(800);
+    expect((await G('y.case.items.map((i) => i.id).sort().join(",")')) === before, 'after a death the case is as it was at the last 当直日誌');
     expect((await G('y.hp')) >= 100, 'after a death the body is whole again');
+  }
+
+  // ------------------------------------------------------------------ 1.4.0 #13: an attack on every group, off the route
+  async function attack() {
+    await dismiss();
+    const groups = [
+      { f: 'hospital', who: 'chisato', room: 'H_NS', at: [9.5, 3.4], others: ['genzo'], task: 'T_CHISATO', next: 'T_RADIO' },
+      { f: 'mart', who: 'nishina', room: 'S_MART', at: [63, 9], others: ['gondo'], task: 'T_NISHINA' },
+      { f: 'cult', who: 'shirasaka', room: 'S_KOMIN', at: [70, 27], others: ['taeko'], task: 'T_CULT', next: 'T_ROPE' },
+      { f: 'alliance', who: 'katagiri', room: 'P_KYU', at: [100, 3.2], others: ['mori'], task: 'T_KATA', next: 'T_GEN' },
+      { f: 'tower', who: 'noguchi', room: 'O_BOSAI', at: [149, 4], others: [], task: 'T_NOGUCHI', next: 'T_SERVER' },
+      { f: 'hayase', who: 'hayase', room: 'O_CHU', at: [149, 4.5], floor: 2, others: [], task: 'T_HAYASE' },
+    ];
+    for (const A of groups) {
+      await goTo(A.who, A.room, A.at[0], A.at[1], A.floor || 0);
+      const s0 = await pState(A.who);
+      if (!s0) { expect(false, `${A.who} is there to be attacked`); continue; }
+      await arm(); await aimAt(A.who); await frames(6);
+      for (let k = 0; k < 4 && !(await G("document.getElementById('yk-aimtag').classList.contains('on')")); k++) { await sleep(600); await stand(A.who); await frames(3); await aimAt(A.who); await frames(6); }
+      expect(await G("document.getElementById('yk-aimtag').classList.contains('on')"), `${A.who}: the sights say 「（撃たない）」 and the weapon drops`);
+      // a shot answered やめる: nothing happens to the person
+      await p.eval("window.__pref = ['no']; 1"); await fireOnce();
+      const s1 = await pState(A.who);
+      expect(s1.hp === s0.hp && s1.mode === s0.mode, `${A.who}: the 「撃つ？」 confirm stopped the shot (hp ${s1.hp}, ${s1.mode})`);
+      expect((await G('window.__chosen.slice(-1)[0]'))?.[1] === 'no', `${A.who}: the confirm was asked`);
+      await shot(`${A.f}_aim`);
+      // 撃つ: the hit turns the group, the others answer
+      expect(await shootPerson(A.who, `p.hp < p.max`), `${A.who}: hit after 撃つ`);
+      await sleep(700);
+      expect(await G(`!!y.flags['hostile:${A.f}'] && y.facState(${J(A.f)}) !== 'friendly'`), `${A.f}: hostile (${await G(`y.facState(${J(A.f)})`)})`);
+      for (const o of A.others) { const so = await pState(o); expect(!so || ['fight', 'shoot', 'flee', 'down'].includes(so.mode), `${A.f}: ${o} answers (${so && so.mode})`); }
+      // a frightened one of a hostile group gives way at [E] (no friendly talk, the task done as by force)
+      if (A.f === 'hospital') {
+        // (T_GENZO's stage is later than here: its registered run is called as [E] would)
+        const r = await p.eval("(async () => { const g = window.__game, n = (g.talkLog || []).length; const ok = await g.ext.reg.task.get('T_GENZO').run(g, g.data.tasks.find((t) => t.id === 'T_GENZO')); return JSON.stringify({ ok, talked: (g.talkLog || []).length - n, mg: !!g.mgOpen }); })()").then(JSON.parse);
+        await dismiss();
+        expect(r.ok === true && !r.talked && !r.mg, `hospital: the frightened 戸川 gives way at [E] (no talk, no mini game: ${JSON.stringify(r)})`);
+      }
+      await shot(`${A.f}_hostile`);
+      // killed: the body stays, the task they stood in is done by force, the way on is open
+      expect(await shootPerson(A.who, "p.mode === 'dead'"), `${A.who}: killed (the second confirm at the one who gave up) ${JSON.stringify(await pState(A.who))} ${JSON.stringify(await G('window.__chosen.slice(-3)'))}`);
+      await sleep(600);
+      expect(await G(`!!y.flags['dead:${A.who}'] && g.state.tasks.includes(${J(A.task)})`), `${A.who}: dead and ${A.task} done by force`);
+      if (A.next) { const why = await G(`(() => { const t = g.data.tasks.find((x) => x.id === ${J(A.next)}); return t.needs.every((n) => g.state.tasks.includes(n)) ? true : 'needs: ' + t.needs.filter((n) => !g.state.tasks.includes(n)).join(','); })()`); expect(why === true, `${A.f}: ${A.next} is not locked behind the dead (${why})`); }
+      await fightAll(); await G('(y.hp = 100, 1)');
+      await shot(`${A.f}_after`);
+    }
+    // the pause menu lists the groups and their state
+    const fac = await G("y.facList().filter((f) => y.flags['met:' + f.id]).map((f) => f.id + ':' + f.state).join(' ')");
+    log('groups', fac);
+    expect(/hostile|wary|gone/.test(fac), 'the groups met show their state (友好 / 警戒 / 敵対)');
+    expect((await G('y.flags.blood')) >= 6, 'six killings counted');
   }
 
   // ------------------------------------------------------------------ off the route

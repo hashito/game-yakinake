@@ -1,4 +1,4 @@
-/* game-kit f89b1fcd: css/kit.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit cad79dd6: css/kit.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: shared styles for first-person browser games (windows, HUD, buttons, touch controls,
    status chips, steppers, kanban, app-like software screens, tabs, stamps, share buttons; at the end
    progression pg-*, sim UI nt-/tb-/dl-/ch-*, journal jr-* / stream veil st-* / hiding hd-*, chat cx-*).
@@ -2837,6 +2837,13 @@ body.touch .hb-tab { min-height: var(--gf-hit, 44px); } /* (U13) the notebook's 
 
 /* pause menu */
 .pm { display: flex; flex-direction: column; gap: var(--gf-space-3, 12px); width: 100%; max-width: 520px; margin: 0 auto; padding: var(--gf-space-2, 8px) 0; }
+.pm.pm-wide { max-width: 980px; display: grid; grid-template-columns: minmax(220px, 320px) 1fr; align-items: start; }
+.pm-panel { min-width: 0; padding: var(--gf-space-3, 12px); border: 1px solid var(--gf-border, var(--line, #d8d2c2)); border-radius: var(--gf-radius, 12px); background: var(--gf-surface, rgba(0,0,0,.04)); }
+@media (max-width: 640px) { .pm.pm-wide { grid-template-columns: 1fr; } .pm.pm-wide .pm-panel { order: -1; } }
+/* 1.35.3: beside the panel the buttons are one column (the 2-column list of a short window squeezed them into one character a line);
+   a landscape phone puts the buttons (two columns, full width) above the panel instead */
+.pm.pm-wide .pm-list { display: flex; flex-direction: column; }
+@media (max-height: 480px) and (min-width: 641px) { .pm.pm-wide { grid-template-columns: 1fr; } .pm.pm-wide .pm-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; } .pm.pm-wide .pm-item { min-height: 44px; } }
 .pm-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--gf-space-3, 12px); }
 .pm-item, .pm-back { position: relative; box-sizing: border-box; width: 100%; min-height: 52px; display: flex; align-items: center; gap: var(--gf-space-3, 12px); padding: 0 var(--gf-space-4, 18px); border: 1px solid var(--gf-border, var(--line, #d8d2c2)); border-radius: var(--gf-radius, 12px); background: var(--gf-surface-2, #fff); color: var(--gf-text, inherit); font: inherit; font-size: 1.02em; text-align: left; cursor: pointer; }
 .pm-item:hover, .pm-back:hover { background: var(--gf-surface, #f4efe2); border-color: var(--gf-accent, #3a7a5a); }

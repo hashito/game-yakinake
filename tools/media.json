@@ -281,12 +281,45 @@
    "key": "item-ROOFKEY",
    "size": "1024x768",
    "prompt": "an old brass key lying in a small open wooden puzzle box, a single object close up, top three-quarter view, centred, on a dark worn surface, dramatic small light, sharp focus, product shot"
+  },
+  {
+   "key": "end-e5",
+   "size": "1344x768",
+   "prompt": "a lone woman in a white doctor coat stained with blood sitting alone in the middle of an empty rooftop helipad at sunrise, a rescue helicopter flying away empty into the orange sky, a handgun lying on the concrete beside her, seen from behind, long shadow"
+  },
+  {
+   "key": "end-e6",
+   "size": "1344x768",
+   "prompt": "inside a rescue helicopter cabin at sunrise, rows of empty seats, a pilot's gloved hands tense on the controls in the foreground, through the window far below tiny grey rooftops of a small port town seen from high above, blank roofs, no signs, cold orange light, oppressive mood"
+  },
+  {
+   "key": "end-e7",
+   "size": "1344x768",
+   "prompt": "a woman doctor in a bloodstained white coat sitting in a crowded rescue helicopter at sunrise among tired police officers and civilians, a policewoman sitting across from her watching her silently, orange light through the window, the town below"
+  },
+  {
+   "key": "item-MARTKEY",
+   "size": "1024x768",
+   "prompt": "a small silver padlock key with a blank white plastic key tag attached by a ring, the key clearly visible, a single object close up, top three-quarter view, centred, on a dark worn steel shelf, dramatic small light, sharp focus, product shot"
+  },
+  {
+   "key": "item-KLEADKEY",
+   "size": "1024x768",
+   "prompt": "a plain brass door key on a faded purple silk cord, a single object close up, top three-quarter view, centred, on a dark worn tatami surface, dramatic small light, sharp focus, product shot"
+  },
+  {
+   "key": "item-CELLARKEY",
+   "size": "1024x768",
+   "prompt": "an old iron padlock key with a small blank brown paper tag tied with string, nothing written, a single object close up, top three-quarter view, centred, on a dark worn wooden surface, dramatic small light, sharp focus, product shot"
   }
  ],
  "seeds": {
   "doc-cult": 19,
   "th-sign": 7,
   "th-bus": 7,
-  "th-track": 7
+  "th-track": 7,
+  "end-e6": 7,
+  "item-MARTKEY": 13,
+  "item-CELLARKEY": 7
  }
 }
