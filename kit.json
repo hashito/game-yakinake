@@ -1,5 +1,5 @@
 {
-  "kit": "0c515586",
+  "kit": "6eebcac2",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -176,7 +176,7 @@
     "rest-check.mjs"
   ],
   "hashes": {
-    "js\\kit\\game-core.js": "5ec4c299ea69",
+    "js\\kit\\game-core.js": "078a676501ea",
     "js\\kit\\item-kinds.js": "1df558ca9be9",
     "js\\kit\\item-models.js": "8c5988e07991",
     "js\\kit\\prop-geo.js": "6015f33a97f7",
@@ -197,7 +197,7 @@
     "js\\kit\\controller.js": "2af0a57f1ad2",
     "js\\kit\\toast-lane.js": "f506276b7744",
     "js\\kit\\gf-test.js": "a4e645fd0759",
-    "js\\kit\\hud-slots.js": "df75b4d75fee",
+    "js\\kit\\hud-slots.js": "d21cd7a4a16c",
     "js\\kit\\progression.js": "2d3255c6a2ae",
     "js\\kit\\progress-ui.js": "cac298c91de4",
     "js\\kit\\icons.js": "200a56f3412d",
@@ -313,7 +313,7 @@
     "tools/frame-flicker.mjs": "ce7b9b4c2524",
     "tools/frame-nest.mjs": "f8b51a40e0ff",
     "tools/frame-padding.mjs": "a010268c76da",
-    "tools/hud-checks.mjs": "f6eacc95bcf7",
+    "tools/hud-checks.mjs": "437fd870a683",
     "tools/menu-checks.mjs": "6844b25b665c",
     "tools/phone-layout.mjs": "135f79b0e13f",
     "tools/scene-luma.mjs": "d81614872784",
@@ -345,7 +345,7 @@
     "js\\kit\\mg-rotate-pipes.js": "6cbd61c9506b",
     "js\\kit\\mg-puzzle-box.js": "246d9eda6b28",
     "js\\kit\\moments.js": "2ceefac9e3f6",
-    "js\\kit\\dot-zombie.js": "b9679a9ebd7c",
+    "js\\kit\\dot-zombie.js": "1f0b11f5f416",
     "js\\kit\\sprite-stack-mesh.js": "11e65f7be71f",
     "js\\kit\\sprite-stack-anim.js": "760d53cbfba8",
     "js\\kit\\mg-library.js": "fcc07a893fef",
@@ -356,7 +356,7 @@
     "js\\kit\\footprints.js": "302cff91ef43",
     "tools/build-site.js": "c8beaa333016",
     "tools/make_og.py": "5f7a64af835d",
-    "tools/rest-check.mjs": "f5ea5eeb15b8"
+    "tools/rest-check.mjs": "1ce04607e207"
   },
   "textures": []
 }

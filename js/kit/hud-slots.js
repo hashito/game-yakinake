@@ -1,4 +1,4 @@
-/* game-kit a0cd84bd: js/hud-slots.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 6eebcac2: js/hud-slots.js — edit in game-kit and run tools/kit-sync.js */
 // HUD slots (rule U27, docs/hud-slots.md): every HUD part has ONE region, so notifications can never sit on the clock, the sensors or the menu.
 //
 //   tl      top-left stack   goal chip, STEP chip                       (#hud-left, flow, order)
@@ -200,8 +200,11 @@ function startObserving() {
     observers.push(ro);
   }
   if (typeof MutationObserver === "function") {
-    const mo = new MutationObserver(schedule);
+    // 1.30.1: at once (a MutationObserver runs before the next paint), not on the next frame: a stack that appears together with a lane
+    // card (the clock with the first place card, ミル配達) moved the card one frame later - a layout shift (CLS) on a phone
+    const mo = new MutationObserver(() => { if (rafId && typeof cancelAnimationFrame === "function") cancelAnimationFrame(rafId); rafId = 0; layoutHudSlots(); });
     for (const id of ["hud-left", "hud-right", "t-right"]) { const e = document.getElementById(id); if (e) mo.observe(e, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "hidden", "style"] }); }
+    for (const e of [document.body, document.getElementById("hud")]) if (e) mo.observe(e, { attributes: true, attributeFilter: ["class", "hidden"] });   // the HUD shown / a phone class (the clock comes with them)
     observers.push(mo);
   }
   schedule();

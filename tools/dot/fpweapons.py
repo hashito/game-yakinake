@@ -480,32 +480,74 @@ def hands():
 
 
 def flashlight():
-    """the left hand with a pen light, lower left; the lens glows"""
+    """the left hand round a torch at the lower left, pointing ahead into the room (1.2.1): the tail cap under the hand, the knurled
+    barrel, the flared head with its bezel ring seen from behind (the lens faces away; only a sliver of its light shows at the rim),
+    and a dithered beam leaving the lens toward the middle of the screen"""
     im, _ = canvas()
+    tail, head = (44, 182), (124, 100)
+    dx, dy = head[0] - tail[0], head[1] - tail[1]; Lh = math.hypot(dx, dy)
+    ux, uy = dx / Lh, dy / Lh                     # along the barrel, toward the lens
+    nx, ny = -uy, ux                               # across it
+    at = lambda t, s=0: (tail[0] + ux * t + nx * s, tail[1] + uy * t + ny * s)
+    # the beam: a pale wedge of dithered pixels from the lens toward the middle (drawn first, under everything)
+    B = Image.new('RGBA', (W, H), (0, 0, 0, 0)); bp = B.load()
+    hx, hy = at(Lh + 2)
+    for y in range(H):
+        for x in range(W):
+            vx, vy = x - hx, y - hy
+            t = vx * ux + vy * uy
+            if t <= 0 or t > 100:
+                continue
+            s = abs(vx * nx + vy * ny)
+            half = 11 + t * 0.42
+            if s > half:
+                continue
+            k = (1 - t / 100) * (1 - (s / half) ** 2)
+            a = int(120 * k)
+            if a < 14 or (x + y) % 2 and k < 0.55:
+                continue
+            bp[x, y] = (255, 240, 190, a)
+    im.alpha_composite(B)
+    # the sleeve and cuff
     L2, d2 = layer()
-    P(d2, quad((46, 164), (0, 200), 46, 60), 'co2')
-    Ln(d2, (30, 150), (-6, 186), 'co4', 2)
-    P(d2, quad((52, 152), (40, 168), 34, 40), 'cu1')
-    Ln(d2, (38, 144), (66, 152), 'cu3')
+    P(d2, quad((40, 176), (-4, 206), 46, 62), 'co2')
+    Ln(d2, (24, 162), (-10, 192), 'co4', 2)
+    P(d2, quad((46, 166), (34, 182), 34, 40), 'cu1')
+    Ln(d2, (32, 158), (60, 166), 'cu3')
     paste(im, L2)
     G, d = layer()
-    tube(d, (70, 160), (112, 96), 14, ('g0', 'g1', 'g2', 'g4'))
-    P(d, [(104, 90), (124, 84), (128, 104), (110, 108)], 'g2')       # the head
-    disc(d, 117, 94, 8, 'lensD'); disc(d, 117, 94, 6, 'lens'); disc(d, 115, 92, 2, 'bulb')
-    for i in range(5):
-        Ln(d, (78 + i * 4, 150 - i * 6), (88 + i * 4, 154 - i * 6), 'g0')   # the knurl
-    Ln(d, (96, 120), (100, 114), 'g4', 2)                             # the switch
+    tube(d, at(6), at(Lh - 22), 15, ('g0', 'g1', 'g2', 'g4'), cap=False)                 # the barrel
+    tube(d, at(0), at(8), 16, ('g0', 'g0', 'g1', 'g2'), cap=False)                         # the tail cap
+    for t in range(30, int(Lh - 34), 4):                                                    # the knurl
+        Ln(d, at(t, -6), at(t + 2, 6), 'g0')
+    P(d, quad(at(Lh - 24), at(Lh - 4), 15, 24), 'g1')                                      # the flared head
+    P(d, quad(at(Lh - 22, -3), at(Lh - 5, -5), 4, 6), 'g2')
+    Ln(d, at(Lh - 22, -6), at(Lh - 5, -10), 'g4')
+    # the bezel ring seen from behind: an ellipse across the axis, rim lit at the top, a sliver of lens light at the far edge
+    cx, cy = at(Lh - 2)
+    pts = []
+    for i in range(24):
+        a = i / 24 * math.tau
+        pts.append((cx + nx * math.cos(a) * 13 + ux * math.sin(a) * 4, cy + ny * math.cos(a) * 13 + uy * math.sin(a) * 4))
+    P(d, pts, 'g2')
+    inner = [(cx + (p[0] - cx) * 0.72 + ux * 1.5, cy + (p[1] - cy) * 0.72 + uy * 1.5) for p in pts]
+    P(d, inner, 'lensD')
+    P(d, [(cx + (p[0] - cx) * 0.5 + ux * 2.5, cy + (p[1] - cy) * 0.5 + uy * 2.5) for p in pts], 'lens')
+    Ln(d, pts[18], pts[6], 'g4')
+    Ln(d, at(Lh - 30, -8), at(Lh - 30, 8), 'g0', 2)                                        # where the head screws on
+    P(d, quad(at(Lh * 0.62, -7), at(Lh * 0.62 + 7, -7), 4), 'g4')                           # the switch
     paste(im, G)
     L, d = layer()
-    back_of_hand(d, [(48, 136), (86, 116), (96, 156), (60, 172)])
+    # the hand: the back of the hand under the barrel, four fingers wrapping across it, the thumb along the top on the switch
+    back_of_hand(d, [at(14, 18), at(46, 20), at(52, 4), at(20, -2), at(4, 14)])
     for i in range(4):
-        y0 = 126 + i * 10
-        finger(d, (70, y0 + 6), (96, y0 - 4), 9, tip=(100, y0 + 4))
-        Ln(d, (72, y0 + 11), (98, y0 + 2), 'sk0')
-    knuckles(d, [(66 + i * 2, 132 + i * 10) for i in range(4)], 4)
-    finger(d, (60, 128), (84, 110), 10, nail=True, tip=(98, 104))     # the thumb on the switch
+        t = 16 + i * 9
+        finger(d, at(t, 14), at(t + 2, -4), 9, tip=at(t + 4, -11))
+        Ln(d, at(t - 3, 6), at(t + 5, 6), 'sk0')
+    knuckles(d, [at(14 + i * 9, 17) for i in range(4)], 4)
+    finger(d, at(8, -10), at(30, -12), 10, tip=at(Lh * 0.62 - 2, -11), nail=True)            # the thumb, its tip by the switch
     paste(im, L)
-    return im, (117, 94)
+    return im, (round(cx), round(cy))
 
 
 def main():

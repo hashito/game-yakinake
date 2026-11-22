@@ -9,6 +9,8 @@
 //   A thick thing standing against a wall in the air (a radio at 1 m with no shelf under it) does not rest: that was the floating radio.
 //   -> [{ name, at: [x, y, z], size: [x, y, z], above: m | null (the gap to what is under it; null = nothing within 2.5 m), against }]
 //   userData.hangs / floats = true on an object (or a parent) leaves it out (a lamp on a wire, a bird, a helicopter in the air).
+//   1.29.2 (鏡屋): a thing in the player's hands is left out too - userData.held, or within 0.7 m of the camera (the camera the player
+//   carries hung in the scene at hip height was reported floating 1.1 m over the floor).
 //
 // sizeSource(rules): things of a known kind have a believable size for a body with eyes at 1.6 m. Each rule is
 //   [regex on the object's name (or "prop:" + the plan furniture kind for prop:<id>), measure, min, max] with measure 'h' (height), 'top'
@@ -42,6 +44,7 @@ export function restSource(o = {}) {
       const nm = t.name || ''; if (SH.test(nm) || flag(t, 'hangs') || flag(t, 'floats') || t.isLight || t.isCamera) continue;
       const b = new T.Box3(); for (const m of ms) b.expandByObject(m); if (b.isEmpty()) continue;
       const s = b.getSize(new T.Vector3()); if ([s.x, s.y, s.z].filter((v) => v > 3).length >= 2 || Math.max(s.x, s.y, s.z) < 0.02) continue;
+      if (flag(t, 'held') || (g.camera && b.distanceToPoint(g.camera.getWorldPosition(new T.Vector3())) < 0.7)) continue;   // in the hands (1.29.4)
       const fy = floorUnder(b.min.y); if (b.min.y - fy < 0.03) continue;
       const own = new Set(ms), c = b.getCenter(new T.Vector3());
       // the candidates near this thing only (a box round it, 2.5 m down), so the rays stay cheap

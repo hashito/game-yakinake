@@ -56,12 +56,23 @@ export function installCombat(ext, G) {
   const view = document.createElement('canvas'); view.id = 'yk-weapon'; view.width = FP_SIZE[0]; view.height = FP_SIZE[1]; view.className = 'yk-weapon';
   const blood = document.createElement('div'); blood.id = 'yk-blood'; blood.className = 'yk-blood';
   const grabTag = document.createElement('div'); grabTag.id = 'yk-grab'; grabTag.className = 'yk-grab';
+  // 1.2.1 (tougher zombies: the hits must read): four hard ticks round the sights for a moment on every hit - white on the body,
+  // red and wider on the head, red and wide on a kill; with a crisp tick sound of its own (the 3D thud comes from the zombie)
+  const mark = document.createElement('div'); mark.id = 'yk-hitmark'; mark.className = 'yk-hitmark'; mark.innerHTML = '<i></i><i></i><i></i><i></i>';
+  let markT = 0;
+  function hitMark(res) {
+    const kind = res.killed ? 'kill' : res.part === 'head' ? 'head' : 'body';
+    mark.className = `yk-hitmark on ${kind}`; markT = kind === 'body' ? 0.12 : 0.2;
+    G.sfx(kind === 'body' ? 'hit-tick' : 'hit-crack');
+  }
+  const bestRes = (a, b) => { const r = (x) => (!x || !x.part ? 0 : x.killed ? 3 : x.part === 'head' ? 2 : 1); return r(b) > r(a) ? b : a; };
   function hud() {
     const h = heldNow();
     el.querySelector('.yk-hp i').style.width = `${Math.max(0, G.hp)}%`;
     el.querySelector('.yk-hp').classList.toggle('low', G.hp < 35);
     el.querySelector('.yk-wn').textContent = h.c.name;
     el.querySelector('.yk-wa').textContent = h.c.gun ? `${h.it.loaded} / ${G.case.count(h.c.gun.ammo)}${reloading > 0 ? '　装填中' : ''}` : '';
+    view.classList.toggle('yk-bare', !h.it || h.it.id === 'hands');
     drawWeapon(view, h.it ? h.it.id : 'hands', { swing, kick, flash: flashT > 0, reload: reloading > 0 ? 1 - reloading / reloadMax : 0, swayX: sway.x, swayY: sway.y, light: !!(ctx && ctx.lightOn) });
   }
   G.hud = hud;
@@ -79,7 +90,7 @@ export function installCombat(ext, G) {
       };
     }
     muzzle = new THREE.PointLight(0xffc070, 0, 14, 1.6); muzzle.name = 'yk-muzzle'; ctx.scene.add(muzzle);
-    document.body.append(view, blood, grabTag);
+    document.body.append(view, blood, grabTag, mark);
     if (ctx.isTouch) {   // a phone has no 装填 / 持ち替え / 手当て buttons (the right column stays short): the status panel takes them
       el.classList.add('yk-tap');
       const tap = (sel, f) => el.querySelector(sel).addEventListener('click', (e) => { e.stopPropagation(); if (!ctx.blocked || !ctx.blocked()) f(); });
@@ -165,7 +176,7 @@ export function installCombat(ext, G) {
     if (muzzle) { muzzle.position.copy(ctx.camera.position); muzzle.intensity = 26 * (KICK[h.it.id] || 1); }
     G.sfx(h.it.id); G.noise(ctx.camera.position, g.noise);
     const base = aimRay().clone(), n = g.pellets || 1;
-    let anyHit = false;
+    let anyHit = false, best = null;
     for (let i = 0; i < n; i++) {
       const r = base.clone(); r.direction.x += (Math.random() - 0.5) * g.spread * 2; r.direction.y += (Math.random() - 0.5) * g.spread * 2; r.direction.z += (Math.random() - 0.5) * g.spread * 2; r.direction.normalize();
       const wall = wallHit(r, 40);
@@ -173,10 +184,10 @@ export function installCombat(ext, G) {
       for (const t of G.targets()) { if (!t.alive && !t.corpse) continue; const q = t.raycast(r); if (q && q.dist < wall) hits.push({ t, q }); }
       hits.sort((a, b) => a.q.dist - b.q.dist);
       const pierce = g.pierce || 1;
-      for (const { t } of hits.slice(0, pierce)) { const res = t.hit(r, g.dmg * (1 - Math.min(0.5, hits.length && t.dist ? 0 : 0)), { force: n > 1 ? 0.5 : 1, dir: [r.direction.x, r.direction.y, r.direction.z] }); if (res && res.part) anyHit = true; }
+      for (const { t } of hits.slice(0, pierce)) { const res = t.hit(r, g.dmg * (1 - Math.min(0.5, hits.length && t.dist ? 0 : 0)), { force: n > 1 ? 0.5 : 1, dir: [r.direction.x, r.direction.y, r.direction.z] }); if (res && res.part) { anyHit = true; best = bestRes(best, res); } }
       if (!hits.length && wall < 40) G.emit('shot:wall', { point: r.at(wall - 0.02, new THREE.Vector3()) });
     }
-    if (anyHit) G.emit('shot:hit');
+    if (anyHit) { G.emit('shot:hit'); hitMark(best); }
     G.emit('case:change'); hud();
   }
   function strike() {
@@ -195,7 +206,7 @@ export function installCombat(ext, G) {
     if (grab) { grab = null; grabTag.classList.remove('on'); G.sfx('shove'); ctx.ui.say('振りほどいた。', 2); }
     if (!best) return;
     const res = best.t.hit(best.q.point ? r : best.q.part, m.dmg, { force: m.knock, dir: [r.direction.x, 0, r.direction.z], melee: true, sever: m.sever });
-    if (res && res.part) { G.sfx(h.it && h.it.id === 'scalpel' ? 'stab' : 'thud'); G.noise(ctx.camera.position, 3); }
+    if (res && res.part) { G.sfx(h.it && h.it.id === 'scalpel' ? 'stab' : 'thud'); G.noise(ctx.camera.position, 3); hitMark(res); }
   }
 
   // ---------------------------------------------------------------- the body: hurt by zombies and people
@@ -214,6 +225,7 @@ export function installCombat(ext, G) {
       if (!ctx || !ctx.state.started || ctx.state.ended) return;
       const busy = ctx.blocked && ctx.blocked();
       cool -= dt; flashT -= dt;
+      if (markT > 0) { markT -= dt; if (markT <= 0) mark.classList.remove('on'); }
       if ((hintT -= dt) <= 0) { hintT = 0.25; dropStaleHints(); }
       if (muzzle && muzzle.intensity > 0) muzzle.intensity = flashT > 0 ? muzzle.intensity : Math.max(0, muzzle.intensity - dt * 400);
       swing = Math.max(0, swing - dt * 3); kick = Math.max(0, kick - dt * 6);

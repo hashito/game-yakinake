@@ -92,6 +92,54 @@ export function installCase(ext, G) {
     }
   };
   ext.on('game:ready', () => C.placeLoot());
+  // 1.2.1 (the things on the floor were easy to miss): a glint - a small hard-pixel star over each thing in the case's world that
+  // twinkles now and then (every 2.6 s, each at its own beat), only within 9 m and not through walls. The same cue on the furniture
+  // and on the floor; the floor ones (def.why) a little brighter, as the floor is darker and lower in the view.
+  const glintTex = (() => {
+    const N = 9, data = new Uint8Array(N * N * 4);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const dx = Math.abs(x - 4), dy = Math.abs(y - 4), i = (y * N + x) * 4, core = dx + dy <= 1, ray = dx === 0 || dy === 0;
+      const v = core ? 255 : ray ? 255 - Math.max(dx, dy) * 40 : 0;
+      data[i] = v; data[i + 1] = v; data[i + 2] = core ? 235 : Math.round(v * 0.75); data[i + 3] = v;
+    }
+    const t = new THREE.DataTexture(data, N, N, THREE.RGBAFormat); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.needsUpdate = true; t.userData.dot = 'tile'; return t;
+  })();
+  const glints = new Map();
+  const topOf = new THREE.Box3();
+  function glintFor(id, g) {
+    let s = glints.get(id);
+    if (s && s.parent === g) return s;
+    s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glintTex, color: 0xfff4d0, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 }));
+    s.material.userData.dot = 'tile';   // a 9 x 9 hard-pixel star: dot already (P33)
+    s.scale.setScalar(0.06); s.visible = false;   // small from the start: the bounds of the thing (select range, P47) stay its own
+    s.name = `loot-glint:${id}`; s.userData.noRest = true; s.userData.held = true; s.raycast = () => {};
+    s.userData.beat = ((id.length * 0.37 + id.charCodeAt(id.length - 1) * 0.11) % 1) * 2.6;
+    s.userData.floor = !!(g.userData.def && g.userData.def.why);
+    g.add(s); glints.set(id, s); return s;
+  }
+  ext.registerSystem('yk-loot-glint', {
+    update(dt) {
+      if (!ctx || !ctx.state || !ctx.state.started) return;
+      const now = performance.now() / 1000, cam = ctx.camera.position;
+      for (const [id, g] of lootMeshes) {
+        const s = glintFor(id, g);
+        if (!s.userData.placed) {
+          // over the top of the thing (the dot part is added and the group seated after it is placed)
+          s.visible = false; topOf.makeEmpty();
+          g.traverse((m) => { if (m.isMesh && m.visible !== false && m.material && m.material.visible !== false) topOf.expandByObject(m); });
+          if (!topOf.isEmpty()) { const w = new THREE.Vector3(); g.getWorldPosition(w); s.position.set(0, Math.max(0.05, topOf.max.y - w.y) + 0.03, 0); s.userData.placed = (s.userData.tries = (s.userData.tries || 0) + 1) > 20; }
+        }
+        const w = s.getWorldPosition(new THREE.Vector3()), d = w.distanceTo(cam);
+        if (d > 9 || Math.abs(w.y - cam.y) > 2.4) { s.visible = false; continue; }
+        const u = ((now + s.userData.beat) % 2.6) / 2.6, tw = u < 0.16 ? Math.sin((u / 0.16) * Math.PI) : 0;
+        const k = s.userData.floor ? 1 : 0.8, far = Math.min(1, d / 3);
+        s.visible = true;
+        s.material.opacity = (0.12 * k + tw * 0.88) * k;
+        s.scale.setScalar((0.06 + tw * 0.07) * (0.8 + far * 0.6) * (s.userData.floor ? 1.15 : 1));
+      }
+    },
+  });
+  G.lootGlints = () => [...glints.values()].filter((s) => s.parent);
   ext.registerInteract('loot', {
     prompt: (o) => `[E] 拾う：${o.label}`,
     run: (o) => {

@@ -16,6 +16,22 @@
 .yk-weapon { position: fixed; right: 1%; bottom: 0; width: min(62vw, 94vh * 1.667, 780px); aspect-ratio: 320 / 192; height: auto; image-rendering: pixelated; pointer-events: none; z-index: 4; display: none; }
 body.yk-playing .yk-weapon { display: block; }
 html[data-input="touch"] .yk-weapon { right: 30%; width: min(42vw, 52vh * 1.667, 340px); height: auto; }
+/* 1.2.1: the bare fist is a big shape in the picture - smaller on a computer (it filled the lower right) */
+html:not([data-input="touch"]) .yk-weapon.yk-bare { width: min(44vw, 66vh * 1.667, 560px); }
+/* 1.2.1: the hit mark - four hard ticks round the sights */
+.yk-hitmark { position: fixed; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; z-index: 5; opacity: 0; }
+.yk-hitmark.on { opacity: 1; }
+.yk-hitmark i { /* pair-ok */ position: absolute; width: 4px; height: 10px; background: #f4f0e4; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55); }
+.yk-hitmark i:nth-child(1) { left: -13px; top: -13px; transform: rotate(-45deg); }
+.yk-hitmark i:nth-child(2) { left: 9px; top: -13px; transform: rotate(45deg); }
+.yk-hitmark i:nth-child(3) { left: -13px; top: 3px; transform: rotate(45deg); }
+.yk-hitmark i:nth-child(4) { left: 9px; top: 3px; transform: rotate(-45deg); }
+.yk-hitmark.head i, .yk-hitmark.kill i { /* pair-ok */ background: #ff4a3a; }
+.yk-hitmark.head i:nth-child(1), .yk-hitmark.kill i:nth-child(1) { left: -17px; top: -17px; }
+.yk-hitmark.head i:nth-child(2), .yk-hitmark.kill i:nth-child(2) { left: 13px; top: -17px; }
+.yk-hitmark.head i:nth-child(3), .yk-hitmark.kill i:nth-child(3) { left: -17px; top: 7px; }
+.yk-hitmark.head i:nth-child(4), .yk-hitmark.kill i:nth-child(4) { left: 13px; top: 7px; }
+.yk-hitmark.kill i { width: 5px; height: 14px; }
 /* a short phone held sideways (844 x 340): the weapon and the thought band both want the bottom middle, so the band goes up under the
    notice lane while a weapon is in the hand (nothing hides the weapon, nothing hides the band) */
 @media (orientation: landscape) and (max-height: 400px) { body.touch.yk-playing #say { top: 52px; bottom: auto; } }

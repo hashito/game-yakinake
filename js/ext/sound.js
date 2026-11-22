@@ -57,6 +57,8 @@ export function installSound(ext, G) {
     thud: () => { burst({ dur: 0.18, f: 260, gain: 0.8 }); burst({ dur: 0.06, f: 1800, type: 'highpass', gain: 0.25 }); },
     stab: () => { burst({ dur: 0.12, f: 700, type: 'bandpass', q: 3, gain: 0.45 }); },
     shove: () => burst({ dur: 0.25, f: 420, gain: 0.5 }),
+    'hit-tick': () => { burst({ dur: 0.05, f: 1700, type: 'bandpass', q: 2.2, gain: 0.32 }); thump(210, 80, 0.07, 0.35); },
+    'hit-crack': () => { burst({ dur: 0.07, f: 2600, type: 'bandpass', q: 2.5, gain: 0.42 }); thump(260, 70, 0.1, 0.5); click(1250, 0.03, 0.12); },
     'hit-flesh': (o) => burst({ dur: 0.16, f: 380, q: 1.5, gain: 0.55 * o.g, pan: o.pan }),
     'hit-armor': (o) => { burst({ dur: 0.12, f: 3200, type: 'bandpass', q: 6, gain: 0.4 * o.g, pan: o.pan }); },
     'hit-person': (o) => burst({ dur: 0.18, f: 300, gain: 0.5 * o.g, pan: o.pan }),

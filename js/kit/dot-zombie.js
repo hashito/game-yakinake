@@ -1,4 +1,4 @@
-/* game-kit 10af67dd: js/dot-zombie.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit a7e7ba59: js/dot-zombie.js — edit in game-kit and run tools/kit-sync.js */
 // Dot zombies with parts that come off (docs/zombies.md). 50 patterns in assets/zombies/ (tools/sprite-stacks/zombie_export.py).
 // A zombie is 13 rigid sprite-stack pieces on the shared rig (11 parts: head, chest, pelvis, upper arms, forearms with
 // hands, thighs, shins with feet). A shot part comes off: a stump cap shows on the body, the piece falls as a gib and
@@ -278,6 +278,7 @@ export function createZombie(pattern, opts = {}) {
   for (const p of z.missing) if (parts[p]) parts[p].hp = 0;
   const motions = R.motions;
   let cooldown = 0, flinchCool = 0, hurtCool = 0, headlessTime = 0, sawTarget = false, lastHitDir = [0, 0, 1];
+  let torsoChain = 0, torsoT = 0;   // 1.30.0: hits to the body in a row (within 0.9 s): the second one stops it (a stagger)
   let pending = null;   // a motion that plays after the current one-shot (fall -> crawl)
 
   // ---------------------------------------------------------------- meshes
@@ -490,14 +491,25 @@ export function createZombie(pattern, opts = {}) {
     if (severed && part === 'pelvis') { z.state = 'chase'; z.do('move'); return; }
     if (b.legs < 2) return;                                // on the floor: no flinch, it keeps coming
     if (stats.knockImmune) return;
-    if (o.force > 0.6 || dmg > 45) { z.state = 'hurt'; z.do('knockback', { restart: true }); hurtCool = 0.8; return; }
+    const region = part === 'head' ? 'flinch-head' : /Arm/.test(part) ? 'flinch-arm' : /thigh|shin/.test(part) ? 'flinch-leg' : 'flinch-torso';
+    // 1.30.0 (夜勤明けの街 1.2.1): body hits in a row stop it - the second within 0.9 s is a stagger it has to stand through,
+    // even inside the flinch cool-down or after a knockback (a tough zombie must still show that the shots land)
+    if (region === 'flinch-torso') { torsoChain = torsoT > 0 ? torsoChain + 1 : 1; torsoT = 0.9; } else torsoChain = 0;
+    if (torsoChain >= 2 && !stats.staggerImmune) {
+      torsoChain = 0; flinchCool = 0.5; hurtCool = 0.7; z.state = 'hurt'; z.do('stagger', { restart: true });
+      z.emit('react', { kind: 'stagger', part, side }); return;
+    }
+    // a strong push throws the body back; the head and the arms keep their own reaction (the head snaps, the arm jerks) unless the
+    // blow is huge (1.30.0: a pistol's force 1 to the head was a knockback, so the parts never showed)
+    if ((o.force > 0.6 && !/head|Arm/.test(part)) || dmg > 45) { z.state = 'hurt'; z.do('knockback', { restart: true }); hurtCool = 0.8; z.emit('react', { kind: 'knockback', part, side }); return; }
     if (flinchCool > 0 && !severed) return;
     flinchCool = 0.35;
-    const region = part === 'head' ? 'flinch-head' : /Arm/.test(part) ? 'flinch-arm' : /thigh|shin/.test(part) ? 'flinch-leg' : 'flinch-torso';
     z.state = 'hurt';
-    if (/thigh|shin/.test(part) && parts[part].hp < parts[part].max * 0.4 && rng() < 0.5) z.do('kneel', { restart: true });
-    else if (severed) z.do('stagger', { restart: true });
-    else z.do(region, { side, restart: true });
+    let kind = region;
+    if (/thigh|shin/.test(part) && parts[part].hp < parts[part].max * 0.4 && rng() < 0.5) kind = 'kneel';
+    else if (severed) kind = 'stagger';
+    z.do(kind, { side, restart: true });
+    z.emit('react', { kind, part, side });
   }
 
   function sever(part, info) {
@@ -643,7 +655,7 @@ export function createZombie(pattern, opts = {}) {
   /** dt seconds; target { position: [x, y, z] | Vector3, camera } (no target: it stands or wanders) */
   z.update = function update(dt, target) {
     z.time += dt;
-    cooldown -= dt; flinchCool -= dt; hurtCool -= dt;
+    cooldown -= dt; flinchCool -= dt; hurtCool -= dt; torsoT -= dt;
     for (const h of z.halves) h.update(dt, null);
     const d = motions[z.motion];
     let tp = null, dist = Infinity, ang = 0;
@@ -786,12 +798,14 @@ export function createGoreFx(THREE, scene, o = {}) {
   const decalMat = new THREE.MeshLambertMaterial({ map: decalTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
   const decals = [];
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), pv = new THREE.Vector3();
+  // 1.30.0: a small hit flash where a shot lands (a hard-pixel star, additive, 0.09 s; also with the gore off - it is not blood)
+  const flashTex = pixelStar(THREE), flashes = [];
   const fx = {
     get gore() { return gore; },
     set gore(g) { gore = g; for (const d of decals) d.visible = g !== 'off'; },
     watch(z) {
       z.on('blood', (e) => fx.spray(e.point, e.dir, e.amount));
-      z.on('hit', (e) => { if (e.point) fx.spray(e.point, e.dir, 0.35); });
+      z.on('hit', (e) => { if (e.point) { fx.spray(e.point, e.dir, 0.35); fx.flash(e.point, e.part === 'head' ? 1.3 : 1); } });
       z.on('decal', (e) => fx.decal(e.point, e.size));
       z.on('died', () => fx.decal([z.pos[0], z.pos[1], z.pos[2]], 0.45));
       return fx;
@@ -816,7 +830,18 @@ export function createGoreFx(THREE, scene, o = {}) {
       m.rotation.y = Math.floor(Math.random() * 4) * Math.PI / 2;
       decals.push(m);
     },
+    flash(point, size = 1) {
+      if (!point || !THREE.Sprite) return;
+      const p = point.isVector3 ? point : new THREE.Vector3(point[0], point[1], point[2]);
+      let f = flashes.find((x) => x.t >= x.life);
+      if (!f) {
+        if (flashes.length >= 8) f = flashes[0];
+        else { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, color: 0xfff0c0, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false })); m.renderOrder = 5; scene.add(m); f = { m }; flashes.push(f); }
+      }
+      f.t = 0; f.life = 0.09; f.s = 0.16 * size; f.m.position.copy(p); f.m.material.rotation = Math.floor(Math.random() * 4) * Math.PI / 4; f.m.visible = true;
+    },
     update(dt) {
+      for (const f of flashes) { if (f.t >= f.life) { f.m.visible = false; continue; } f.t += dt; const u = Math.min(1, f.t / f.life); f.m.scale.setScalar(f.s * (0.7 + u * 0.6)); f.m.material.opacity = 1 - u; }
       let k = 0;
       for (let i = live.length - 1; i >= 0; i--) {
         const d = live[i];
@@ -832,9 +857,23 @@ export function createGoreFx(THREE, scene, o = {}) {
       drops.count = k;
       drops.instanceMatrix.needsUpdate = true;
     },
-    dispose() { scene.remove(drops); for (const d of decals) scene.remove(d); },
+    dispose() { scene.remove(drops); for (const d of decals) scene.remove(d); for (const f of flashes) scene.remove(f.m); },
   };
   return fx;
+}
+
+function pixelStar(THREE) {
+  const N = 16, data = new Uint8Array(N * N * 4);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const dx = Math.abs(x - 7.5), dy = Math.abs(y - 7.5), i = (y * N + x) * 4;
+    const core = dx < 2 && dy < 2, ray = (dx < 1 && dy < 7) || (dy < 1 && dx < 7) || (Math.abs(dx - dy) < 1 && dx < 4.5);
+    const v = core ? 255 : ray ? 200 : 0;
+    data[i] = v; data[i + 1] = core ? 255 : Math.round(v * 0.85); data[i + 2] = core ? 240 : Math.round(v * 0.5); data[i + 3] = v;
+  }
+  const t = new THREE.DataTexture(data, N, N, THREE.RGBAFormat);
+  t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter;
+  t.needsUpdate = true;
+  return t;
 }
 
 function pixelSplat(THREE) {

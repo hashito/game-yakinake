@@ -39,7 +39,10 @@ export function closeTapSource() {
 }
 
 // close the open mini game: the library's .mgx-close, or a game's own window in #mg-custom (its [data-close] / 閉じる button); 1.28.1:
-// a custom window left open (札の家 keyring) stayed on screen and every later task measured it instead of its own
+// a custom window left open (札の家 keyring) stayed on screen and every later task measured it instead of its own;
+// 1.29.3: the older task-minigames window (#mg) is not measured (its layout predates P36 / P44) but it is closed, so it does not stay
+// on screen for the next checks (配達: a dial left open counted as a spilling frame in P32)
+const mgOldClose = `{ const o = document.getElementById('mg'); if (o) { (o.querySelector('.mg-x') || { click() {} }).click(); await Promise.race([run, new Promise((r) => setTimeout(r, 800))]); } }`;
 const mgCloseJs = (v) => `(${v}.querySelector('.mgx-close, [data-close]') || [...${v}.querySelectorAll('button')].find((b) => /閉じる|やめる|中断/.test(b.textContent || '')) || { click() {} }).click();`;
 
 /** open the library mini game of task <id>, make every caption longer, and report the controls that moved (then close it) */
@@ -47,7 +50,7 @@ export function mgStableSource(id) {
   return `(async () => {
     const t = g.data.tasks.find((x) => x.id === ${JSON.stringify(id)}); if (!t || !g.runMinigame) return null;
     const run = g.runMinigame(t); await new Promise((r) => setTimeout(r, 700));
-    const host = document.getElementById('mg-custom') || document.querySelector('.mgx'); if (!host) return { type: (t.minigame || {}).type, open: false };
+    const host = document.getElementById('mg-custom') || document.querySelector('.mgx'); if (!host) { ${mgOldClose} return { type: (t.minigame || {}).type, open: false }; }
     const ctl = [...host.querySelectorAll('[role=slider], button:not(.mgx-close), input, select, canvas, [draggable=true], [data-k]')].filter((e) => e.getBoundingClientRect().width > 2);
     const at = () => ctl.map((e) => { const r = e.getBoundingClientRect(); return [r.left, r.top]; });
     const before = at(), moved = [];
@@ -69,7 +72,7 @@ export function mgFitSource(id) {
   return `(async () => {
     const t = g.data.tasks.find((x) => x.id === ${JSON.stringify(id)}); if (!t || !g.runMinigame) return null;
     const run = g.runMinigame(t); await new Promise((r) => setTimeout(r, 900));
-    const root = document.querySelector('.mgx') || document.getElementById('mg-custom'); if (!root) return { type: (t.minigame || {}).type, open: false };
+    const root = document.querySelector('.mgx') || document.getElementById('mg-custom'); if (!root) { ${mgOldClose} return { type: (t.minigame || {}).type, open: false }; }
     const H = innerHeight, W = innerWidth, off = [];
     let scroll = 0;
     for (const el of [root, ...root.querySelectorAll('*')]) {

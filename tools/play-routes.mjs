@@ -166,6 +166,27 @@ async function run(route) {
     for (let i = 0; i < 4 && (await G(`!!${Z}`)); i++) { const at = await partAt('head'); if (!at) break; await lookAt(...at); await frames(2); await key('Fire'); await frames(3); await key('Fire', 'keyup'); await sleep(300); await key('KeyR'); await sleep(200); }
     expect(await G(`!${Z}`), 'a shot to the head kills it');
     await shot('headshot');
+    // 1.2.1: the hits read - the mark round the sights on a hit, two body shots in a row stop it (a stagger), a hit flash
+    { await spawn('salaryman', 3.4); await sleep(700);
+      await G(`(() => { const L = ${Z}; window.__reacts = []; if (L) L.z.on('react', (e) => window.__reacts.push(e.kind)); return 1; })()`);
+      await key('KeyR'); await sleep(1500);
+      let marked = false;
+      for (let i = 0; i < 3; i++) {
+        const at = await partAt('chest'); if (!at) break; await lookAt(at[0], at[1] + 0.05, at[2]); await frames(2); await key('Fire'); await frames(2); await key('Fire', 'keyup');
+        if (!marked) marked = await G("document.getElementById('yk-hitmark').classList.contains('on')");
+        await sleep(330);
+      }
+      const R = await G('window.__reacts || []');
+      log('reactions', JSON.stringify(R));
+      expect(marked, 'a hit shows the mark round the sights');
+      expect(R.includes('stagger'), `body shots in a row stop it with a stagger (${R.join(', ')})`);
+      await shot('hit_reaction');
+      await G('(y.liveZombies().forEach((L) => L.alive && L.z.kill()), 1)'); await key('KeyR'); await sleep(1400); }
+    // 1.2.1: every pickup has a glint (the floor ones were missed)
+    { await G("(g.teleport({ x: 39.4, z: 6.4, yaw: 0, floor: 0 }), 1)"); await sleep(800);
+      const n = await G("(() => { const s = y.lootGlints(); return [s.length, s.filter((x) => x.visible).length]; })()");
+      expect(n && n[0] >= 30 && n[1] >= 1, `the pickups glint (${JSON.stringify(n)})`);
+      await G("(g.teleport({ x: 50, z: 1, yaw: -Math.PI / 2, floor: 0 }), g.fp.pitch = 0, 1)"); await sleep(400); }
     // 1.2.0 #2: tougher by block - weak in the hospital, the strongest on the roof (tools/ammo-budget.mjs adds up the ammo)
     { const T = await G("(() => { const o = {}; for (const [r, x, z] of [['H_ROKA', 13, 6.8], ['S_ODORI', 56, 1.2], ['P_ROKA', 112, 7.6], ['O_OFF', 136, 7], ['O_ROOF', 137, 8]]) { const L = y.extraZombie({ id: 'Z_TOUGH_' + r, room: r, x, z, p: 'salaryman', yaw: 0 }); o[r] = L ? [L.z.maxLife, L.z.parts.head.max, L.z.parts.chest.max] : null; if (L) L.z.kill(); } return o; })()");
       log('toughness', JSON.stringify(T));
