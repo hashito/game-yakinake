@@ -1,4 +1,4 @@
-/* game-kit a7e7ba59: js/dot-zombie.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit f89b1fcd: js/dot-zombie.js — edit in game-kit and run tools/kit-sync.js */
 // Dot zombies with parts that come off (docs/zombies.md). 50 patterns in assets/zombies/ (tools/sprite-stacks/zombie_export.py).
 // A zombie is 13 rigid sprite-stack pieces on the shared rig (11 parts: head, chest, pelvis, upper arms, forearms with
 // hands, thighs, shins with feet). A shot part comes off: a stump cap shows on the body, the piece falls as a gib and
@@ -133,7 +133,7 @@ export function motionFits(motions, name, missing) {
 }
 
 // ------------------------------------------------------------------ loading
-function stripVol(px, p) {
+export function stripVol(px, p) {
   const W = px.width, data = px.data;
   return {
     w: p.w, d: p.d, n: p.n,
@@ -153,19 +153,25 @@ export async function loadZombiePattern(THREE, src, o = {}) {
   if (!rig) rig = await (await fetch(new URL(json.rig, base).href)).json();
   const pat = { json, rig, THREE, geo: null };
   if (THREE) {
-    const { buildStackGeometry, loadPixels } = await import('./sprite-stack-mesh.js');
-    const px = o.pixels || await loadPixels(new URL(json.atlas, base).href);
-    const make = (p, mpp) => {
-      const g = buildStackGeometry(THREE, stripVol(px, p), { mpp, pivot: [p.pivot[0], p.pivot[1]] });
+    const { quadsToGeometry, stackQuads, loadPixels, loadBakedQuads } = await import('./sprite-stack-mesh.js');
+    // 1.33.0: the baked quads (tools/bake-stacks.mjs) when there are: no atlas to decode, no meshing on the phone
+    const baked = base && o.baked !== false && !o.pixels ? await loadBakedQuads(base.href, json.id) : null;
+    const keys = [...json.pieces.map((p) => `fine:${p.name}`), ...json.lod.map((p) => `lod:${p.name}`), ...json.caps.map((c) => `cap:${c.name}`)];
+    const allBaked = !!baked && keys.every((k) => baked.has(k));
+    const px = allBaked ? null : o.pixels || await loadPixels(new URL(json.atlas, base).href);
+    pat.baked = allBaked;
+    const make = (p, mpp, key) => {
+      const q = allBaked ? baked.get(key) : stackQuads(stripVol(px, p));
+      const g = quadsToGeometry(THREE, q, { mpp, pivot: [p.pivot[0], p.pivot[1]] });
       g.translate(0, -(p.pivot[2] + 0.5) * mpp, 0);
       g.computeBoundingBox(); g.computeBoundingSphere();
       return g;
     };
     pat.geo = { fine: {}, lod: {}, cap: {}, capGrey: {} };
-    for (const p of json.pieces) pat.geo.fine[p.name] = make(p, json.mpp);
-    for (const p of json.lod) pat.geo.lod[p.name] = make(p, json.mpp * 2);
+    for (const p of json.pieces) pat.geo.fine[p.name] = make(p, json.mpp, `fine:${p.name}`);
+    for (const p of json.lod) pat.geo.lod[p.name] = make(p, json.mpp * 2, `lod:${p.name}`);
     for (const c of json.caps) {
-      const g = make(c, json.mpp);
+      const g = make(c, json.mpp, `cap:${c.name}`);
       pat.geo.cap[c.name] = g;
       const grey = g.clone();                                   // gore off: the wound cap in the clothes' shadow grey
       const col = grey.getAttribute('color');

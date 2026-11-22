@@ -426,8 +426,9 @@ try {
   // P9: 操作方法 in the menu
   const ctl = await G(`(async () => { if (!g.pm) return 'no menu'; g.pm.open(); await new Promise((r) => setTimeout(r, 400)); const ok = [...document.querySelectorAll('.wm-layer button, .pm button')].some((b) => /操作方法/.test(b.textContent)); g.pm.close && g.pm.close(); return ok; })()`);
   if (ctl !== true) E('P9', `the menu has no 操作方法 (${ctl})`);
-  // P7: each death card
+  // P7: each death card (1.32.2, 継ぎ目: a room note window left open by the earlier passes was counted as "held after the retry" - close it first)
   for (const reason of Object.keys(game.deaths || {})) {
+    await G(`(g.wm && g.wm.isOpen && g.wm.close(), g.lane && g.lane.clear && g.lane.clear('card'), 1)`); await sleep(300);
     await G(`(g.die(${JSON.stringify(reason)}), 1)`);
     let seen = null;
     for (let i = 0; i < 40 && !seen; i++) { await sleep(150); seen = await G(`(() => { const c = document.querySelector('.gf-mo-card'); if (!c) return null; const r = c.getBoundingClientRect(), top = document.elementFromPoint(innerWidth / 2, innerHeight / 2); const b = c.querySelector('button'); return { covers: r.width >= innerWidth * 0.95 && r.height >= innerHeight * 0.95, onTop: !!(top && c.contains(top)), button: !!(b && b.offsetParent) }; })()`); }

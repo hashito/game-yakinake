@@ -20,7 +20,10 @@
     "check:contrast": "node tools/check-text-contrast.mjs index.html --hooks tools/contrast-hooks/std.mjs --viewport 390x844,1920x1080 --shots shots/contrast",
     "sync-kit": "node ../game-kit/tools/kit-sync.js .",
     "check:pixel": "node tools/audit-pixel-items.mjs pixel-items.json",
-    "build": "node tools/build-site.js",
+    "build": "node tools/bake-stacks.mjs . --check && node tools/bake-photos.mjs --check && node tools/build-site.js",
+    "bake:photos": "node tools/bake-photos.mjs",
+    "bake": "node tools/bake-stacks.mjs .",
+    "check:bake": "node tools/bake-stacks.mjs . --check",
     "play": "node tools/play-routes.mjs",
     "check:ammo": "node tools/ammo-budget.mjs",
     "check:all": "npm run check && npm run check:ammo && npm run check:pixel && npm run check:pairs && npm run check:copy && node tools/check-playtest.mjs ."

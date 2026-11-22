@@ -244,6 +244,8 @@ export function installCombat(ext, G) {
       if (grab) { grab.t -= dt; G.hp -= dt * 5; if (G.hp <= 0) G.hurt(0, { reason: 'bitten' }); if (grab && grab.t <= 0) { grab = null; grabTag.classList.remove('on'); } }
       // slow mending while nothing hurts (to 40 at most: real healing needs the case)
       regen += dt; if (regen > 8 && G.hp < 40) G.hp = Math.min(40, G.hp + dt * 0.8);
+      // a shove frees a grab at once, even while the last swing is still recovering (the swing itself follows when it can)
+      if (grab && want.melee && !busy) { grab = null; grabTag.classList.remove('on'); G.sfx('shove'); ctx.ui.say('振りほどいた。', 2); }
       if (!busy && cool <= 0) {
         const h = heldNow();
         if (want.melee) { want.melee = false; strike(); }

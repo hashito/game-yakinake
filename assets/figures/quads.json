@@ -1,0 +1,52 @@
+{
+ "chisato": {
+  "bin": "chisato.quads.bin",
+  "src": "1e2400625b77d0eb",
+  "gz": true
+ },
+ "genzo": {
+  "bin": "genzo.quads.bin",
+  "src": "6595513b01788821",
+  "gz": true
+ },
+ "gondo": {
+  "bin": "gondo.quads.bin",
+  "src": "334f48fb01491f82",
+  "gz": true
+ },
+ "hayase": {
+  "bin": "hayase.quads.bin",
+  "src": "948d8a815bd18054",
+  "gz": true
+ },
+ "katagiri": {
+  "bin": "katagiri.quads.bin",
+  "src": "69db66ab7a3157bd",
+  "gz": true
+ },
+ "mori": {
+  "bin": "mori.quads.bin",
+  "src": "5251314ede14e1bd",
+  "gz": true
+ },
+ "nishina": {
+  "bin": "nishina.quads.bin",
+  "src": "b279ac2a182d0c69",
+  "gz": true
+ },
+ "noguchi": {
+  "bin": "noguchi.quads.bin",
+  "src": "e47a33a13283a0c6",
+  "gz": true
+ },
+ "shirasaka": {
+  "bin": "shirasaka.quads.bin",
+  "src": "62332f016fb24afa",
+  "gz": true
+ },
+ "taeko": {
+  "bin": "taeko.quads.bin",
+  "src": "cf72878da12ea46a",
+  "gz": true
+ }
+}

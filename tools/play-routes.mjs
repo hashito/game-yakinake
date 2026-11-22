@@ -219,14 +219,16 @@ async function run(route) {
     await G(`(y.equipUid(${pipe}), 1)`);
     await spawn('salaryman', 1.3); await sleep(400);
     const hp0 = await G(`(() => { const L = ${Z}; return L ? L.z.life || L.z.hp || 0 : 0; })()`);
-    for (let i = 0; i < 3; i++) { const at = await partAt('head'); if (at) await lookAt(...at); await key('KeyV'); await sleep(700); }
+    for (let i = 0; i < 3; i++) { const at = await partAt('head'); if (at) await lookAt(...at); await key('KeyV'); await sleep(120); await key('KeyV', 'keyup'); await sleep(700); }   // a press: down and up (a key left down is not pressed again)
     const hp1 = await G(`(() => { const L = ${Z}; return L ? L.z.life || L.z.hp || 0 : 0; })()`);
     expect(hp1 < hp0 || !(await G(`!!${Z}`)), `melee hurts (${hp0} -> ${hp1})`);
     await G('(y.hurt(5, { grab: 1.5, by: null }), 1)'); await sleep(200);
     expect(await G("document.getElementById('yk-grab').classList.contains('on')"), 'a grab shows the shove hint');
     await shot('grabbed');
-    await key('KeyV'); await sleep(300);
-    expect(await G("!document.getElementById('yk-grab').classList.contains('on')"), 'melee shoves free of a grab');
+    // a press is a key down and up (a key left down is not pressed again); the swing before may still be recovering
+    let freed = false;
+    for (let i = 0; i < 3 && !freed; i++) { await key('KeyV', 'keyup'); await key('KeyV'); await sleep(250); await key('KeyV', 'keyup'); freed = await G("!document.getElementById('yk-grab').classList.contains('on')"); }
+    expect(freed, 'melee shoves free of a grab');
     await G('(y.liveZombies().forEach((L) => L.alive && L.z.kill()), 1)');
     // the case: open with B, combine bandage + disinfectant, heal
     await key('KeyB'); await sleep(500);

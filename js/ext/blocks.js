@@ -11,11 +11,11 @@ import { SPAWNS, ROOF_WAVE } from './spawns.js';
 import { PEOPLE } from './people.js';
 
 export const BLOCKS = [
-  { id: 'H', name: '灯ヶ浦市民病院', levels: ['L1', 'L2', 'L3'] },
-  { id: 'S', name: '夜の街', levels: ['L4'] },
-  { id: 'P', name: '灯ヶ浦警察署', levels: ['L5', 'L6'] },
-  { id: 'O', name: '臨港セントラルビル', levels: ['L7'] },
-  { id: 'R', name: '屋上', levels: ['L8'] },
+  { id: 'H', name: '灯ヶ浦市民病院', levels: ['L1', 'L2', 'L3'], pic: 'op-1.webp' },
+  { id: 'S', name: '夜の街', levels: ['L4'], pic: 'sc-street.webp' },
+  { id: 'P', name: '灯ヶ浦警察署', levels: ['L5', 'L6'], pic: 'sc-police.webp' },
+  { id: 'O', name: '臨港セントラルビル', levels: ['L7'], pic: 'sc-office.webp' },
+  { id: 'R', name: '屋上', levels: ['L8'], pic: 'sc-roof.webp' },
 ];
 export const blockOfLevel = (lv) => (BLOCKS.find((b) => b.levels.includes(lv)) || BLOCKS[0]).id;
 // a room's block: by its prefix; the plaza in front of the tower is still the police block's, the roof its own
@@ -48,6 +48,10 @@ export function installBlocks(ext, G) {
         const lv = snap && snap.prog && snap.prog.level;
         return lv ? blockOfLevel(lv) : 'H';
       },
+      // 1.3.1: the place on the card, as the dot picture the game makes of its own scene photo
+      picture: (id) => { const b = BLOCKS.find((x) => x.id === id); return b && b.pic && window.__dot && window.__dot.pixelPhoto ? window.__dot.pixelPhoto(b.pic) : null; },
+      // 1.3.1: the next block's baked bodies and people go into the HTTP cache while this one is played
+      prefetch: (id) => [...patternsOf(id).map((p) => `assets/zombies/${p}.quads.bin`), ...peopleOf(id).map((q) => `assets/figures/${q}.quads.bin`)],
       line: (id, from, o = {}) => {
         const b = BLOCKS.find((x) => x.id === id);
         if (o.start && o.snap && o.snap.prog) { const L = levels.find((l) => l.id === o.snap.prog.level); return L ? `つづきから：${L.name}。${L.text || ''}` : ''; }

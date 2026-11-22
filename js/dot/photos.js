@@ -14,7 +14,7 @@ export const pixelUrl = (v) => {
 };
 const mapCss = (v) => (typeof v === 'string' && map.size ? v.replace(/url\((['"]?)([^'")]+)\1\)/g, (all, q, u) => { const p = pixelUrl(u); return p === u ? all : `url(${q}${p}${q})`; }) : v);
 
-async function pixelate(url) {
+export async function pixelate(url) {
   const img = new Image();
   img.decoding = 'async';
   img.src = url;
@@ -35,12 +35,25 @@ async function pixelate(url) {
   return URL.createObjectURL(blob);
 }
 
+// 1.3.1 (「ブロックの読み込みが長すぎる」): the pixel versions are made at build time by this same pixelate() (tools/bake-photos.mjs ->
+// assets/photos-px/<name>.png + index.json). With them nothing is decoded or dithered on the phone and a photo is fetched only when it is
+// shown; a photo missing from the index is still made here (preparePhotos).
+export async function loadBakedPhotos() {
+  try {
+    const base = new URL('../../assets/photos-px/', import.meta.url).href;
+    const idx = await fetch(new URL('index.json', base).href).then((r) => (r.ok ? r.json() : {}));
+    for (const [name, e] of Object.entries(idx)) if (!map.has(name)) map.set(name, new URL(e.file, base).href);
+    refresh(document.body);
+    return Object.keys(idx).length;
+  } catch (e) { console.warn('[dot] baked photos', e && e.message); return 0; }
+}
+
 /** pixel versions of every photo in the list (names under /assets/photos/); report(k) while it works */
 export async function preparePhotos(names, report = () => {}) {
   let n = 0;
   const t0 = performance.now();
   // a few at a time: decoding is off the main thread, the dither is short
-  const queue = [...names];
+  const queue = names.filter((f) => !map.has(f)); n = names.length - queue.length;   // 1.3.1: one already made (a loading card's picture) is kept
   const worker = async () => {
     while (queue.length) {
       const f = queue.shift();

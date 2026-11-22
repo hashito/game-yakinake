@@ -1,0 +1,230 @@
+{
+ "death.webp": {
+  "file": "death.png",
+  "src": "5d2a2f088b10eeb8"
+ },
+ "doc-cult.webp": {
+  "file": "doc-cult.png",
+  "src": "a5fb4ad582114bd0"
+ },
+ "doc-genmanual.webp": {
+  "file": "doc-genmanual.png",
+  "src": "1dad5f1c54db83f9"
+ },
+ "doc-handover.webp": {
+  "file": "doc-handover.png",
+  "src": "1514d68cb08675eb"
+ },
+ "doc-policelog.webp": {
+  "file": "doc-policelog.png",
+  "src": "ffe588b23a2201de"
+ },
+ "doc-roster.webp": {
+  "file": "doc-roster.png",
+  "src": "e3f29cedc3ad3893"
+ },
+ "doc-today.webp": {
+  "file": "doc-today.png",
+  "src": "4183e739f5cd127b"
+ },
+ "end-e1.webp": {
+  "file": "end-e1.png",
+  "src": "d5ea78b35148c111"
+ },
+ "end-e2.webp": {
+  "file": "end-e2.png",
+  "src": "495ea94f35b8a598"
+ },
+ "end-e3.webp": {
+  "file": "end-e3.png",
+  "src": "5f576e05fa5316fe"
+ },
+ "end-e4.webp": {
+  "file": "end-e4.png",
+  "src": "05b418621ea1f689"
+ },
+ "face-chisato.webp": {
+  "file": "face-chisato.png",
+  "src": "2ee3d044b070c79c"
+ },
+ "face-genzo.webp": {
+  "file": "face-genzo.png",
+  "src": "f874e9ee0cd0e6a0"
+ },
+ "face-gondo.webp": {
+  "file": "face-gondo.png",
+  "src": "d69734f8c8bd07e6"
+ },
+ "face-hayase.webp": {
+  "file": "face-hayase.png",
+  "src": "3cb0d3a5b3fe709c"
+ },
+ "face-katagiri.webp": {
+  "file": "face-katagiri.png",
+  "src": "e1f355a33ba1b694"
+ },
+ "face-mori.webp": {
+  "file": "face-mori.png",
+  "src": "3687e3dd709fce3d"
+ },
+ "face-nishina.webp": {
+  "file": "face-nishina.png",
+  "src": "07f44be848720600"
+ },
+ "face-noguchi.webp": {
+  "file": "face-noguchi.png",
+  "src": "621b8808c5a384f3"
+ },
+ "face-pilot.webp": {
+  "file": "face-pilot.png",
+  "src": "acbf069e52136e3f"
+ },
+ "face-radio.webp": {
+  "file": "face-radio.png",
+  "src": "26523796a4be2577"
+ },
+ "face-shirasaka.webp": {
+  "file": "face-shirasaka.png",
+  "src": "d6242a24d5623162"
+ },
+ "face-taeko.webp": {
+  "file": "face-taeko.png",
+  "src": "d6bd8d8f0ffecca3"
+ },
+ "item-ANTIBIO.webp": {
+  "file": "item-ANTIBIO.png",
+  "src": "32558df28de5ab9f"
+ },
+ "item-FIREKEY.webp": {
+  "file": "item-FIREKEY.png",
+  "src": "4ce58aa24ca68730"
+ },
+ "item-INSULIN.webp": {
+  "file": "item-INSULIN.png",
+  "src": "00e12699f73bda7f"
+ },
+ "item-KEYCARD.webp": {
+  "file": "item-KEYCARD.png",
+  "src": "c3d080a14b28c02a"
+ },
+ "item-KEYRING.webp": {
+  "file": "item-KEYRING.png",
+  "src": "32ab29f778a1a402"
+ },
+ "item-LIFTKEY.webp": {
+  "file": "item-LIFTKEY.png",
+  "src": "8fa5f9aec8ab679d"
+ },
+ "item-PENLIGHT.webp": {
+  "file": "item-PENLIGHT.png",
+  "src": "6dc72c084d43f7d3"
+ },
+ "item-PHS.webp": {
+  "file": "item-PHS.png",
+  "src": "82b8d7955d71ac0a"
+ },
+ "item-ROOFKEY.webp": {
+  "file": "item-ROOFKEY.png",
+  "src": "1bd067fe11382f6d"
+ },
+ "item-STETHO.webp": {
+  "file": "item-STETHO.png",
+  "src": "47648f5aabac88ff"
+ },
+ "mg-desk.webp": {
+  "file": "mg-desk.png",
+  "src": "142cd1a63ef120df"
+ },
+ "op-1.webp": {
+  "file": "op-1.png",
+  "src": "edc1254377e8de0a"
+ },
+ "op-2.webp": {
+  "file": "op-2.png",
+  "src": "04228136b36c2284"
+ },
+ "op-3.webp": {
+  "file": "op-3.png",
+  "src": "f31420251efed7f2"
+ },
+ "op-4.webp": {
+  "file": "op-4.png",
+  "src": "1af5dd807e11ebdb"
+ },
+ "sc-office.webp": {
+  "file": "sc-office.png",
+  "src": "523a9f91977858e1"
+ },
+ "sc-police.webp": {
+  "file": "sc-police.png",
+  "src": "8639bb2bc63b9638"
+ },
+ "sc-roof.webp": {
+  "file": "sc-roof.png",
+  "src": "91496b416698fd72"
+ },
+ "sc-street.webp": {
+  "file": "sc-street.png",
+  "src": "4b682f855e29ce87"
+ },
+ "th-altar.webp": {
+  "file": "th-altar.png",
+  "src": "8e98e1cdd36236e7"
+ },
+ "th-ambu.webp": {
+  "file": "th-ambu.png",
+  "src": "d0b46d699af3bdb0"
+ },
+ "th-bars.webp": {
+  "file": "th-bars.png",
+  "src": "42b7e46689868801"
+ },
+ "th-bed.webp": {
+  "file": "th-bed.png",
+  "src": "6d3a98f63b90bf93"
+ },
+ "th-bus.webp": {
+  "file": "th-bus.png",
+  "src": "8793faeba44bff4e"
+ },
+ "th-car.webp": {
+  "file": "th-car.png",
+  "src": "8a568ea12cdeb28b"
+ },
+ "th-chain.webp": {
+  "file": "th-chain.png",
+  "src": "728742cd06c768f4"
+ },
+ "th-clock.webp": {
+  "file": "th-clock.png",
+  "src": "40f552571c7883d6"
+ },
+ "th-firedoor.webp": {
+  "file": "th-firedoor.png",
+  "src": "329b468922106948"
+ },
+ "th-glass.webp": {
+  "file": "th-glass.png",
+  "src": "d40957fa9fa75a0e"
+ },
+ "th-roofh.webp": {
+  "file": "th-roofh.png",
+  "src": "b9e41b014c921a03"
+ },
+ "th-sign.webp": {
+  "file": "th-sign.png",
+  "src": "e38b1d6f2ac35a18"
+ },
+ "th-track.webp": {
+  "file": "th-track.png",
+  "src": "ad1856f08e1345b3"
+ },
+ "th-window.webp": {
+  "file": "th-window.png",
+  "src": "2186f5ab1e0671ba"
+ },
+ "title.webp": {
+  "file": "title.png",
+  "src": "7e6d539b1a986f2f"
+ }
+}

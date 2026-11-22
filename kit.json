@@ -1,5 +1,5 @@
 {
-  "kit": "874f1b3a",
+  "kit": "f33d12c8",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -174,10 +174,11 @@
     "pick-overlap.mjs",
     "build-site.js",
     "make_og.py",
-    "rest-check.mjs"
+    "rest-check.mjs",
+    "bake-stacks.mjs"
   ],
   "hashes": {
-    "js\\kit\\game-core.js": "242d35d099dc",
+    "js\\kit\\game-core.js": "61fc397bcde6",
     "js\\kit\\item-kinds.js": "1df558ca9be9",
     "js\\kit\\item-models.js": "8c5988e07991",
     "js\\kit\\prop-geo.js": "6015f33a97f7",
@@ -273,7 +274,7 @@
     "js\\kit\\chat.js": "3e99e458a470",
     "js\\kit\\chat-ext.js": "7c0ff308e8ee",
     "js\\kit\\dot-world.js": "1dd58795007c",
-    "css/kit.css": "1142577bcfb0",
+    "css/kit.css": "77dddbcd9ab6",
     "css\\theme.css": "174fb669fcd0",
     "css\\themes.css": "b49eed6cdfa5",
     "css\\shell.css": "6552678cfcfe",
@@ -309,7 +310,7 @@
     "tools/review-shots.mjs": "8442e751189f",
     "tools/scene-links.mjs": "a7c96d3e129b",
     "tools/check-copy.mjs": "2a54b9214aba",
-    "tools/check-playtest.mjs": "889b2f3e9914",
+    "tools/check-playtest.mjs": "00f243768188",
     "tools/dot-scene.mjs": "ca5eb9b31cfe",
     "tools/frame-flicker.mjs": "ce7b9b4c2524",
     "tools/frame-nest.mjs": "f8b51a40e0ff",
@@ -346,8 +347,8 @@
     "js\\kit\\mg-rotate-pipes.js": "6cbd61c9506b",
     "js\\kit\\mg-puzzle-box.js": "246d9eda6b28",
     "js\\kit\\moments.js": "2ceefac9e3f6",
-    "js\\kit\\dot-zombie.js": "1f0b11f5f416",
-    "js\\kit\\sprite-stack-mesh.js": "e0033ba0cc9a",
+    "js\\kit\\dot-zombie.js": "4423f0b14b96",
+    "js\\kit\\sprite-stack-mesh.js": "b10ca38d7e6f",
     "js\\kit\\sprite-stack-anim.js": "760d53cbfba8",
     "js\\kit\\mg-library.js": "fcc07a893fef",
     "js\\kit\\mg-sound.js": "887ba6e46d12",
@@ -358,7 +359,8 @@
     "tools/build-site.js": "c8beaa333016",
     "tools/make_og.py": "5f7a64af835d",
     "tools/rest-check.mjs": "1ce04607e207",
-    "js\\kit\\block-loader.js": "a0185ed4f586"
+    "js\\kit\\block-loader.js": "c41ae1776bdd",
+    "tools/bake-stacks.mjs": "56932cc25652"
   },
   "textures": []
 }

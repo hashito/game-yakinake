@@ -1,0 +1,182 @@
+{
+ "bloated": {
+  "bin": "bloated.quads.bin",
+  "src": "760236ad103c90be",
+  "gz": true
+ },
+ "bride": {
+  "bin": "bride.quads.bin",
+  "src": "36ec34850536ea07",
+  "gz": true
+ },
+ "burnt": {
+  "bin": "burnt.quads.bin",
+  "src": "8a344dbd815ace19",
+  "gz": true
+ },
+ "chef": {
+  "bin": "chef.quads.bin",
+  "src": "6485ebf68b702264",
+  "gz": true
+ },
+ "cleaner": {
+  "bin": "cleaner.quads.bin",
+  "src": "d6523c57bf29a4e8",
+  "gz": true
+ },
+ "clerk": {
+  "bin": "clerk.quads.bin",
+  "src": "44bbfd31c643534a",
+  "gz": true
+ },
+ "crawler": {
+  "bin": "crawler.quads.bin",
+  "src": "dea4cc1a0a337714",
+  "gz": true
+ },
+ "doctor": {
+  "bin": "doctor.quads.bin",
+  "src": "7227f0bca31fe144",
+  "gz": true
+ },
+ "fisherman": {
+  "bin": "fisherman.quads.bin",
+  "src": "d61bc91f340c0588",
+  "gz": true
+ },
+ "giant": {
+  "bin": "giant.quads.bin",
+  "src": "e2d9d6bd2fbc05cf",
+  "gz": true
+ },
+ "housewife": {
+  "bin": "housewife.quads.bin",
+  "src": "99efa6455f523319",
+  "gz": true
+ },
+ "hunched": {
+  "bin": "hunched.quads.bin",
+  "src": "3d281f265e127fe7",
+  "gz": true
+ },
+ "jogger": {
+  "bin": "jogger.quads.bin",
+  "src": "9fb7d56b29acef36",
+  "gz": true
+ },
+ "kimono": {
+  "bin": "kimono.quads.bin",
+  "src": "c4941aca8b055f3b",
+  "gz": true
+ },
+ "mourner": {
+  "bin": "mourner.quads.bin",
+  "src": "6026c18256203786",
+  "gz": true
+ },
+ "nurse-rot": {
+  "bin": "nurse-rot.quads.bin",
+  "src": "7fcf34bcad6126a9",
+  "gz": true
+ },
+ "office-woman": {
+  "bin": "office-woman.quads.bin",
+  "src": "baeda793ee21ade2",
+  "gz": true
+ },
+ "old-man": {
+  "bin": "old-man.quads.bin",
+  "src": "b06795252de4f741",
+  "gz": true
+ },
+ "old-woman": {
+  "bin": "old-woman.quads.bin",
+  "src": "b84be2cd863649bd",
+  "gz": true
+ },
+ "patient": {
+  "bin": "patient.quads.bin",
+  "src": "a9564678ffe56955",
+  "gz": true
+ },
+ "police": {
+  "bin": "police.quads.bin",
+  "src": "b45cdcaae626449d",
+  "gz": true
+ },
+ "punk": {
+  "bin": "punk.quads.bin",
+  "src": "f68670e1421c82e7",
+  "gz": true
+ },
+ "raincoat": {
+  "bin": "raincoat.quads.bin",
+  "src": "ca136a85e27df194",
+  "gz": true
+ },
+ "rider": {
+  "bin": "rider.quads.bin",
+  "src": "cb1b21edd7b7082a",
+  "gz": true
+ },
+ "riot": {
+  "bin": "riot.quads.bin",
+  "src": "255be25e6649fd43",
+  "gz": true
+ },
+ "runner": {
+  "bin": "runner.quads.bin",
+  "src": "1be78aaa94a34feb",
+  "gz": true
+ },
+ "salaryman-dry": {
+  "bin": "salaryman-dry.quads.bin",
+  "src": "098afdd6604aa50b",
+  "gz": true
+ },
+ "salaryman-rot": {
+  "bin": "salaryman-rot.quads.bin",
+  "src": "2ec6eb5286069d07",
+  "gz": true
+ },
+ "salaryman": {
+  "bin": "salaryman.quads.bin",
+  "src": "1d688b1a7abf6476",
+  "gz": true
+ },
+ "schoolboy": {
+  "bin": "schoolboy.quads.bin",
+  "src": "7b812f06b5472b36",
+  "gz": true
+ },
+ "screamer": {
+  "bin": "screamer.quads.bin",
+  "src": "2032a2f7858cf8a7",
+  "gz": true
+ },
+ "skeletal": {
+  "bin": "skeletal.quads.bin",
+  "src": "a90fb22564959085",
+  "gz": true
+ },
+ "spitter": {
+  "bin": "spitter.quads.bin",
+  "src": "b35e0c083cf8026d",
+  "gz": true
+ },
+ "tall-coat": {
+  "bin": "tall-coat.quads.bin",
+  "src": "a937b7939f15b5b4",
+  "gz": true
+ },
+ "worker": {
+  "bin": "worker.quads.bin",
+  "src": "903ebd1bb2d180ad",
+  "gz": true
+ },
+ "yukata": {
+  "bin": "yukata.quads.bin",
+  "src": "d5fcb24309b4f255",
+  "gz": true
+ }
+}

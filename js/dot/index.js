@@ -6,9 +6,9 @@
 //   - one palette for the whole night, its hues by block: cold hospital teal, sodium orange, police blue, office white, dawn rose
 //   - the dark stays readable: a floor of light that never reaches black, a small light round the player, the next goal glows
 import * as THREE from 'three';
-import { buildStackGeometry, loadPixels, stripVolume } from '../kit/sprite-stack-mesh.js';
+import { buildStackGeometry, loadPixels, stripVolume, loadBakedQuads, quadsToGeometry } from '../kit/sprite-stack-mesh.js';
 import { palette, dotifyScene } from '../kit/dot-world.js';
-import { installPhotoHooks, preparePhotos } from './photos.js';
+import { installPhotoHooks, preparePhotos, loadBakedPhotos } from './photos.js';
 import { autoFurniture } from '../kit/room-types.js';
 
 const AT = (p) => new URL(`../../${p}`, import.meta.url).href;
@@ -68,13 +68,18 @@ export default async function dotLayer(ext, { manifest, data }) {
   const D = window.__dot = { timings: {}, furniture: [], props: [], stations: [], loot: 0, surf: {}, seated: [] };
   const t0 = performance.now();
   const index = await fetch(AT('assets/stacks/index.json')).then((r) => r.json()).catch(() => ({}));
-  const px = Object.fromEntries(await Promise.all(Object.keys(index).map(async (k) => [k, await loadPixels(AT(`assets/stacks/${k}.png`))])));
+  // 1.3.1: the parts' faces are baked at build time (kit tools/bake-stacks.mjs -> assets/stacks/index.quads.bin): no 59 pictures to decode
+  // and mesh on the phone before the title; the pictures are the fallback when the pack is missing or stale
+  const baked = await loadBakedQuads(AT('assets/stacks/index.json'), 'index');
+  const bakedAll = !!baked && Object.keys(index).every((k) => baked.has(k));
+  D.timings.baked = bakedAll;
+  const px = bakedAll ? {} : Object.fromEntries(await Promise.all(Object.keys(index).map(async (k) => [k, await loadPixels(AT(`assets/stacks/${k}.png`))])));
   D.timings.load = Math.round(performance.now() - t0);
   const mat = new THREE.MeshLambertMaterial({ vertexColors: true }); mat.name = 'dot-stack';
   const geo = new Map();
   const cgeo = (k) => {
     if (!geo.has(k)) {
-      const s = index[k], g = buildStackGeometry(THREE, stripVolume(px[k], s.w, s.d, s.n, 0), { mpp: s.mpp });
+      const s = index[k], g = bakedAll ? quadsToGeometry(THREE, baked.get(k), { mpp: s.mpp }) : buildStackGeometry(THREE, stripVolume(px[k], s.w, s.d, s.n, 0), { mpp: s.mpp });
       g.computeBoundingBox(); const b = g.boundingBox, c = b.getCenter(new THREE.Vector3()); g.translate(-c.x, -b.min.y, -c.z); g.computeBoundingBox();
       geo.set(k, g);
     }
@@ -101,8 +106,10 @@ export default async function dotLayer(ext, { manifest, data }) {
     if (size) m.scale.setScalar(size / Math.max(gs.x, gs.y, gs.z)); else if (R && R.h) m.scale.y = R.h / gs.y; else if (R && R.surf) m.scale.y = R.surf / R.nat; return m; };
 
   // 1.3.0 (#10): the photos in dot are made with the first block (js/ext/blocks.js, the common pack), not behind the title
-  ext.registerBoot('dot-title', async () => { await preparePhotos(['title.webp']); });   // the title art alone behind the title
+  ext.registerBoot('dot-title', async () => { D.bakedPhotos = await loadBakedPhotos(); await preparePhotos(['title.webp']); });   // 1.3.1: the baked pixel photos (no work), else the title art alone   // the title art alone behind the title
   let picturesP = null;
+  // 1.3.1: one photo as a dot picture now (the loading card of a block shows its place before the rest of the photos are made)
+  D.pixelPhoto = async (name) => { await preparePhotos([name]); return `assets/photos/${name}`; };
   D.preparePictures = (report = () => {}) => picturesP || (picturesP = (async () => {
     const t = performance.now();
     const names = [...new Set(JSON.stringify(data).match(/assets\/photos\/[\w.-]+\.webp/g) || [])].map((s) => s.slice(14));

@@ -1,4 +1,4 @@
-/* game-kit 874f1b3a: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit f89b1fcd: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -77,7 +77,7 @@ import { installTimedShot } from './timed-shot.js';
 import { VoiceQueue } from './voice-queue.js';
 import { installNpcAudit } from './npc-audit.js';
 
-export const CORE_VERSION = '1.32.1';
+export const CORE_VERSION = '1.33.0';
 // the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
 export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board', 'darkroom-develop', 'tape-splice', 'switchboard', 'steam-letter', 'puzzle-box', 'rubbing', 'knot-untangle', 'torn-paper', 'safe-listen', 'footprint-track'];
 const $ = (id) => document.getElementById(id);
@@ -1090,7 +1090,7 @@ ${it.desc}` : ''}`, ...(it.photo ? { img: it.photo } : {}) };
   store.autosave(() => (state.started && !state.ended && !TEST_MODE ? snapshot() : null));
 
   // the same warm-up for things made after the boot (a block loaded later, js/block-loader.js): compile and upload them hidden
-  ctx.prewarmNow = async (extra = []) => { if (manifest.noPrewarm) return null; const r = await prewarm(renderer, scene, camera, { hidden: true, extra }); fg.armPrograms(); return r; };
+  ctx.prewarmNow = async (extra = []) => { ctx.prewarmPending = false; if (manifest.noPrewarm) return null; const r = await prewarm(renderer, scene, camera, { hidden: true, extra: [...(ctx.warmObjects || []), ...extra] }); fg.armPrograms(); ctx.prewarmReport = ctx.prewarmReport || r; return r; };
   // ---- boot (behind the title: the game's pre-compile, tour, decode steps) ----
   ctx.boot = async () => {
     const btn = $('start-btn');
@@ -1105,10 +1105,14 @@ ${it.desc}` : ''}`, ...(it.photo ? { img: it.photo } : {}) };
       ctx.pixelStyle.sweep();
       try { ctx.warmImages = [...(ctx.warmImages || []), ...cfg.mods.pixel.pixelLedgerImages(await (await fetch(new URL('pixel-items.json', location.href).href)).json())]; } catch (e) { console.warn('pixel-items.json', e); }
     }
-    if (!manifest.noPrewarm) { try { ctx.prewarmReport = await prewarm(renderer, scene, camera, { hidden: true, extra: ctx.warmObjects || [] }); fg.armPrograms(); ctx.sceneAudit = auditScene(scene, renderer); if (ctx.sceneAudit.length && (ctx.debug || FrameGuard.query())) console.warn('[frame-guard] hitch risks: ' + ctx.sceneAudit.join(' / ')); } catch (e) { console.warn('prewarm', e); } }
+    // 1.33.0: with a block loader (ctx.blockGate) the title opens with the core only: compiling the scene and pre-painting the windows wait
+    // for the first block's loading card (block-loader runs ctx.prewarmPending / ctx.warmLater before its button opens), 2-3 s at CPU 4x
+    const deferWarm = !!ctx.blockGate && !manifest.warmAtTitle;
+    if (deferWarm) ctx.prewarmPending = !manifest.noPrewarm;
+    if (!manifest.noPrewarm && !deferWarm) { try { ctx.prewarmReport = await prewarm(renderer, scene, camera, { hidden: true, extra: ctx.warmObjects || [] }); fg.armPrograms(); ctx.sceneAudit = auditScene(scene, renderer); if (ctx.sceneAudit.length && (ctx.debug || FrameGuard.query())) console.warn('[frame-guard] hitch risks: ' + ctx.sceneAudit.join(' / ')); } catch (e) { console.warn('prewarm', e); } }
     // pre-paint every standard window (invisible): the first real open must not pay for layout / glyphs / image decode (perf: 150-450 ms at 4x CPU)
-    if (status) status.textContent = '画面を準備中…';
-    ctx.warmReport = await warmStandardUi({ text: corpusOf([data, manifest]), images: [...imagesOf(data.items, data.docs, data.things), ...(ctx.warmImages || [])], wm, tm, pm, rn, inv, owned: () => ctx.owned(), minigames: Object.keys(MG.TASKS), minigame: (id) => ctx.minigame(id), abortMinigame: MG.abort, steps: ctx.warmSteps });
+    const warmUi = async () => { ctx.warmReport = await warmStandardUi({ text: corpusOf([data, manifest]), images: [...imagesOf(data.items, data.docs, data.things), ...(ctx.warmImages || [])], wm, tm, pm, rn, inv, owned: () => ctx.owned(), minigames: Object.keys(MG.TASKS), minigame: (id) => ctx.minigame(id), abortMinigame: MG.abort, steps: ctx.warmSteps }); };
+    if (deferWarm) ctx.warmLater = warmUi; else { if (status) status.textContent = '画面を準備中…'; await warmUi(); }
     // the sound engine too (standard 1.16.3): opening the AudioContext and generating the reverb on the start click froze the first frame of play 111-356 ms;
     // prepared here it stays private until the first click / key, which then only adopts and resumes it (js/audio.js prepare)
     // (1.16.4) a game's own sound class (or one with its own init()) cannot adopt: the kit opens the context for it instead, handed to its first `new AudioContext()`
@@ -1142,6 +1146,7 @@ ${it.desc}` : ''}`, ...(it.photo ? { img: it.photo } : {}) };
   function frameBody(t) {
     fg.frame(t); ctx.jobs.run();
     if (!ctx.booted && !manifest.renderWhileBooting) { clock.getDelta(); return; }   // behind the title nothing is drawn until the boot steps are done (a time-sliced world build waits for frames: drawing a half-built scene every frame doubled the build time)
+    if (ctx.holdFrames && ctx.holdFrames()) { clock.getDelta(); return; }   // 1.33.0: a full-screen loading card (block-loader) covers the game: no world update, no draw (14 of a block's 24 s at CPU 4x were frames drawn behind it)
     const dt = Math.min(clock.getDelta(), 0.1);
     const active = state.started && !blocked();
     ctx.pad.poll(dt);
