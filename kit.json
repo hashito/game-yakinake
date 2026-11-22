@@ -1,5 +1,5 @@
 {
-  "kit": "d0e6d25c",
+  "kit": "d9e67113",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -181,7 +181,7 @@
     "bake-prop-boxes.mjs"
   ],
   "hashes": {
-    "js\\kit\\game-core.js": "12cf37982159",
+    "js\\kit\\game-core.js": "2b1cdbafb0d6",
     "js\\kit\\item-kinds.js": "1df558ca9be9",
     "js\\kit\\item-models.js": "8c5988e07991",
     "js\\kit\\prop-geo.js": "6015f33a97f7",
@@ -217,7 +217,7 @@
     "js\\kit\\room-types.js": "e3dd75863c22",
     "js\\kit\\barrier-look.js": "13e40328718e",
     "js\\kit\\station-looks.js": "f142e9eb3366",
-    "js\\kit\\hide-looks.js": "895d0853b186",
+    "js\\kit\\hide-looks.js": "a20af418e7c4",
     "js\\kit\\win-manager.js": "097ede2d3b61",
     "js\\kit\\tab-menu.js": "a81a26b26ca6",
     "js\\kit\\guide-aids.js": "cd5e46d5cebb",
@@ -245,7 +245,7 @@
     "js\\kit\\ambience.js": "bec3aca988af",
     "js\\kit\\guidance.js": "f75dfbfd53de",
     "js\\kit\\game-data.js": "a6296c951dc4",
-    "js\\kit\\ending-scene.js": "b68b5bdb305a",
+    "js\\kit\\ending-scene.js": "71f4a69ed901",
     "js\\kit\\share-bar.js": "1d6eecc20252",
     "js\\kit\\wall-paste.js": "b095ea87709a",
     "js\\kit\\timed-shot.js": "18050d42421a",
@@ -280,7 +280,7 @@
     "css/kit.css": "ba5316a106a4",
     "css\\theme.css": "174fb669fcd0",
     "css\\themes.css": "b49eed6cdfa5",
-    "css\\shell.css": "fc2cb3efc4ca",
+    "css\\shell.css": "07d8ae516c4f",
     "schema/chat-game.schema.json": "4463a3812a3d",
     "schema/chat-story.schema.json": "74021fbcd2f8",
     "schema/creation-brief.schema.json": "4a7c4e40cf74",
@@ -365,8 +365,8 @@
     "js\\kit\\block-loader.js": "9eae779a410c",
     "tools/bake-stacks.mjs": "56932cc25652",
     "tools/bake-prop-boxes.mjs": "3bd46492d944",
-    "js\\kit\\fp-voxel.js": "20eddda24ecc",
-    "js\\kit\\fp-voxel-parts.js": "13d46a400731",
+    "js\\kit\\fp-voxel.js": "fb19e0285d15",
+    "js\\kit\\fp-voxel-parts.js": "54b0bf46e58d",
     "tools/cue-order.mjs": "28ab5482036a"
   },
   "textures": []

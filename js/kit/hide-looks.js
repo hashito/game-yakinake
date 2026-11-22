@@ -1,4 +1,4 @@
-/* game-kit a4da8f61: js/hide-looks.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit d9e67113: js/hide-looks.js — edit in game-kit and run tools/kit-sync.js */
 // Hiding places you can see (standard 1.10.13, rule G7 "隠れる場所は、見て隠れ場所と分かる物にする"; feedback 2026-11-03 出口はこちらです
 // 「棚の隙間に隠れるの分かりづらい。ロッカーとかおいて」). plan.hides[i].look builds the thing at the hide spot (x, z = its centre):
 //   'locker'   a grey steel locker, a louvre at eye height to peek through (offices, stations, schools, plant rooms)
@@ -10,6 +10,10 @@
 // its own dark metal (a lining, a hat shelf, coat hooks, air slits) - never the wall's colour; the steel is named 'metal' so a dot game draws
 // it as a metal tile (js/dot-world.js tileKindOf). h.open: true keeps the old door standing open.
 import * as THREE from 'three';
+
+/** how far a locker / cabinet whose centre is dist from its wall's line must move forward so its back clears the wall's face */
+export const HIDE_BACK = 0.425;
+export function backClear(dist) { return dist < HIDE_BACK ? +(HIDE_BACK - dist).toFixed(4) : 0; }
 
 /** the wall nearest to (x, z) in a room { x, z, w, d }: its side and the yaw that turns a front (+z) away from it */
 export function nearestWallYaw(room, x, z) {
@@ -56,8 +60,12 @@ export function buildHideLook(h, room) {
     const leaves = [-1, 1].map((s) => { const f = new THREE.Group(); f.position.set(s * 0.42, 0, 0.4 + (s > 0 ? 0.03 : 0)); g.add(f); box(f, 0.84, 1.8, 0.025, 0, 0.92, 0, paper); for (const x of [-0.4, 0.4]) box(f, 0.03, 1.8, 0.03, x, 0.92, 0, frame); box(f, 0.05, 0.05, 0.01, s * -0.3, 0.95, 0.015, frame); return f; });
     setShut = (k) => { leaves[1].position.x = 0.44 - (1 - k) * 0.84; };   // shut: a 2 cm gap at the middle to peek through
   } else return null;
-  const yaw = h.yaw ?? (room ? nearestWallYaw(room, h.x, h.z).yaw : 0);
+  const nw = room ? nearestWallYaw(room, h.x, h.z) : null, yaw = h.yaw ?? (nw ? nw.yaw : 0);
   g.rotation.y = yaw; g.position.set(h.x, 0, h.z);
+  // 1.37.5 (水無瀬病院 1.5.1: the open locker showed the white wall tiles inside - its back stood 5 cm inside the wall): a locker / cabinet
+  // backed onto its nearest wall keeps its back clear of the wall's face (half a wall 0.08 m + its own back 0.325 m + 2 cm)
+  const push = h.yaw == null && nw && kind !== 'oshiire' ? backClear(nw.dist) : 0;
+  if (push > 0) { g.position.x += Math.sin(yaw) * push; g.position.z += Math.cos(yaw) * push; }
   const rest = h.open || kind === 'oshiire' ? 0 : 1;   // a locker / cabinet stands shut (1.36.0); an oshiire keeps its open fusuma
   setShut(rest);
   return { group: g, solids, setShut, front, rest };

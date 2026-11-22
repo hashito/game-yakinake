@@ -1,4 +1,4 @@
-/* game-kit a4da8f61: css/shell.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit d9e67113: css/shell.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: the standard 3D shell (js/game-core.js): title screen, prompt, endings, pause menu, custom mini-game layer.
    Tokens only (css/theme.css); loaded after kit.css and theme.css. A game restyles it through tokens in css/theme-game.css. */
 #title { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; text-align: center; padding: var(--gf-win-margin, 16px); overflow-y: auto; overscroll-behavior: contain;
@@ -253,6 +253,7 @@ body.touch #say { bottom: max(12px, var(--gf-safe-b, 0px)); }
 #gf-fear { position: fixed; inset: 0; pointer-events: none; z-index: 5; opacity: 0; background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0) 38%, rgba(10, 0, 0, 0.55) 72%, rgba(0, 0, 0, 0.92) 100%); }
 /* the ending as a scene (js/ending-scene.js): the picture fills the screen and comes slowly closer; the text stands in front, a line at a time */
 .gf-ending { position: fixed; inset: 0; z-index: 96; background: #050505; color: #f1ece0; overflow: hidden auto; display: flex; flex-direction: column; align-items: center; }   /* 1.10.10: no align-items: flex-end (a long epilogue ran off the top, out of reach); the text sits low by its margin-top: auto */
+body:has(> .gf-ending) #gf-test-badge { display: none; }   /* 1.37.6: the test-mode band (game-core) stays off the ending: at 844x390 it covered the first line (水無瀬病院 1.5.1) */
 .gf-ending-photo { position: fixed; inset: 0; background: center / cover no-repeat; filter: saturate(0.75) brightness(0.8); animation: gf-end-zoom 40s ease-out both, gf-end-fade 2.4s ease-out both; }
 .gf-ending-shade { position: fixed; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.5) 28%, rgba(0, 0, 0, 0.8) 58%, rgba(0, 0, 0, 0.94) 100%); }
 .gf-ending-text { position: relative; flex: none; width: min(720px, 100% - 32px); margin: auto auto 0; padding: 30vh 0 max(32px, var(--gf-safe-b, 0px)); display: flex; flex-direction: column; gap: 12px; text-shadow: 0 1px 3px #000, 0 0 18px rgba(0, 0, 0, 0.8); }
@@ -270,7 +271,8 @@ body.touch #say { bottom: max(12px, var(--gf-safe-b, 0px)); }
 .gf-ending.all .gf-ending-text > *, .gf-ending.still .gf-ending-text > * { animation: none; opacity: 1; }
 .gf-ending.still .gf-ending-photo { animation: none; }
 .gf-ending-later { opacity: 0; animation: gf-end-zoom 40s ease-out var(--d, 0s) both, gf-end-fade 2.4s ease-out var(--d, 0s) both; }   /* 1.37.0: the next picture of a long epilogue */
-.gf-ending.all .gf-ending-later, .gf-ending.still .gf-ending-later { animation: none; opacity: 1; }
+.gf-ending.all .gf-ending-later, .gf-ending.still .gf-ending-later { animation: none; opacity: 0; transition: opacity 1.2s ease; }   /* 1.37.4: read at once, a picture shows when its line comes up (js .on) */
+.gf-ending.all .gf-ending-later.on, .gf-ending.still .gf-ending-later.on { opacity: 1; }
 @keyframes gf-end-zoom { from { transform: scale(1.02); } to { transform: scale(1.16); } }
 @keyframes gf-end-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes gf-end-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

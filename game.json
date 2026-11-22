@@ -2,8 +2,8 @@
   "id": "yakinake",
   "title": "夜勤明けの街",
   "subtitle": "屋上のヘリまで、生きて歩け",
-  "version": "1.4.2",
-  "standard": "1.37.3",
+  "version": "1.4.3",
+  "standard": "1.37.7",
   "checks": { "rest": "error" },
   "theme": "dark-industrial hospital-cold",
   "preset": {

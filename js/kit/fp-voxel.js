@@ -1,4 +1,4 @@
-/* game-kit d0e6d25c: js/fp-voxel.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit d9e67113: js/fp-voxel.js — edit in game-kit and run tools/kit-sync.js */
 // First-person hands and weapons as real 3D dot models (1.35.0, 夜勤明けの街 #1 「手や武器も3Dドットで作成してください」).
 // The models are made of simple shapes (boxes, capsules, cylinders, ellipsoids; groups that turn) filled into a fine voxel grid
 // (4 mm by default), meshed with the sprite-stack mesher (js/sprite-stack-mesh.js) and drawn IN the scene, attached to the camera,
@@ -215,13 +215,15 @@ export function createFpRig(THREE, camera, o = {}) {
   // changed at run time; rig.fitNow(id) says what is applied. kxw/dyw/dzw/rzw are the same at wide screens (t = 0); rz/rzw tilt the model
   // (negative = its top to the right). A part may carry its own `fit` (long melee weapons stand lower and lean out of the crosshair), and
   // rig.fit.per[id] overrides that at run time.
-  const fit = { wide: 1.6, narrow: 0.46, kx: 0.5, dy: -0.02, dz: -0.05, rz: 0, kxw: 1.12, dyw: -0.012, dzw: 0, rzw: 0, per: {}, ...(o.fit || {}) };
+  // 1.37.7 (夜勤明けの街 1.4.3: the long guns' stocks ran down behind the phone's buttons in portrait): ry / ryw turn the model about the
+  // vertical (positive = its muzzle to the left, its stock out to the right edge), so a long gun can leave the screen beside the buttons.
+  const fit = { wide: 1.6, narrow: 0.46, kx: 0.5, dy: -0.02, dz: -0.05, rz: 0, ry: 0, kxw: 1.12, dyw: -0.012, dzw: 0, rzw: 0, ryw: 0, per: {}, ...(o.fit || {}) };
     const rig = {
     root, built, fit,
     fitNow(id = cur && cur.id) {
       const r = id != null ? built.get(id) : null, f = { ...fit, ...((r && r.spec.fit) || {}), ...((fit.per && fit.per[id]) || {}) };
       const a = camera.aspect || f.wide, t = Math.max(0, Math.min(1, (f.wide - a) / (f.wide - f.narrow))), L = (w, n) => w + t * (n - w);
-      return { t, kx: L(f.kxw, f.kx), dy: L(f.dyw, f.dy), dz: L(f.dzw, f.dz), rz: L(f.rzw, f.rz) };
+      return { t, kx: L(f.kxw, f.kx), dy: L(f.dyw, f.dy), dz: L(f.dzw, f.dz), rz: L(f.rzw, f.rz), ry: L(f.ryw || 0, f.ry || 0) };
     },
     get current() { return cur ? cur.id : null; },
     set visible(v) { root.visible = !!v; }, get visible() { return root.visible; },
@@ -254,7 +256,7 @@ export function createFpRig(THREE, camera, o = {}) {
       }
       const F = rig.fitNow(cur.id);
       g.position.set(b.x * F.kx + sx + mx + dip * 0.03, b.y + F.dy - sy + my + k * 0.012 - dip * 0.13, b.z + F.dz + mz + k * 0.045);
-      g.rotation.set(rx + k * 0.16 - dip * 0.45, ry, rz + F.rz + dip * (two ? 0.35 : 0.6), 'YXZ');
+      g.rotation.set(rx + k * 0.16 - dip * 0.45, ry + F.ry, rz + F.rz + dip * (two ? 0.35 : 0.6), 'YXZ');
       if (cur.flash) { cur.flash.visible = !!s.flash; if (s.flash) cur.flash.rotation.z = Math.random() * Math.PI; }
       // the off hand with the light: one-handed weapons only, its own smaller sway
       const wantLeft = !!s.light && !two && !!o.left;

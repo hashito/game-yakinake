@@ -1,4 +1,4 @@
-/* game-kit a4da8f61: js/ending-scene.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit d9e67113: js/ending-scene.js — edit in game-kit and run tools/kit-sync.js */
 // The ending as a scene (standard 1.8.1, feedback 2026-11-01 "最後にも写真を置いて手前に文字をつけるなど雰囲気を出して"): the picture fills the
 // screen and slowly comes closer, the kicker and the title stand in front of it, the epilogue appears a line at a time, and the stats and
 // the buttons come last. A click / Enter / Space shows the rest at once; reduced motion (ctx.calm or the OS setting) shows it all still.
@@ -54,6 +54,12 @@ export function endingShareOptions(manifest, o = {}) {
   return { place: "ending", tags: s.tags, line: s.line, ending: typeof ending === "string" ? ending : "", fallbackName: manifest && manifest.title };
 }
 
+/** which later pictures of a read-at-once epilogue show (1.37.4): the one whose line (index ats[i]) has its top above 60% of the view
+ *  height; pure (test/ending-scene.test.mjs) */
+export function laterOn(tops, ats, viewH) {
+  return ats.map((at) => tops[at] != null && tops[at] < viewH * 0.6);
+}
+
 export function showEndingScene(ctx, o = {}) {
   const paras = String(o.text || "").split("\n").filter((p) => p.trim());
   const still = !!(ctx && ctx.calm) || (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) || !!(ctx && ctx.qa);
@@ -65,7 +71,7 @@ export function showEndingScene(ctx, o = {}) {
   const el = document.createElement("div");
   el.id = "gf-ending"; el.className = `gf-ending ${still ? "still" : ""}`; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", o.title || "エンディング");
   const d = (s) => `style="--d:${s.toFixed(2)}s"`;
-  const later = (o.scenes || []).filter((s) => s && s.photo && tl.lines[s.at] != null).map((s) => `<div class="gf-ending-photo gf-ending-later" style="background-image:url('${esc(s.photo)}');--d:${tl.lines[s.at].toFixed(2)}s"></div>`).join("");
+  const later = (o.scenes || []).filter((s) => s && s.photo && tl.lines[s.at] != null).map((s) => `<div class="gf-ending-photo gf-ending-later" data-at="${s.at}" style="background-image:url('${esc(s.photo)}');--d:${tl.lines[s.at].toFixed(2)}s"></div>`).join("");
   el.innerHTML = `${o.photo ? `<div class="gf-ending-photo" style="background-image:url('${esc(o.photo)}')"></div>` : ""}${later}<div class="gf-ending-shade"></div>
     <div class="gf-ending-text">
       ${o.kicker ? `<p class="gf-ending-kicker" ${d(tl.kicker)}>${esc(o.kicker)}</p>` : ""}
@@ -79,10 +85,15 @@ export function showEndingScene(ctx, o = {}) {
   const so = endingShareOptions(ctx && ctx.manifest, o);
   if (so) { const sh = document.createElement("div"); sh.className = "gf-ending-share"; sh.setAttribute("style", `--d:${tl.buttons.toFixed(2)}s`); el.querySelector(".gf-ending-text").appendChild(sh); mountShareBar(sh, so); }
   document.body.appendChild(el);
-  const all = () => el.classList.add("all");
+  // 1.37.4 (水無瀬病院 1.5.1): read at once (calm / reduced motion / a click shows all), the later pictures follow the reading: each shows
+  // once its line has come up into the upper part of the screen (before: all of them showed at once, so only the last one was ever seen)
+  const lines = [...el.querySelectorAll(".gf-ending-line")], laters = [...el.querySelectorAll(".gf-ending-later")];
+  const sync = () => { if (!laters.length || !(still || el.classList.contains("all"))) return; const tops = lines.map((p) => p.getBoundingClientRect().top); const on = laterOn(tops, laters.map((x) => +x.dataset.at), el.clientHeight || innerHeight); laters.forEach((x, i) => x.classList.toggle("on", on[i])); };
+  el.addEventListener("scroll", sync, { passive: true }); addEventListener("resize", sync);
+  const all = () => { el.classList.add("all"); sync(); };
   el.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("button[data-i]"); if (b) { const f = (o.buttons || [])[+b.dataset.i]; f && f.fn && f.fn(); } else all(); });
   el.addEventListener("keydown", (e) => { if ((e.code === "Space" || e.code === "Enter") && !(e.target.closest && e.target.closest("button"))) { e.preventDefault(); all(); } });
-  el.tabIndex = -1; el.focus({ preventScroll: true });
+  el.tabIndex = -1; el.focus({ preventScroll: true }); requestAnimationFrame(sync);
   // a long epilogue is taller than the screen: follow each part down as it appears, until the player scrolls or shows it all (1.10.10)
   if (!still) {
     let follow = true; const stop = () => { follow = false; };
