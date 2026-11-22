@@ -1,4 +1,4 @@
-/* game-kit 0c515586: css/kit.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit c9310310: css/kit.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: shared styles for first-person browser games (windows, HUD, buttons, touch controls,
    status chips, steppers, kanban, app-like software screens, tabs, stamps, share buttons; at the end
    progression pg-*, sim UI nt-/tb-/dl-/ch-*, journal jr-* / stream veil st-* / hiding hd-*, chat cx-*).
@@ -48,6 +48,9 @@ button { font-family: inherit; }
 #crosshair.on { width: 18px; height: 18px; margin: -9px 0 0 -9px; background: transparent; border: 3px solid var(--accent2); }
 #prompt { position: absolute; left: 50%; top: calc(50% + 26px); transform: translateX(-50%); background: var(--gf-panel-soft, rgba(255, 253, 246, 0.94)); padding: 4px 12px; border-radius: 8px; font-weight: 700; white-space: nowrap; max-width: 92vw; overflow: hidden; text-overflow: ellipsis; }
 #prompt:empty { display: none; }
+/* 1.31.0: a thing already read / looked at: the same [E] line, quieter (no bold, no ring); the crosshair a thin grey square instead of the accent */
+#prompt.seen { font-weight: 400; box-shadow: none; outline: none; }
+#crosshair.on.seen { border-width: 2px; border-color: var(--gf-text-dim, #9a9a9a); }
 #hud-left { position: absolute; left: 12px; top: 12px; display: flex; flex-direction: column; gap: 8px; max-width: min(460px, 70vw); }
 #objective { background: var(--gf-panel-soft, rgba(255, 253, 246, 0.9)); border-radius: 12px; padding: 8px 12px; line-height: 1.6; border: 1px solid var(--line); }
 #objective .day { font-weight: 700; color: var(--gf-heading, #2f5e46); }
@@ -3999,4 +4002,21 @@ body.touch #say.on { pointer-events: auto; }   /* a tap on the thought band open
   .mgx.mgx--photo-full .mgx-photo-read, .mgx.mgx--photo-full .mgx-photo-left { top: 82px; }
   .mgx.mgx--photo-full .mgx-photo-meter { top: 56px; }
   .mgx.mgx--photo-full .mgx-msg { top: 112px; }
+}
+
+/* ---- block loading (js/block-loader.js, standard 1.32.0): a full screen over the game, the block's name, a story line, a bar, a button ---- */
+.gf-block-load { position: fixed; inset: 0; z-index: 2600; display: none; align-items: flex-start; justify-content: center; padding: max(16px, 6vh) 16px 16px; background: #0b0f10; color: #eef2ee; overflow: auto; }
+.gf-block-load.on { display: flex; }
+.gf-bl-box { width: min(560px, 100%); display: flex; flex-direction: column; gap: 14px; padding: 22px 24px; border-radius: var(--gf-radius-lg, 16px); background: #161d1f; color: #eef2ee; border: 1px solid #2c3a3c; }
+.gf-bl-kicker { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.06em; color: #f4f0e4; }
+.gf-bl-line { margin: 0; font-size: 17px; line-height: 1.75; color: #dfe6e1; }
+.gf-bl-bar { height: 12px; border-radius: 6px; background: #2a3437; color: #eef2ee; overflow: hidden; }   /* pair-ok */
+.gf-bl-bar i { display: block; height: 100%; width: 0; background: var(--accent2); transition: width 0.2s; }   /* pair-ok */
+.gf-bl-status { margin: 0; min-height: 1.5em; font-size: 15px; color: #c9d3cd; }
+.gf-bl-go { align-self: center; min-width: 200px; min-height: 48px; font-size: 18px; }
+@media (orientation: landscape) and (max-height: 500px) {
+  .gf-block-load { padding-top: 12px; }
+  .gf-bl-box { gap: 8px; padding: 14px 18px; }
+  .gf-bl-kicker { font-size: 18px; }
+  .gf-bl-line { font-size: 15px; line-height: 1.6; }
 }

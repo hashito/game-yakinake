@@ -23,50 +23,66 @@ export const PEOPLE = [
 export function installPeople(ext, G) {
   const sets = new Map(), figs = new Map();
   let ctx = null;
-  ext.registerBoot('yk-people', async (c, report) => {
-    let k = 0;
-    await Promise.all(PEOPLE.map(async (p) => {
-      try { sets.set(p.id, await loadFrameSet(THREE, `${FIG}${p.id}.json`)); } catch (e) { console.warn('[yakinake] figure', p.id, e); }
-      report(++k / PEOPLE.length, `人を準備中… ${Math.round((k / PEOPLE.length) * 100)}%`);
-    }));
-    loaded = true; placeAll();
-  });
-  // the boot (behind the title) ends after game:ready: the people stand once both have happened
-  let loaded = false, placed = false;
+  // 1.3.0 (play test #10 「重すぎて開かない」): the figures are loaded block by block (js/ext/blocks.js). One at a time, and the decoded
+  // picture (11424 x 1974 px, 90 MB of pixels each) is let go as soon as the frames are built: ten of them held 1.5 GB behind the title.
   const figMat = (self, name) => {
     const m = new THREE.MeshLambertMaterial({ vertexColors: true }); m.name = name;
-    m.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\n totalEmissiveRadiance += diffuseColor.rgb * ${self.toFixed(3)};`); };
+    m.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+ totalEmissiveRadiance += diffuseColor.rgb * ${self.toFixed(3)};`); };
     m.customProgramCacheKey = () => `yk-fig-${self}`;
     return m;
   };
-  ext.on('game:ready', (c) => { ctx = c; placeAll(); });
-  function placeAll() {
-    if (!ctx || !loaded || placed) return; placed = true;
-    const plan = ctx.data.plan, W = ctx.world, mat = figMat(0.22, 'yk-person');
-    const warm = [];
-    for (const P of PEOPLE) {
-      const set = sets.get(P.id); if (!set) continue;
-      const st = P.station ? plan.stations.find((s) => s.id === P.station) : null;
-      const [room, x, z] = st ? [st.room, st.x, st.z] : P.at;
-      const R = plan.rooms.find((r) => r.id === room), y = W.floorY((R && R.floor) || 0);
-      const f = createFigure(THREE, set, { height: P.h, material: mat, name: P.id });
-      // stand a little behind the talk point, facing into the room
-      const cx = R.x + R.w / 2, cz = R.z + R.d / 2, yaw = Math.atan2(cx - x, cz - z);
-      f.root.position.set(x - Math.sin(yaw) * 0.15, y, z - Math.cos(yaw) * 0.15);
-      f.root.rotation.y = yaw;
-      f.root.name = `person:${P.id}`;
-      ctx.scene.add(f.root);
-      f.anim.play('idle');
-      // the station's own stand-in look (a grey block where a person talks) is the person now
-      const sid = P.station || (P.id === 'hayase' ? 'S_HAYASE' : null);
-      if (sid) { const look = W.group.getObjectByName(`stlook:${sid}`); if (look) look.traverse((m) => { if (m.isMesh) m.visible = false; }); }
-      warm.push(f.warm);
-      figs.set(P.id, { P, f, room, floor: (R && R.floor) || 0, yaw, home: f.root.position.clone(), hp: P.hp || 100, max: P.hp || 100, mode: 'stand', cool: 0, hidden: false });
-    }
-    for (const w of warm) { if (!w) continue; w.visible = false; ctx.scene.add(w); }
-    ctx.warmObjects = [...(ctx.warmObjects || []), ...warm.filter(Boolean)];
-    G.people = figs;
+  ext.on('game:ready', (c) => { ctx = c; });
+  let mat = null;
+  const warmOf = new Map();
+  function placeOne(P, set) {
+    const plan = ctx.data.plan, W = ctx.world;
+    mat = mat || figMat(0.22, 'yk-person');
+    const st = P.station ? plan.stations.find((s) => s.id === P.station) : null;
+    const [room, x, z] = st ? [st.room, st.x, st.z] : P.at;
+    const R = plan.rooms.find((r) => r.id === room), y = W.floorY((R && R.floor) || 0);
+    const f = createFigure(THREE, set, { height: P.h, material: mat, name: P.id });
+    // stand a little behind the talk point, facing into the room
+    const cx = R.x + R.w / 2, cz = R.z + R.d / 2, yaw = Math.atan2(cx - x, cz - z);
+    f.root.position.set(x - Math.sin(yaw) * 0.15, y, z - Math.cos(yaw) * 0.15);
+    f.root.rotation.y = yaw;
+    f.root.name = `person:${P.id}`;
+    ctx.scene.add(f.root);
+    f.anim.play('idle');
+    // the station's own stand-in look (a grey block where a person talks) is the person now
+    const sid = P.station || (P.id === 'hayase' ? 'S_HAYASE' : null);
+    if (sid) { const look = W.group.getObjectByName(`stlook:${sid}`); if (look) look.traverse((m) => { if (m.isMesh) m.visible = false; }); }
+    if (f.warm) { f.warm.visible = false; ctx.scene.add(f.warm); warmOf.set(P.id, f.warm); }
+    figs.set(P.id, { P, f, set, room, floor: (R && R.floor) || 0, yaw, home: f.root.position.clone(), hp: P.hp || 100, max: P.hp || 100, mode: 'stand', cool: 0, hidden: false });
   }
+  G.loadPeople = async (ids, report = () => {}) => {
+    const want = PEOPLE.filter((P) => ids.includes(P.id) && !figs.has(P.id));
+    let k = 0;
+    for (const P of want) {
+      try {
+        const set = await loadFrameSet(THREE, `${FIG}${P.id}.json`);
+        placeOne(P, set);
+        set.px = null;   // the frames are built: the 90 MB picture goes
+      } catch (e) { console.warn('[yakinake] figure', P.id, e); }
+      report(++k / Math.max(1, want.length), `人を準備中… ${Math.round((k / Math.max(1, want.length)) * 100)}%`);
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    G.people = figs;
+    return want.length;
+  };
+  G.unloadPeople = (keep) => {
+    const K = new Set(keep || []);
+    for (const [id, p] of [...figs]) {
+      if (K.has(id)) continue;
+      p.f.root.removeFromParent();
+      const w = warmOf.get(id); if (w) { w.removeFromParent(); warmOf.delete(id); }
+      if (p.set && p.set.geo) { for (const g of p.set.geo.values()) g.dispose(); p.set.geo.clear(); }
+      figs.delete(id);
+    }
+  };
+  G.peopleWarm = () => [...warmOf.values()];
+  G.loadedPeople = () => [...figs.keys()];
+  G.people = figs;
   G.person = (id) => figs.get(id) || null;
   /** a person is somewhere else now (the roof at the end): a room, a point, a yaw; standing */
   G.placePerson = (id, room, x, z, yaw) => {

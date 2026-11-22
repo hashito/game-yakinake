@@ -11,7 +11,7 @@ const IDS = ['hands', 'scalpel', 'pipe', 'axe', 'nailgun', 'pistol', 'shotgun', 
 const pics = new Map();
 let meta = { w: 320, h: 192, weapons: {} };
 fetch(`${FP}fp.json`).then((r) => r.json()).then((m) => { meta = m; }).catch(() => {});
-for (const id of IDS) { const im = new Image(); im.src = `${FP}${id}.png?v=1.2.1`;   // the 1.1 pictures (160 x 96) stay a day in the cache: a new name
+for (const id of IDS) { const im = new Image(); im.src = `${FP}${id}.png?v=1.3.0`;   // the 1.1 pictures (160 x 96) stay a day in the cache: a new name
   im.onload = () => { pics.set(id, im); }; }
 // how far each gun kicks (1 = the pistol) and how big its flash is
 export const KICK = { nailgun: 0.4, pistol: 1, rifle: 1.5, shotgun: 2.2 };

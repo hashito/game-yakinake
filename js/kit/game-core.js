@@ -1,4 +1,4 @@
-/* game-kit 6eebcac2: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 874f1b3a: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -77,7 +77,7 @@ import { installTimedShot } from './timed-shot.js';
 import { VoiceQueue } from './voice-queue.js';
 import { installNpcAudit } from './npc-audit.js';
 
-export const CORE_VERSION = '1.30.2';
+export const CORE_VERSION = '1.32.1';
 // the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
 export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board', 'darkroom-develop', 'tape-splice', 'switchboard', 'steam-letter', 'puzzle-box', 'rubbing', 'knot-untangle', 'torn-paper', 'safe-listen', 'footprint-track'];
 const $ = (id) => document.getElementById(id);
@@ -563,7 +563,7 @@ export function createGame(cfg) {
     item: { prompt: (o) => `[E] 拾う：${items.find((i) => i.id === o.id).name}`,
       run: (o) => { const it = items.find((i) => i.id === o.id); remove('item', o.id); state.inv.push(o.id); sound('pickup'); if (!(it.photo || it.read)) ctx.lastPickup = { it, at: Date.now() };   /* 1.20.3: an item shown in the reading panel is not shown again as the first page of a talk */ if (it.photo || it.read) readItem(it, '入手'); else ui.toast(`入手：${esc(it.name)}`); if (it.feeling) ctx.afterReading(() => ui.say(esc(it.feeling)));   /* 1.20.3 items.json "read": a letter shows what it says the moment it is picked up (札の家 「各手紙も拾ったタイミングで内容を表示」); re-read in the item list / 手帳 */   /* an item with a photo shows its picture card (the feeling stays in the thought band) */ bus.emit('item:pickup', { id: o.id }); ctx.save(); checkEndings(); } },
     doc: { prompt: (o) => `[E] 読む：${docs.find((d) => d.id === o.id).title}`,
-      run: (o) => { const d = docs.find((x) => x.id === o.id); const first = !state.docsRead.includes(o.id); if (first) state.docsRead.push(o.id); sound('paper'); wm.open('doc', { title: d.title, size: (manifest.docStyle === 'paper' || d.paper) ? 'm' : 's', render: (el) => renderDocWindow(el, d, { paper: manifest.docStyle === 'paper' || !!d.paper, onDone: () => wm.close() }) });   /* 1.21.1: js/paper-doc.js renderDocWindow: the text in its own scroller, 読んだ below it (never over it), the picture left of the text on a low landscape screen, the picture shrunk before the text (js/panel-fit.js) */   /* 1.20.3: 読んだ at the end of the text closes it (then the comment) */   /* 1.17.0: game.json docStyle "paper" / docs.json "paper": the document as a sheet (js/paper-doc.js) */ if (first && d.feeling) ctx.monologue(d.feeling, Math.min(9, 2.4 + String(d.feeling).length * 0.09));   /* 1.20.3: the document alone in its window; the protagonist's comment comes after it is closed (ctx.monologue waits, see ctx.afterReading) and stays in 手帳 */ bus.emit('doc:read', { id: o.id }); ctx.save(); } },
+      run: (o) => { const d = docs.find((x) => x.id === o.id); const first = !state.docsRead.includes(o.id); if (first) state.docsRead.push(o.id); renewed.delete(`doc:${o.id}`); ctx.refreshEmphasis && ctx.refreshEmphasis(); sound('paper'); wm.open('doc', { title: d.title, size: (manifest.docStyle === 'paper' || d.paper) ? 'm' : 's', render: (el) => renderDocWindow(el, d, { paper: manifest.docStyle === 'paper' || !!d.paper, onDone: () => wm.close() }) });   /* 1.21.1: js/paper-doc.js renderDocWindow: the text in its own scroller, 読んだ below it (never over it), the picture left of the text on a low landscape screen, the picture shrunk before the text (js/panel-fit.js) */   /* 1.20.3: 読んだ at the end of the text closes it (then the comment) */   /* 1.17.0: game.json docStyle "paper" / docs.json "paper": the document as a sheet (js/paper-doc.js) */ if (first && d.feeling) ctx.monologue(d.feeling, Math.min(9, 2.4 + String(d.feeling).length * 0.09));   /* 1.20.3: the document alone in its window; the protagonist's comment comes after it is closed (ctx.monologue waits, see ctx.afterReading) and stays in 手帳 */ bus.emit('doc:read', { id: o.id }); ctx.save(); } },
     // locked stairs say why (the plan's hint, else the progression's lock text) and stay shut: [E] gives the reason in the thought band (1.9.1)
     stairs: { prompt: (o) => (o.locked && o.locked() ? `[E] ${lockedLabel(o.label || '階段', 'いまは使えません')}` : `[E] ${o.label || '階段を使う'}`),
       run: (o) => { if (o.locked && o.locked()) { ui.say(esc(o.hint || prog.lockText(o.unlock) || 'いまは、この階段を使えません。先に、いまの目標を進めましょう。'), 6, { urgent: true }); bus.emit('stairs:locked', { id: o.id, unlock: o.unlock }); return; } ctx.useStairs(o); } },
@@ -700,7 +700,32 @@ export function createGame(cfg) {
 
   // step guide: STEP cards for the first task that can be started and has "steps" (U22/U23); the hint is the protagonist's line
   let guide = null, guideTask = null;
-  const glow = (key, on) => { const m = world.interactables.find((o) => key && o.userData.interact && `${o.userData.interact.kind}:${o.userData.interact.id}` === key); if (m && m.material && m.material.emissiveIntensity != null) m.material.emissiveIntensity = on ? 1.8 : 0.55; };
+  // 1.31.0 (「読んだら強調表示をやめるようにしてください」): a document read or a thing looked at stops calling - its glow (emissive) drops to a faint
+  // rest, the game's own marks on it (children with userData.emphasis, or a game listening to bus 'emphasis') go out, the crosshair and the
+  // [E] line turn quiet (dimmer, the same words) - it can still be read again. It keeps calling while it is the STEP card's target, or after ctx.renew(key)
+  // (something new on it, until it is read again). The read state is the save's docsRead / looked, so it holds after a reload.
+  // ctx.isSeen(kind, id) -> read / looked; ctx.wantsEmphasis(key) -> still calling; ctx.renew(key); ctx.refreshEmphasis().
+  let emphTarget = null;
+  const renewed = new Set();
+  ctx.isSeen = (kind, id) => (kind === 'doc' ? state.docsRead.includes(id) : kind === 'look' ? (state.looked || []).includes(id) : false);
+  ctx.wantsEmphasis = (key) => { if (!key) return true; if (key === emphTarget || renewed.has(key)) return true; const i = key.indexOf(':'); return !ctx.isSeen(key.slice(0, i), key.slice(i + 1)); };
+  ctx.renew = (key) => { renewed.add(key); ctx.refreshEmphasis(); };
+  const emphState = new Map();   // key -> last applied (true calling / false quiet)
+  const setEmphasis = (m, on) => {
+    const key = m.name; if (emphState.get(key) === on) return; emphState.set(key, on);
+    m.traverse((o) => {
+      if (o !== m && o.userData && o.userData.emphasis) o.visible = on;
+      for (const mt of [].concat(o.material || [])) { if (!mt || mt.emissiveIntensity == null || !mt.emissive) continue; if (mt.userData.emis0 == null) mt.userData.emis0 = mt.emissiveIntensity; mt.emissiveIntensity = on ? mt.userData.emis0 : mt.userData.emis0 * 0.15; }
+    });
+    m.userData.quiet = !on; bus.emit('emphasis', { key, on });
+  };
+  ctx.refreshEmphasis = () => { for (const m of world.interactables) { const ia = m.userData && m.userData.interact; if (!ia || (ia.kind !== 'doc' && ia.kind !== 'look')) continue; setEmphasis(m, ctx.wantsEmphasis(`${ia.kind}:${ia.id}`)); } };
+  const glow = (key, on) => {
+    if (on) emphTarget = key; else if (emphTarget === key) emphTarget = null;
+    const m = world.interactables.find((o) => key && o.userData.interact && `${o.userData.interact.kind}:${o.userData.interact.id}` === key);
+    if (m && m.material && m.material.emissiveIntensity != null) m.material.emissiveIntensity = on ? 1.8 : ctx.wantsEmphasis(key) ? 0.55 : 0.08;
+    ctx.refreshEmphasis();
+  };
   const kt = (x) => (x == null ? x : keyText(x, ctx.input === 'pad' ? 'pad' : ctx.isTouch ? 'touch' : 'mouse'));   // the step card's key names follow the device
   ctx.keyText = kt; ui.keys = () => (ctx.input === 'pad' ? 'pad' : ctx.isTouch ? 'touch' : 'mouse');
   function refreshGuide() {
@@ -1054,7 +1079,9 @@ ${it.desc}` : ''}`, ...(it.photo ? { img: it.photo } : {}) };
       checkEndings();
     };
     title.classList.add('hidden');   // the game's cards (controls, intro) show on the bare 3D view
-    if (td.beforeStart && !o.skipIntro) td.beforeStart(ctx, go, o); else go();   // the game's controls card / intro screens
+    const run = () => { if (td.beforeStart && !o.skipIntro) td.beforeStart(ctx, go, o); else go(); };   // the game's controls card / intro screens
+    // block loading (standard 1.32.0, js/block-loader.js): the block the game starts in is loaded (behind its own loading screen) first
+    if (ctx.blockGate) ctx.blockGate(o).then(run, (e) => console.error('[block-loader] start', e)); else run();
   };
   installPhonePlay(ctx, { manifest, bus, pm: ctx.pm, ui });   // 1.21.0 phone play: landscape notice, 目的 chip, one notice at a time, 全画面 (js/phone-play.js)
   $('start-btn').onclick = () => { if (saved && td.confirmNew && !$('start-btn').dataset.sure) { $('start-btn').dataset.sure = '1'; $('start-btn').textContent = td.confirmNew; return; } begin({}); };
@@ -1062,6 +1089,8 @@ ${it.desc}` : ''}`, ...(it.photo ? { img: it.photo } : {}) };
   ctx.start = begin;
   store.autosave(() => (state.started && !state.ended && !TEST_MODE ? snapshot() : null));
 
+  // the same warm-up for things made after the boot (a block loaded later, js/block-loader.js): compile and upload them hidden
+  ctx.prewarmNow = async (extra = []) => { if (manifest.noPrewarm) return null; const r = await prewarm(renderer, scene, camera, { hidden: true, extra }); fg.armPrograms(); return r; };
   // ---- boot (behind the title: the game's pre-compile, tour, decode steps) ----
   ctx.boot = async () => {
     const btn = $('start-btn');
@@ -1102,15 +1131,28 @@ ${it.desc}` : ''}`, ...(it.photo ? { img: it.photo } : {}) };
 
   // ---- frame loop ----
   const clock = new THREE.Clock();
+  let emphTick = 0;
   ctx.active = () => state.started && !blocked();
-  renderer.setAnimationLoop((t) => {
+  // 1.31.1 (水無瀬病院 「ひなたと喋った後に携帯で動けなくなります」, P51): three.js asks for the next frame only after this callback returns, so one
+  // throw stopped the game for good (frozen picture, no walking, the HUD still tapping). A frame that throws is reported (once per message,
+  // ctx.frameErrors for the checks) and the next frame still comes; the world update / prompt / systems throw apart from the walk and the draw.
+  const frameErrors = ctx.frameErrors = [];
+  const frameFail = (where, e) => { const m = `${where}: ${(e && e.message) || e}`; if (frameErrors.includes(m)) return; frameErrors.push(m); console.error('[frame]', m, e && e.stack ? e.stack.split(String.fromCharCode(10)).slice(1, 4).join(' ') : ''); };
+  renderer.setAnimationLoop((t) => { try { frameBody(t); } catch (e) { frameFail('frame', e); } });
+  function frameBody(t) {
     fg.frame(t); ctx.jobs.run();
     if (!ctx.booted && !manifest.renderWhileBooting) { clock.getDelta(); return; }   // behind the title nothing is drawn until the boot steps are done (a time-sliced world build waits for frames: drawing a half-built scene every frame doubled the build time)
     const dt = Math.min(clock.getDelta(), 0.1);
     const active = state.started && !blocked();
     ctx.pad.poll(dt);
     if (ctx.lookInput) ctx.lookInput.update(dt);
-    fp.update(dt);
+    try { fp.update(dt); } catch (e) { frameFail('walk', e); }
+    try { midFrame(dt, active); } catch (e) { frameFail('update', e); }
+    if (ctx.pixelStyle) ctx.pixelStyle.update(dt);
+    const own = ext.reg.render.get('render');
+    if (own) own.render(dt, ctx, look); else { look.update(dt, t / 1000, camera.position); look.render(); }   // registerRender: the game draws the frame (arakawa, heiengo)
+  }
+  function midFrame(dt, active) {
     if (world.update) world.update(dt, ctx);
     const room = world.roomAt(camera.position.x, camera.position.z, camera.position.y);
     if (room !== state.room) { const from = state.room; state.room = room; if (room && !state.visited.includes(room)) state.visited.push(room); if (state.started) bus.emit('player:room', { from, to: room }); }
@@ -1122,14 +1164,13 @@ ${it.desc}` : ''}`, ...(it.photo ? { img: it.photo } : {}) };
     if (ctx.input === 'pad') text = text.replace(/\[E\]/g, '[A]'); else if (ctx.isTouch) text = text.replace(/\[E\] ?/g, 'タップ：');   // the key hint follows the device in use (touch: tap the thing, W18)
     const pe = $('prompt'); if (pe.dataset.t !== text) { pe.dataset.t = text; if (/<[a-z]/i.test(text)) pe.innerHTML = text; else pe.textContent = text; }
     $('crosshair').classList.toggle('on', !!text); $('crosshair').classList.toggle('aim', !!text);
+    { const q = !!(target && text && (target.kind === 'doc' || target.kind === 'look') && !ctx.wantsEmphasis(`${target.kind}:${target.id}`)); $('crosshair').classList.toggle('seen', q); pe.classList.toggle('seen', q); }   // 1.31.0: read -> quiet
+    if ((emphTick = (emphTick + 1) % 30) === 0) ctx.refreshEmphasis();   // a reload, a STEP change, a look: applied within half a second
     for (const m of monsters) m.inst && m.inst.update && m.inst.update(dt, ctx);
     for (const s of systems) s.def.update(dt, ctx, active, s.inst);
     if (ctx.approach) ctx.approach.update(dt, active);
     if (ctx.audio.ctx) safe(() => ctx.audio.setListener(camera));
-    if (ctx.pixelStyle) ctx.pixelStyle.update(dt);
-    const own = ext.reg.render.get('render');
-    if (own) own.render(dt, ctx, look); else { look.update(dt, t / 1000, camera.position); look.render(); }   // registerRender: the game draws the frame (arakawa, heiengo)
-  });
+  }
   // GA4 events (no-ops unless the site build injected gtag)
   bus.on('game:start', () => track('game_start', { game: manifest.id, version: manifest.version }));
   bus.on('task:done', ({ id }) => track('task_done', { game: manifest.id, task: id }));

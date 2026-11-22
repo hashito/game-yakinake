@@ -174,6 +174,7 @@ export function installStory(ext, G) {
     genzo: { at: [132.6, 12.2], wave: 2 },
     chisato: { at: [134.2, 12.4], wave: 2 },
   };
+  G.roofAllies = () => allies();   // 1.3.0: the roof block loads just these people
   function allies() {
     const f = G.flags, kept = f.alliance === 'joined' && !f.betrayed;
     const on = new Set();

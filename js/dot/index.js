@@ -100,13 +100,17 @@ export default async function dotLayer(ext, { manifest, data }) {
   const sized = (m, k, size) => { const gs = cgeo(k).boundingBox.getSize(new THREE.Vector3()), R = REAL[k];
     if (size) m.scale.setScalar(size / Math.max(gs.x, gs.y, gs.z)); else if (R && R.h) m.scale.y = R.h / gs.y; else if (R && R.surf) m.scale.y = R.surf / R.nat; return m; };
 
-  ext.registerBoot('dot-pictures', async (ctx, report) => {
+  // 1.3.0 (#10): the photos in dot are made with the first block (js/ext/blocks.js, the common pack), not behind the title
+  ext.registerBoot('dot-title', async () => { await preparePhotos(['title.webp']); });   // the title art alone behind the title
+  let picturesP = null;
+  D.preparePictures = (report = () => {}) => picturesP || (picturesP = (async () => {
     const t = performance.now();
     const names = [...new Set(JSON.stringify(data).match(/assets\/photos\/[\w.-]+\.webp/g) || [])].map((s) => s.slice(14));
-    names.push(...['title.webp', 'death.webp'].filter((n) => !names.includes(n)));
+    names.push(...['death.webp'].filter((n) => !names.includes(n)));
     D.photos = await preparePhotos(names, (k) => report(k, `ドット絵を準備中… ${Math.round(k * 100)}%`));
     D.timings.pictures = Math.round(performance.now() - t);
-  });
+    return D.photos;
+  })());
 
   // systems are registered before the game starts; the world's own update is filled in at game:ready
   let worldUpdate = null;

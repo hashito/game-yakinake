@@ -1,4 +1,4 @@
-/* game-kit 10af67dd: js/sprite-stack-mesh.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit c9310310: js/sprite-stack-mesh.js — edit in game-kit and run tools/kit-sync.js */
 // Sprite stacks as three.js meshes (docs/sprite-motions.md): the horizontal slices are read as a voxel volume and turned
 // into one mesh per frame (faces only where a voxel meets air, coplanar faces of one colour merged into rectangles, colour
 // per vertex). The model reads the same from every angle, also at eye level where stacked slice planes would vanish.
@@ -15,17 +15,88 @@
 // sight of a motion uploads nothing during play (pixel games load first).
 import { MotionPlayer } from './sprite-stack-anim.js';
 
-/** RGBA pixels of an image URL */
+// iOS Safari (WebKit) caps a canvas at 16,777,216 pixels (4096 x 4096). The res-2 frame atlases are bigger (ひなた 10080 x 2880 = 29 MP,
+// 千草 24 MP, worker 56 MP): read through one canvas, iPhones got pixels laid out at another width and every slice read from the wrong
+// place - the figure fanned out into tilted copies (水無瀬病院 「ひなたが壊れてます」, 札の家 「ふだの家の老婆も壊れてます」, 1.31.1, P50).
+// So a PNG is decoded here, in script (no canvas, no colour premultiplied and back, the same bytes on every browser); a canvas is only the
+// fallback (no DecompressionStream, not a PNG), read in tiles that each stay under the cap.
+export const CANVAS_MAX_AREA = 16777216;
+export const CANVAS_TILE = 4096;
+
+async function inflate(bytes) {
+  const ds = new DecompressionStream('deflate');   // zlib (RFC 1950): what a PNG's IDAT holds
+  const out = await new Response(new Blob([bytes]).stream().pipeThrough(ds)).arrayBuffer();
+  return new Uint8Array(out);
+}
+
+/** decode a PNG (8-bit, not interlaced: grey, RGB, palette, grey + alpha, RGBA) to { data (RGBA), width, height }; null if it cannot */
+export async function decodePng(buf) {
+  const b = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  const SIG = [137, 80, 78, 71, 13, 10, 26, 10];
+  if (b.length < 33 || SIG.some((v, i) => b[i] !== v)) return null;
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  let w = 0, h = 0, depth = 0, type = 0, lace = 0, plte = null, trns = null; const idat = [];
+  for (let o = 8; o + 8 <= b.length;) {
+    const len = dv.getUint32(o), t = String.fromCharCode(b[o + 4], b[o + 5], b[o + 6], b[o + 7]), d = b.subarray(o + 8, o + 8 + len);
+    if (t === 'IHDR') { w = dv.getUint32(o + 8); h = dv.getUint32(o + 12); depth = d[8]; type = d[9]; lace = d[12]; }
+    else if (t === 'PLTE') plte = d; else if (t === 'tRNS') trns = d; else if (t === 'IDAT') idat.push(d); else if (t === 'IEND') break;
+    o += 12 + len;
+  }
+  const ch = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 }[type];
+  if (!w || !h || depth !== 8 || lace !== 0 || !ch || !idat.length || (type === 3 && !plte)) return null;
+  let n = 0; for (const d of idat) n += d.length;
+  const z = new Uint8Array(n); n = 0; for (const d of idat) { z.set(d, n); n += d.length; }
+  const raw = await inflate(z);
+  const stride = w * ch;
+  if (raw.length < (stride + 1) * h) return null;
+  const px = new Uint8Array(stride * h);
+  for (let y = 0; y < h; y++) {
+    const f = raw[y * (stride + 1)], src = y * (stride + 1) + 1, dst = y * stride, up = dst - stride;
+    for (let i = 0; i < stride; i++) {
+      const x = raw[src + i], a = i >= ch ? px[dst + i - ch] : 0, u = y ? px[up + i] : 0, c = y && i >= ch ? px[up + i - ch] : 0;
+      let v;
+      if (f === 0) v = x; else if (f === 1) v = x + a; else if (f === 2) v = x + u; else if (f === 3) v = x + ((a + u) >> 1);
+      else if (f === 4) { const p = a + u - c, pa = Math.abs(p - a), pb = Math.abs(p - u), pc = Math.abs(p - c); v = x + (pa <= pb && pa <= pc ? a : pb <= pc ? u : c); }
+      else return null;
+      px[dst + i] = v & 255;
+    }
+  }
+  if (type === 6) return { data: new Uint8ClampedArray(px.buffer), width: w, height: h };
+  const data = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0, j = 0; i < w * h; i++, j += 4) {
+    if (type === 2) { data[j] = px[i * 3]; data[j + 1] = px[i * 3 + 1]; data[j + 2] = px[i * 3 + 2]; data[j + 3] = 255; }
+    else if (type === 0) { data[j] = data[j + 1] = data[j + 2] = px[i]; data[j + 3] = 255; }
+    else if (type === 4) { data[j] = data[j + 1] = data[j + 2] = px[i * 2]; data[j + 3] = px[i * 2 + 1]; }
+    else { const k = px[i]; data[j] = plte[k * 3]; data[j + 1] = plte[k * 3 + 1]; data[j + 2] = plte[k * 3 + 2]; data[j + 3] = trns && k < trns.length ? trns[k] : 255; }
+  }
+  return { data, width: w, height: h };
+}
+
+/** RGBA pixels of an image URL: { data, width, height } (data rows of `width` pixels). A PNG is decoded in script; otherwise a canvas
+ *  read in tiles of at most CANVAS_TILE x CANVAS_TILE (never one canvas over CANVAS_MAX_AREA: see above). px.via says which. */
 export async function loadPixels(url) {
+  if (typeof DecompressionStream === 'function') {
+    try {
+      const r = await fetch(url);
+      if (r.ok) { const px = await decodePng(await r.arrayBuffer()); if (px) { px.via = 'png'; return px; } }
+    } catch (e) { console.warn('[sprite-stack] PNG decode failed, using a canvas:', url, e && e.message); }
+  }
   const img = new Image();
   img.decoding = 'async';
   img.src = url;
   await img.decode();
-  const c = document.createElement('canvas');
-  c.width = img.naturalWidth; c.height = img.naturalHeight;
+  const W = img.naturalWidth, H = img.naturalHeight, data = new Uint8ClampedArray(W * H * 4);
+  const T = CANVAS_TILE, c = document.createElement('canvas');
+  c.width = Math.min(W, T); c.height = Math.min(H, T);
   const g = c.getContext('2d', { willReadFrequently: true });
-  g.drawImage(img, 0, 0);
-  return { data: g.getImageData(0, 0, c.width, c.height).data, width: c.width, height: c.height };
+  for (let ty = 0; ty < H; ty += T) for (let tx = 0; tx < W; tx += T) {
+    const tw = Math.min(T, W - tx), th = Math.min(T, H - ty);
+    g.clearRect(0, 0, c.width, c.height);
+    g.drawImage(img, tx, ty, tw, th, 0, 0, tw, th);
+    const part = g.getImageData(0, 0, tw, th).data;
+    for (let y = 0; y < th; y++) data.set(part.subarray(y * tw * 4, (y + 1) * tw * 4), ((ty + y) * W + tx) * 4);
+  }
+  return { data, width: W, height: H, via: 'canvas' };
 }
 
 /** a volume view of one strip (rows y, columns z * w + x) inside an RGBA picture, starting at row `row` */
@@ -113,6 +184,8 @@ export function buildStackGeometry(THREE, vol, o = {}) {
 export async function loadFrameSet(THREE, jsonUrl) {
   const meta = await (await fetch(jsonUrl)).json();
   const px = await loadPixels(new URL(`${meta.id}.png`, new URL(jsonUrl, location.href)).href);
+  // the atlas must be exactly the frames x slices the JSON says (a picture read at another size puts every slice in the wrong place)
+  if (px.width < meta.w * meta.n || px.height < meta.d * meta.frames.length) throw new Error(`${meta.id}: atlas ${px.width}x${px.height} is smaller than ${meta.w * meta.n}x${meta.d * meta.frames.length} (w*n x d*frames)`);
   return { meta, px, url: jsonUrl };
 }
 

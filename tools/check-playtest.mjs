@@ -58,6 +58,7 @@
 //   1.22.0 (the 鏡屋 dot play test rolled out): P42 a mark (▼, arrow, the next-place pointer, a glow) drawn through a wall, every room
 //   (tools/mark-sight.mjs; js/mark-sight.js markSight().clear() fixes it); P43 a pickup cut into by another thing - a wall clock over an
 //   item (tools/pick-overlap.mjs)
+//   P52 (1.32.0, 夜勤明けの街 「ゾンビのゲーム重すぎて開かない」): the JS heap behind the title - over 400 MB a warning, over 600 MB an error
 //   1.28.0 (夜勤明けの街 play test 2026-11-22; tools/rest-check.mjs): P47 a placed thing floating - nothing under it within 4 cm, not a thin wall
 //   thing against a wall, not hanging (「空中にものが浮いています（ラジオや紙）」); P48 a thing of a known kind out of body size - desks 0.66-0.8 m,
 //   counters 0.82-1.05, doors 1.9-2.25, eyes 1.5-1.72, cars 3.6-5.4 long ... (「自分の体のサイズに合わせてサイズを考え直してください」).
@@ -71,7 +72,8 @@
 //     content spilling out of a frame (error); an inner line drawn as a negative outline, a squashed picture (warning) (tools/frame-nest.mjs)
 //   1.21.0: P31 phone layout at 844x390 / 667x375 (landscape) and 390x844 (portrait): the HUD covers more than PHONE_HUD_MAX of the screen,
 //       two panels overlap (errors), the portrait notice is missing (tools/phone-layout.mjs: 「メッセージや通知で領域を使いすぎている」)
-// Exit 1 on an error (P4, P7, P9, P19, P24, P25 overlap, P26, P30, P31, P32, P33, P34, P35, P36, P37, P38, P39, P40, P41, P42, P43, P44, P46, P47 / P48 with checks.rest = "error") or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
+//   1.31.0: P49 a document read keeps its emphasis (glow, marks) or cannot be read again (「読んだら強調表示をやめるようにしてください」)
+// Exit 1 on an error (P4, P7, P9, P19, P24, P25 overlap, P26, P30, P31, P32, P33, P34, P35, P36, P37, P38, P39, P40, P41, P42, P43, P44, P46, P49, P47 / P48 with checks.rest = "error", P52 over 600 MB) or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -151,6 +153,11 @@ try {
   const sc = arg('--scene', null);
   await p.goto(`${base}?test=1${sc ? `&scene=${sc}` : ''}`);
   await p.waitFor("window.__game && document.getElementById('start-btn') && !document.getElementById('start-btn').disabled || (window.__game && window.__game.state && window.__game.state.started)", 120000);
+  // P52 (1.32.0, 夜勤明けの街 「重すぎて開かない」): the title is light - the JS heap behind the title stays under 400 MB (a warning; 600 MB an
+  // error). 1.2.0 held 1.5 GB there (every figure's 90 MB picture, every zombie pattern) and did not open on a phone: load by block (js/block-loader.js)
+  { const hp = await G('(performance.memory || {}).usedJSHeapSize || 0'); const mb = Math.round((hp || 0) / 1048576);
+    if (mb > 600) E('P52', `the JS heap behind the title is ${mb} MB (over 600 MB: a phone may not open it; load the heavy parts by block, js/block-loader.js)`);
+    else if (mb > 400) Wn('P52', `the JS heap behind the title is ${mb} MB (over 400 MB; load the heavy parts by block, js/block-loader.js)`); }
   if (!(await G('g.state.started'))) await G(`(document.getElementById('start-btn').click(), 1)`);
   for (let i = 0; i < 40 && !(await G('g.state.started')); i++) { await G(`([...document.querySelectorAll('button')].filter((b) => b.offsetParent && /始める|はじめる|タップ|クリック|OK|わかった/.test(b.textContent)).slice(0, 1).forEach((b) => b.click()), 1)`); await sleep(300); }
   await sleep(2000);
@@ -435,11 +442,12 @@ try {
   for (const [w, h] of [[390, 844], [375, 667], [844, 390]]) {
     const q = await launch({ width: w, height: h, mobile: true, dpr: 2 });
     const Q = async (expr) => { const s = await q.eval(`(async () => { const g = window.__game; return JSON.stringify(await (${expr})); })()`); return s === undefined ? undefined : JSON.parse(s); };
-    const closeAll = () => Q(`(g.lane && g.lane.clear && g.lane.clear('card'), g.wm && g.wm.isOpen && g.wm.close(), [...document.querySelectorAll('.wm-layer .btn.primary')].filter((b) => b.offsetParent).forEach((b) => b.click()), 1)`);
+    const closeAll = () => Q(`(g.lane && g.lane.clear && g.lane.clear('card'), g.wm && g.wm.isOpen && g.wm.close(), [...document.querySelectorAll('.wm-layer .btn.primary, [role=dialog] .btn.primary')].filter((b) => b.offsetParent).forEach((b) => b.click()), 1)`);   // 1.30.3: a game's own dialog too (署名のあとで 説明)
     try {
       await q.goto(`${base}?test=1`);
       await q.waitFor("window.__game && document.getElementById('start-btn') && !document.getElementById('start-btn').disabled || (window.__game && window.__game.state && window.__game.state.started)", 120000);
       if (!(await Q('g.state.started'))) await Q(`(document.getElementById('start-btn').click(), 1)`);
+      if (h > w) { await sleep(800); await Q(`((document.querySelector('#gf-rotate .gf-rot-ok') || { click() {} }).click(), 1)`); }   // 1.30.3: portrait: 縦のまま続ける first, as a player does (P35 found the 横向き notice over 閉じる)
       await sleep(2500);
       for (let i = 0; i < 30 && (await Q('g.blocked ? g.blocked() : false')); i++) { await closeAll(); await sleep(400); }
       await sleep(600);
@@ -492,6 +500,33 @@ try {
     } catch (e) { Wn('P24', `${w}x${h}: the phone pass could not run: ${e.message}`); }
     finally { await q.close(); }
   }
+  // P49 (1.31.0, 「読んだら強調表示をやめるようにしてください」): a document read stops calling - no glow, no mark, a quiet crosshair - and can be
+  // read again. Each placed document is read (ctx.useInteract), closed, then: still selectable, ctx.wantsEmphasis false (unless it is the STEP
+  // card's target), its emissive at the faint rest, its emphasis children hidden; a second read opens it again.
+  if (await G('typeof g.wantsEmphasis === "function" && typeof g.useInteract === "function"')) {
+    const R = await G(`(async () => {
+      const out = [], sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const close = async () => { for (let i = 0; i < 12 && (g.blocked ? g.blocked() : false); i++) { g.lane && g.lane.clear && g.lane.clear('card'); g.wm && g.wm.isOpen && g.wm.close(); [...document.querySelectorAll('.wm-layer .btn.primary, [role=dialog] .btn.primary')].filter((b) => b.offsetParent).forEach((b) => b.click()); await sleep(150); } };
+      const docs = g.world.interactables.filter((m) => m.userData && m.userData.interact && m.userData.interact.kind === 'doc').slice(0, 8);
+      for (const m of docs) {
+        const ia = m.userData.interact, key = 'doc:' + ia.id;
+        g.useInteract(ia); await sleep(300); await close(); g.refreshEmphasis(); await sleep(50);
+        const bad = [];
+        if (!g.world.interactables.includes(m)) { out.push([ia.id, 'gone after reading (it cannot be read again)']); continue; }
+        if (g.wantsEmphasis(key) && g.target !== m) { const why = g.isSeen('doc', ia.id) ? 'still calling (the STEP target or renewed?)' : 'not recorded as read (state.docsRead)'; if (!/STEP/.test(why)) bad.push(why); }
+        let hot = 0; m.traverse((o) => { if (o !== m && o.userData && o.userData.emphasis && o.visible && !g.wantsEmphasis(key)) bad.push('a mark still shows: ' + (o.name || o.type)); for (const mt of [].concat(o.material || [])) if (mt && mt.emissive && mt.userData && mt.userData.emis0 > 0.05 && !g.wantsEmphasis(key) && mt.emissiveIntensity > mt.userData.emis0 * 0.5) hot++; });
+        if (hot) bad.push(hot + ' material(s) still glow');
+        const opens = (g.readLog || []).filter((x) => x[0] === 'open' && x[1] === 'doc').length;
+        g.useInteract(ia); await sleep(300);
+        const again = (g.readLog || []).filter((x) => x[0] === 'open' && x[1] === 'doc').length > opens || (g.wm && g.wm.isOpen);
+        await close();
+        if (!again) bad.push('a second read did not open it');
+        for (const b of bad) out.push([ia.id, b]);
+      }
+      return out;
+    })()`);
+    for (const [id, why] of (Array.isArray(R) ? R : []).slice(0, 12)) E('P49', `doc "${id}": ${why}`);
+  } else Wn('P49', 'ctx.wantsEmphasis is missing (kit < 1.31.0): read documents keep their emphasis');
   // P43 (1.22.0): pickups clear of other things
   { const O = await G(pickOverlapSource()); for (const x of (Array.isArray(O) ? O : []).slice(0, 12)) E('P43', `pickup "${x[0]}": "${x[1]}" cuts into it by ${JSON.stringify(x[2])} m at ${JSON.stringify(x[3])}`); }
   // P47 / P48 (1.28.0, 夜勤明けの街): every placed thing rests on something; known kinds have a body-sized size (tools/rest-check.mjs).

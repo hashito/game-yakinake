@@ -18,13 +18,32 @@ export function installZombies(ext, G) {
   const MAX = () => (touch() ? 12 : 15);
   const RADIUS = 26;
 
-  ext.registerBoot('yk-zombies', async (c, report) => {
+  // 1.3.0 (play test #10 「重すぎて開かない」): the patterns are loaded block by block (js/ext/blocks.js), not all 40 behind the title.
+  // loadPatterns(ids): the ones not loaded yet; unloadPatterns(keep): every other one goes, with the bodies made of it (they are far away)
+  G.loadPatterns = async (ids, report = () => {}) => {
+    const want = [...new Set(ids)].filter((id) => PATTERNS.includes(id) && !pats.has(id));
     let k = 0;
-    await Promise.all(PATTERNS.map(async (id) => {
+    await Promise.all(want.map(async (id) => {
       try { pats.set(id, await loadZombiePattern(THREE, `${ZDIR}${id}.json`)); } catch (e) { console.warn('[yakinake] zombie pattern', id, e); }
-      report(++k / PATTERNS.length, `ゾンビを準備中… ${Math.round((k / PATTERNS.length) * 100)}%`);
+      report(++k / Math.max(1, want.length), `ゾンビを準備中… ${Math.round((k / Math.max(1, want.length)) * 100)}%`);
     }));
-  });
+    return want.length;
+  };
+  G.ensurePatterns = (ids) => G.loadPatterns(ids).then(() => true);   // tests: a pattern from another block, before extraZombie
+  G.unloadPatterns = (keep) => {
+    const K = new Set(keep || []);
+    for (const [id, L] of [...live]) if (!K.has(L.def.p)) despawn(id);
+    let n = 0;
+    for (const [id, pat] of [...pats]) {
+      if (K.has(id)) continue;
+      const geos = [...Object.values(pat.geo || {}).flatMap((g) => Object.values(g)), ...Object.values(pat.skin || {})];
+      for (const g of geos) if (g && g.dispose) g.dispose();
+      pats.delete(id); n++;
+    }
+    return n;
+  };
+  G.loadedPatterns = () => [...pats.keys()];
+  G.patternOf = (id) => pats.get(id) || null;
 
   ext.on('game:ready', (c) => {
     ctx = c;
