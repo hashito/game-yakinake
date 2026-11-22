@@ -1,5 +1,5 @@
 {
-  "kit": "f33d12c8",
+  "kit": "93a3e709",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -175,10 +175,11 @@
     "build-site.js",
     "make_og.py",
     "rest-check.mjs",
-    "bake-stacks.mjs"
+    "bake-stacks.mjs",
+    "bake-prop-boxes.mjs"
   ],
   "hashes": {
-    "js\\kit\\game-core.js": "61fc397bcde6",
+    "js\\kit\\game-core.js": "2c74b7faabb7",
     "js\\kit\\item-kinds.js": "1df558ca9be9",
     "js\\kit\\item-models.js": "8c5988e07991",
     "js\\kit\\prop-geo.js": "6015f33a97f7",
@@ -227,7 +228,7 @@
     "js\\kit\\map-svg.js": "8e96f392f862",
     "js\\kit\\plan-check.js": "a055459332bf",
     "js\\kit\\step-guide.js": "6d7f94593cfc",
-    "js\\kit\\frame-guard.js": "155d3536102e",
+    "js\\kit\\frame-guard.js": "c97497652c62",
     "js\\kit\\approach-fx.js": "de156497c36e",
     "js\\kit\\body-fx.js": "5d8382cb1ec2",
     "js\\kit\\plan-dress.js": "f47552922a18",
@@ -265,7 +266,7 @@
     "js\\kit\\things.js": "221850052d83",
     "js\\kit\\terminal-screen.js": "1a08b05c35af",
     "js\\kit\\voice-fx.js": "5b9cf3f75ef3",
-    "js\\kit\\recipes.js": "d58491ea03ae",
+    "js\\kit\\recipes.js": "2ff38bc4e621",
     "js\\kit\\props.js": "d5439140640e",
     "js\\kit\\prop-batch.js": "905b27d055e7",
     "js\\kit\\env-props.js": "ea65b46f79c1",
@@ -359,8 +360,9 @@
     "tools/build-site.js": "c8beaa333016",
     "tools/make_og.py": "5f7a64af835d",
     "tools/rest-check.mjs": "1ce04607e207",
-    "js\\kit\\block-loader.js": "c41ae1776bdd",
-    "tools/bake-stacks.mjs": "56932cc25652"
+    "js\\kit\\block-loader.js": "9eae779a410c",
+    "tools/bake-stacks.mjs": "56932cc25652",
+    "tools/bake-prop-boxes.mjs": "3bd46492d944"
   },
   "textures": []
 }

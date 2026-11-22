@@ -75,6 +75,9 @@ export default async function dotLayer(ext, { manifest, data }) {
   D.timings.baked = bakedAll;
   const px = bakedAll ? {} : Object.fromEntries(await Promise.all(Object.keys(index).map(async (k) => [k, await loadPixels(AT(`assets/stacks/${k}.png`))])));
   D.timings.load = Math.round(performance.now() - t0);
+  // 1.3.2: a prop this layer replaces with a part is built by the kit as its boxes only (kit 1.34.0 recipes: data/prop-boxes.json from
+  // tools/bake-prop-boxes.mjs) - the full props were 4.5 s of the title at CPU 4x and were hidden here anyway
+  ext.on('game:ready', (c) => { c.recipeStub = (f) => { const k = FURN_ID[f.id] || FURN[f.kind]; return !!(k && index[k]); }; });
   const mat = new THREE.MeshLambertMaterial({ vertexColors: true }); mat.name = 'dot-stack';
   const geo = new Map();
   const cgeo = (k) => {

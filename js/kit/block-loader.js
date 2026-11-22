@@ -1,4 +1,4 @@
-/* game-kit f89b1fcd: js/block-loader.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit f33d12c8: js/block-loader.js — edit in game-kit and run tools/kit-sync.js */
 // Block loading (standard 1.32.0, 夜勤明けの街 1.3.0: 「重すぎて開かないので各ブロック単位でロードする仕様に」).
 // A big game is cut into blocks (a hospital, a street, a station ...). The title opens with the core only; starting, continuing or
 // walking into the next block loads just that block's things (figures, zombie patterns, pictures ...) behind a loading screen with a
@@ -99,6 +99,22 @@ export function installBlockLoader(ctx, def) {
     await waitGo(o.goLabel || (from ? '進む' : 'はじめる'));
     el.classList.remove('on'); api.loading = false;
     prefetchNext(id);
+    idleImages();
+  }
+  // 1.34.0: the windows' pictures the warm-up left out (game-core ctx.idleImages), loaded one by one at idle once play has begun
+  function idleImages() {
+    const list = ctx.idleImages; if (!list || !list.length || typeof Image === 'undefined') return;
+    ctx.idleImages = null;
+    const idle = (f) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(f, { timeout: 5000 }) : setTimeout(f, 1000));
+    const step = () => {
+      if (api.loading) { setTimeout(() => idle(step), 2000); return; }
+      const u = list.shift(); if (!u) return;
+      const img = new Image(); img.decoding = 'async';
+      const next = () => idle(step);
+      img.onload = () => { (img.decode ? img.decode().catch(() => {}) : Promise.resolve()).then(next); }; img.onerror = next;
+      img.src = u;
+    };
+    idle(step);
   }
   // 1.33.0: the next block's files go into the HTTP cache at idle (fetched and dropped: nothing held), so walking on is a cache read
   const fetched = new Set();

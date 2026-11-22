@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/frame-guard.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit f33d12c8: js/frame-guard.js — edit in game-kit and run tools/kit-sync.js */
 // Frame pacing guard for three.js games: find and remove hitches (カクつき).
 // No three.js import (renderer / scene are duck-typed), so the logic runs and is tested in Node.
 //  - FrameStats: frame times in a ring buffer, p50 / p95 / p99 / max, a log of hitches with what the frame did
@@ -302,9 +302,20 @@ export async function prewarm(renderer, scene, camera, o = {}) {
       if (now() - t > (o.budgetMs ?? 8)) (await nextFrame(), (t = now()));
     }
   }
+  // 1.34.0 o.only: draw only these roots (the bodies a block load just made), with every light of the scene (so the programs are the ones
+  // of play): a later block's warm-up no longer draws the whole world again (layer 31 for that one frame)
+  const only = o.only ? [].concat(o.only).filter(Boolean) : null, LAYER = 31, layerOn = [];
+  let camMask = 0;
+  if (only && camera && camera.layers) {
+    camMask = camera.layers.mask;
+    const on = (x) => { if (!x.layers.isEnabled(LAYER)) { x.layers.enable(LAYER); layerOn.push(x); } };
+    scene.traverse((x) => { if (x.isLight) on(x); });
+    for (const r of only) r.traverse(on);
+    camera.layers.set(LAYER);
+  }
   if (o.render !== false && renderer.render) {
     const culled = [], shown = [];
-    scene.traverse((x) => {
+    (only ? { traverse: (f) => only.forEach((r) => r.traverse(f)) } : scene).traverse((x) => {
       if (x.frustumCulled) (culled.push(x), (x.frustumCulled = false));
       if (o.hidden && x.visible === false && !x.isLight && !x.isCamera) (shown.push(x), (x.visible = true));
     });
@@ -320,6 +331,7 @@ export async function prewarm(renderer, scene, camera, o = {}) {
     for (const l of muted) l.visible = true;
     await nextFrame();
   }
+  if (only && camera && camera.layers) { camera.layers.mask = camMask; for (const x of layerOn) x.layers.disable(LAYER); }
   for (const x of holder) scene.remove(x);
   const p1 = renderer.info && renderer.info.programs ? renderer.info.programs.length : 0;
   const r = { ms: Math.round(now() - t0), programs: p1 - p0, textures };

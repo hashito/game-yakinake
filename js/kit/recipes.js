@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/recipes.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit f33d12c8: js/recipes.js — edit in game-kit and run tools/kit-sync.js */
 // The recipes of the standard, switched on from game.json "recipes" (standard 1.5; pure side + docs in js/recipes-data.js):
 //   props       plan.furniture[] { kind, x, z, rot, args, opts } -> js/props.js / js/env-props.js objects in the world, with colliders
 //   openables   props with userData.drawers (lockers, fridges, cabinets): [E] opens / closes, the state is saved (ext.openables)
@@ -9,6 +9,31 @@
 // game-core imports this module only when game.json has "recipes" (loadGame), kit-sync copies what each switch needs (tools/kit-features.cjs).
 import { PROP_KINDS, furnitureOf, ambienceModelFromPlan } from './recipes-data.js';
 import { autoFurniture, roomLook } from './room-types.js';
+
+/** what a furniture entry builds from (a baked box is used only while this is the same) */
+export function propSig(f) {
+  const t = JSON.stringify([f.kind, f.args || null, f.w ?? null, f.d ?? null, f.opts || null]);
+  let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(36);
+}
+/** tools/bake-prop-boxes.mjs: every prop's local box and colliders, measured from the real build (?bakeprops) */
+export function measureProps(ctx, localBox) {
+  const plan = ctx.data.plan, out = {};
+  const all = [...furnitureOf(plan), ...autoFurniture(plan)];
+  for (const f of all) {
+    const obj = ctx.recipes && ctx.recipes.props.get(f.id); if (!obj || obj.userData.stub) continue;
+    if ((obj.userData.drawers || []).length) continue;   // a prop that opens keeps its parts
+    // the box Box3.setFromObject sees (every mesh, decorations included) and the colliders propColliders makes (localBox skips noCollide)
+    obj.updateMatrixWorld(true);
+    const inv = obj.matrixWorld.clone().invert(), b = localBox(obj).makeEmpty();
+    obj.traverse((o) => { if (!o.isMesh) return; if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); b.union(o.geometry.boundingBox.clone().applyMatrix4(inv.clone().multiply(o.matrixWorld))); });
+    const cols = obj.userData.colliders && obj.userData.colliders.length ? obj.userData.colliders : [localBox(obj)];
+    if (b.isEmpty()) continue;
+    const r = (v) => Math.round(v * 1e6) / 1e6, bx = (x) => [x.min.x, x.min.y, x.min.z, x.max.x, x.max.y, x.max.z].map(r);
+    out[f.id] = { s: propSig(f), box: bx(b), cols: cols.filter((c) => !c.isEmpty()).map(bx), kind: obj.userData.kind || undefined };
+  }
+  return out;
+}
 
 export async function installRecipes(ctx, cfg = {}) {
   const mods = {};   // the parts are imported only for the switches that are on
@@ -26,13 +51,37 @@ export async function installRecipes(ctx, cfg = {}) {
   if (cfg.props || cfg.openables) {
     const T = {};
     let op = null;
+    // 1.34.0 (夜勤明けの街 1.3.2: a dot build hides most of these props behind its own sprite-stack parts, yet building them all was 4.5 s of
+    // the title at CPU 4x): a prop the game stubs (ctx.recipeStub(f) -> true) and that tools/bake-prop-boxes.mjs measured (data/prop-boxes.json)
+    // is only its boxes: an invisible box of its size (for Box3.setFromObject) with its colliders, no geometry, no textures
+    const Q = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
+    let boxes = null;
+    if (cfg.props && typeof ctx.recipeStub === 'function' && !Q.has('bakeprops')) {
+      try { const r = await fetch(new URL(typeof cfg.props === 'object' && cfg.props.boxes ? cfg.props.boxes : 'data/prop-boxes.json', location.href).href); boxes = r.ok ? (await r.json()).items || null : null; } catch { boxes = null; }
+    }
+    const THREE_ = boxes ? await import('three') : null;
+    let unit = null, hidden = null;
+    const stubOf = (f) => {
+      const b = boxes && boxes[f.id];
+      if (!b || b.s !== propSig(f) || !ctx.recipeStub(f)) return null;
+      const T3 = THREE_, g = new T3.Group();
+      unit = unit || new T3.BoxGeometry(1, 1, 1); hidden = hidden || new T3.MeshBasicMaterial({ visible: false });
+      const box = new T3.Box3(new T3.Vector3(b.box[0], b.box[1], b.box[2]), new T3.Vector3(b.box[3], b.box[4], b.box[5]));
+      const m = new T3.Mesh(unit, hidden); box.getCenter(m.position); box.getSize(m.scale); m.userData.noCollide = true; m.name = 'prop-stub'; g.add(m);
+      g.userData.colliders = (b.cols || []).map((c) => new T3.Box3(new T3.Vector3(c[0], c[1], c[2]), new T3.Vector3(c[3], c[4], c[5])));
+      if (b.kind) g.userData.kind = b.kind;
+      g.userData.stub = true;
+      return g;
+    };
+    api.stubbed = 0;
     if (cfg.openables && mods.Openables) op = api.openables = ctx.openables = new mods.Openables({ onChange: (id, open) => { const o = api.props.get(id); const pos = o && o.position; ctx.audio && ctx.audio.at && ctx.sound && ctx.audio.at(pos).lockerDoor && ctx.audio.at(pos).lockerDoor(pos, open); bus.emit('openable:change', { id, open }); } });
     for (const f of [...furnitureOf(plan), ...(cfg.props ? autoFurniture(plan) : [])]) {
       const k = PROP_KINDS[f.kind];
       if (!k) { console.warn(`recipes.props: unknown kind "${f.kind}" (${f.id})`); continue; }
       const fn = (k.from === 'P' ? P : E)[f.kind];
       if (typeof fn !== 'function') continue;
-      let obj;
+      let obj = stubOf(f);
+      if (obj) { api.stubbed++; obj.name = `prop:${f.id}`; obj.rotation.y = ((f.rot || 0) * Math.PI) / 180; world.place(obj, f.room, f.x, f.z); api.props.set(f.id, obj); world.colliders.push(...propColliders(obj)); continue; }
       try { obj = k.from === 'P' ? (k.t ? fn(T, ...(f.args || [])) : fn(...(f.args || []))) : fn({ w: f.w, d: f.d, ...(f.opts || {}) }); } catch (e) { console.warn(`recipes.props: ${f.id} (${f.kind}): ${e.message}`); continue; }
       obj.name = `prop:${f.id}`;
       obj.rotation.y = ((f.rot || 0) * Math.PI) / 180;

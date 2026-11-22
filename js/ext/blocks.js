@@ -73,7 +73,7 @@ export function installBlocks(ext, G) {
         report(0.98, '描画を準備中…');
         const tmp = [];
         for (const p of pats) { const pat = G.patternOf && G.patternOf(p); if (!pat) continue; const z = createZombie(pat, { position: [0, -50, 0] }); z.root.visible = false; ctx.scene.add(z.root); tmp.push(z); }
-        try { if (ctx.prewarmNow) await ctx.prewarmNow([...tmp.map((z) => z.root), ...(G.peopleWarm ? G.peopleWarm() : [])]); } catch (e) { console.warn('[yakinake] block warm', e); }
+        try { if (ctx.prewarmNow) await ctx.prewarmNow([...tmp.map((z) => z.root), ...(G.peopleWarm ? G.peopleWarm() : [])], { only: true }); } catch (e) { console.warn('[yakinake] block warm', e); }   // 1.3.2: a later block draws only its new bodies (the first warms the whole scene)
         for (const z of tmp) { z.root.removeFromParent(); z.dispose(); }
         if (G.syncZombies && ctx.state.started) G.syncZombies();
       },
