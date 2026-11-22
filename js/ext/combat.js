@@ -64,7 +64,7 @@ export function installCombat(ext, G) {
   // 1.4.0 (play test #1 「手や武器も3Dドットで作成してください」): the hand and the weapon are 3D dot models in the scene, on the camera
   // (kit js/fp-voxel.js + js/fp-voxel-parts.js: 4 mm voxels, the doctor's white coat sleeve, the fingers round each grip), lit by the
   // world and the light, under the dot post-process; the motions are the 1.2.0 ones in 3D (sway, recoil, reload, strike, the light hand)
-  let rig = null, rigId = '', bloodT = 0;
+  let rig = null, rigId = '', bloodT = 0, buildRig = () => {};
   const blood = document.createElement('div'); blood.id = 'yk-blood'; blood.className = 'yk-blood';
   const grabTag = document.createElement('div'); grabTag.id = 'yk-grab'; grabTag.className = 'yk-grab';
   // 1.2.1 (tougher zombies: the hits must read): four hard ticks round the sights for a moment on every hit - white on the body,
@@ -107,6 +107,10 @@ export function installCombat(ext, G) {
     if (rig && wid !== rigId) { rigId = wid; rig.set(FP_IDS.includes(wid) ? wid : 'hands'); rig.bloody(bloodT > 0 ? 1 : 0); }
   }
   G.hud = hud;
+  G.buildFpRig = async (report) => {
+    if (!ctx) return; buildRig();
+    for (let k = 0; k < FP_IDS.length; k++) { try { rig.prebuild([FP_IDS[k]]); } catch (e) { console.warn('[yakinake] fp', FP_IDS[k], e); } if (report) report((k + 1) / FP_IDS.length); await new Promise((r) => setTimeout(r, 0)); }
+  };
   ext.on('game:ready', (c) => {
     ctx = c;
     if (ctx.lane && ctx.lane.model) {
@@ -122,16 +126,18 @@ export function installCombat(ext, G) {
     }
     muzzle = new THREE.PointLight(0xffc070, 0, 14, 1.6); muzzle.name = 'yk-muzzle'; ctx.scene.add(muzzle);
     document.body.append(blood, grabTag, mark, aimTag);
-    rig = createFpRig(THREE, ctx.camera, { ...fpParts({ sleeve: '#b4bbb8', cuff: '#98a19d' }), self: 0.16 });
-    rig.visible = false;
-    if (ctx.isTouch) rig.root.position.x = -0.035;   // a phone's buttons stand on the right: the hand a little in from the edge
-    rig.set('hands'); rigId = '';
-    G.fpRig = rig;
-    // the other weapons are built one at a time while the game is idle (a first change of weapon does not stall)
-    const idle = (f) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(f, { timeout: 3000 }) : setTimeout(f, 300));
-    const queue = [...FP_IDS];
-    const step = () => { const id = queue.shift(); if (!id) return; try { rig.prebuild([id]); } catch (e) { console.warn('[yakinake] fp', id, e); } idle(step); };
-    idle(step);
+    // the hands are built behind the first block card, not behind the title (1.4.0: building them and the weapons at game:ready made
+    // the title slower and its heap 24 MB bigger on a throttled phone), and every weapon with them, one step at a time (a weapon built
+    // when it is picked up stalled play for a moment); a game without that card builds them as play starts
+    buildRig = () => {
+      if (rig) return;
+      rig = createFpRig(THREE, ctx.camera, { ...fpParts({ sleeve: '#b4bbb8', cuff: '#98a19d' }), self: 0.16 });
+      rig.visible = false;
+      if (ctx.isTouch) rig.root.position.x = -0.035;   // a phone's buttons stand on the right: the hand a little in from the edge
+      rig.set('hands'); rigId = '';
+      G.fpRig = rig;
+      rig.prebuild(['hands']);
+    };
     if (ctx.isTouch) {   // a phone has no 装填 / 持ち替え / 手当て buttons (the right column stays short): the status panel takes them
       el.classList.add('yk-tap');
       const tap = (sel, f) => el.querySelector(sel).addEventListener('click', (e) => { e.stopPropagation(); if (!ctx.blocked || !ctx.blocked()) f(); });
@@ -150,7 +156,7 @@ export function installCombat(ext, G) {
     if (phone || !ctx.registerHudPart) document.body.append(el); else ctx.registerHudPart('yk-status', { slot: 'tl', order: 60, el });
   }
   addEventListener('resize', () => { if (ctx) setTimeout(place, 50); });
-  ext.on('game:start', () => { document.body.classList.add('yk-playing'); if (rig) rig.visible = true; place(); hud(); });
+  ext.on('game:start', () => { document.body.classList.add('yk-playing'); buildRig(); if (rig) { rig.visible = true; rigId = ''; } place(); hud(); });
 
   // ---------------------------------------------------------------- input
   const want = { fire: false, melee: false };

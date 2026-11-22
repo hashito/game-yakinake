@@ -69,6 +69,8 @@ export function installBlocks(ext, G) {
         await G.loadPatterns(pats, (k, t) => report(k / parts, t));
         await G.loadPeople(people, (k, t) => report((1 + k) / parts, t));
         if (first && window.__dot && window.__dot.preparePictures) await window.__dot.preparePictures((k) => report((2 + k) / parts, `写真を準備中… ${Math.round(k * 100)}%`));
+        // 1.4.0: the 3D dot hands and weapons are built behind the first card (not behind the title, not in play)
+        if (G.buildFpRig) await G.buildFpRig((k) => report(0.9 + k * 0.08, `手と武器を準備中… ${Math.round(k * 100)}%`));
         // pixel games load first: one hidden body of each pattern and every frame of the people are compiled and uploaded now
         report(0.98, '描画を準備中…');
         const tmp = [];
