@@ -179,7 +179,7 @@
    }
   ],
   "needs": [
-   "T_CHISATO"
+   "T_RADIO"
   ],
   "minigame": {
    "type": "safe-listen",
@@ -196,7 +196,10 @@
      -1,
      1
     ],
-    "seed": 8
+    "seed": 8,
+    "catch": 3,
+    "slack": 5,
+    "near": 12
    }
   }
  },
@@ -226,7 +229,7 @@
   ],
   "optional": true,
   "needs": [
-   "T_CHISATO"
+   "T_RADIO"
   ],
   "minigame": {
    "type": "sort-items",
@@ -429,7 +432,7 @@
    }
   ],
   "needs": [
-   "T_REI"
+   "T_CASE"
   ],
   "minigame": {
    "type": "pump-gauge",
@@ -564,7 +567,10 @@
     "done": "task"
    }
   ],
-  "optional": true
+  "optional": true,
+  "needs": [
+   "T_GONDO"
+  ]
  },
  {
   "id": "T_FUEL",
@@ -599,7 +605,10 @@
     "pins": 3,
     "seed": 7
    }
-  }
+  },
+  "needs": [
+   "T_GONDO"
+  ]
  },
  {
   "id": "T_AXE",
@@ -625,7 +634,10 @@
     "done": "task"
    }
   ],
-  "optional": true
+  "optional": true,
+  "needs": [
+   "T_GONDO"
+  ]
  },
  {
   "id": "T_CULT",
@@ -650,6 +662,9 @@
     "text": "[E] で話す",
     "done": "task"
    }
+  ],
+  "needs": [
+   "T_GONDO"
   ]
  },
  {
@@ -714,7 +729,10 @@
     "done": "task"
    }
   ],
-  "optional": true
+  "optional": true,
+  "needs": [
+   "T_CULT"
+  ]
  },
  {
   "id": "T_KDESK",
@@ -870,7 +888,7 @@
    }
   ],
   "needs": [
-   "T_KATA"
+   "T_TAPE"
   ],
   "minigame": {
    "type": "rubbing",
@@ -1199,11 +1217,11 @@
  },
  {
   "id": "T_SERVER",
-  "title": "サーバー室の冷却をつなぎ直して、エレベーターの電源を戻す",
+  "title": "サーバー室の冷却をつなぎ直して、シャフトの扉の電源を戻す",
   "stage": "L7",
   "room": "O_SRV",
   "station": "S_SERVER",
-  "meaning": "サーバー室が熱で止まり、ビルの非常電源が落ちている。**冷却が戻れば**、エレベーターが動く。",
+  "meaning": "サーバー室が熱で止まり、ビルの非常電源が落ちている。**冷却が戻れば**、エレベーターのシャフトの扉が開き、はしごで3階へ上がれる。",
   "hint": "非常階段で2階へ。2階の**北東の戸**からサーバー室へ。",
   "steps": [
    {
@@ -1242,7 +1260,7 @@
   "room": "O_SHOK",
   "station": "S_HAYASE",
   "meaning": "3階の厨房から、**男の声**がする。",
-  "hint": "エレベーターで3階へ。社員食堂の**北東の戸**。",
+  "hint": "エレベーターのシャフトのはしごで3階へ。社員食堂の**北東の戸**。",
   "steps": [
    {
     "text": "3階の社員食堂へ",

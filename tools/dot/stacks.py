@@ -35,6 +35,8 @@ PARTS = {
     'safe': 'kushi-q1-safe', 'switchboard': 'kuromado-switchboard', 'radio': 'atmos-k5-radio-tube', 'breaker': 'minase-m2-breaker',
     'tape-deck': 'game-yukishiro-tapeDeck', 'barricade': 'arakawa-barricade', 'sandbags': 'atmos-k3-sandbags', 'cone': 'env-props-traffic-cone',
     'street-lamp': 'env-props-street-lamp', 'pole': 'arakawa-utility-pole', 'iv-fallen': 'atmos-k2-iv-fallen',
+    # 1.5.0 (play test 2026-11-23 「道を塞ぐボードみたいなもの…車やもので塞いでください」): heaps of real things instead of the board barricade
+    'junk-pile': 'atmos-k3-furniture-pile', 'tire-pile': 'atmos-k3-tire-pile', 'rope-fence': 'atmos-k4-rope-fence', 'bins': 'env-props-wheelie-bin',
     'wheelchair': 'atmos-k2-wheelchair-overturned', 'gurney': 'atmos-k2-gurney-slipped', 'collapsed-shelf': 'atmos-k3-collapsed-shelf',
     # the things lying in the world (loot)
     'pistol': 'game-arakawa-pistol', 'shotgun': 'game-arakawa-shotgun', 'medkit': 'game-arakawa-medkit', 'ammo-9mm': 'game-arakawa-ammo-9mm',

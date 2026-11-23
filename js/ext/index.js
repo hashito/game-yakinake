@@ -12,6 +12,7 @@ import { installPeople } from './people.js';
 import { installStory } from './story.js';
 import { installFactions } from './factions.js';
 import { installBlocks } from './blocks.js';
+import { installShutter } from './shutter.js';
 import { LOOT } from './loot.js';
 
 export default function (ext, env = {}) {
@@ -30,6 +31,7 @@ export default function (ext, env = {}) {
   installStory(ext, G);
   installFactions(ext, G);
   installBlocks(ext, G);
+  installShutter(ext, G);
   G.targets = () => [...(G.zombieTargets ? G.zombieTargets() : []), ...(G.peopleTargets ? G.peopleTargets() : [])];
   // what stops a bullet: the walls, doors, floors and furniture of the world (not the pickups, the people or the marks)
   let solid = [], solidAt = -1e9;

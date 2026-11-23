@@ -111,7 +111,7 @@ export function installStory(ext, G) {
   after('T_SAFE', () => talk('safe_done'));
   ext.registerTask('T_GENZO', { run: async (c, task) => { if (!(await ctx.runMinigame(task))) return false; await talk('genzo'); ctx.state.inv.splice(ctx.state.inv.indexOf('INSULIN'), 1); return true; } });
   after('T_REI', () => { setTimeout(() => talk('morgue_wake'), 300); });
-  after('T_SHUTTER', () => { G.noise(ctx.camera.position, 30); setTimeout(() => talk('outside'), 400); });
+  after('T_SHUTTER', () => { G.noise(ctx.camera.position, 30); setTimeout(() => talk('outside'), 3000); });   // 1.5.0: the line waits for the shutter to be up (js/ext/shutter.js rolls it for 2.6 s)
 
   // the mart: trade / sneak / fight
   ext.registerTask('T_GONDO', { run: async () => {
@@ -352,18 +352,55 @@ export function installStory(ext, G) {
   ext.on('game:start', ({ resume }) => {
     if (!resume) ctx.talk('opening', { title: 'はじまり', last: '始める' }).then(() => { if (ctx.isTouch && innerHeight > innerWidth) ctx.ui.say('スマホは横持ちがおすすめ。', 5); });
   });
+  // 1.5.0 (play test 2026-11-23 「コメントが少し前に表示されます。ゾンビがいるのを発見したりドア枠内にいる場合はそこまで少しアップしてください。
+  // もう少しあとの方が良い」): a zombie standing still in view (in the eyes' cone, nothing solid between, within 16 m) for a quarter of a second
+  // is "spotted": the eyes turn to it and zoom in a little, once per zombie; the line about it waits for that look (or for the player to be
+  // right on it). The talks on entering a room wait until the player has been inside for a moment and a few steps in.
+  const spotted = new Set(), dwell = new Map(), ray = new THREE.Raycaster(), fwd = new THREE.Vector3(), to = new THREE.Vector3();
+  let spotT = 0, looking = 0, roomT = 0, roomId = null;
+  const headOf = (L) => { const q = L.z.root ? L.z.root.position : new THREE.Vector3(L.z.pos[0], L.z.pos[1] || 0, L.z.pos[2]); const low = (L.z.lying && L.z.lying()) || /crawl/.test((L.def && L.def.p) || ''); return new THREE.Vector3(q.x, q.y + (low ? 0.35 : 1.45), q.z); };
+  // the first ones the story speaks of are caught from beside too, when close (passing the treatment room's glass door, the crawler in the corridor)
+  const WIDE = { Z_SHO_EAT: 1.75, Z_CRAWL: 1.75 };
+  const inSight = (L, max = 16) => {
+    if (!L || !L.alive || L.floor !== (ctx.floor || 0) || !L.z) return false;
+    const cam = ctx.camera, h = headOf(L); to.copy(h).sub(cam.position); const d = to.length(); if (d > max || d < 0.5) return false;
+    cam.getWorldDirection(fwd); const wide = WIDE[L.def && L.def.id]; if (fwd.angleTo(to) > (wide && d < 6 ? wide : 0.6)) return false;   // in the eyes' cone (35°): one seen from the corner of the eye, in a door frame, counts
+    ray.set(cam.position, to.clone().normalize()); ray.far = d - 0.4;
+    return !(G.solidMeshes && ray.intersectObjects(G.solidMeshes(), false).some((h) => !(h.object.material && h.object.material.transparent)));   // seen through glass (the treatment room's glass door)
+  };
+  G.spotted = (id) => spotted.has(id);
+  const spot = (dt) => {
+    if ((spotT -= dt) > 0) return; spotT = 0.1;
+    if (looking > 0 || !G.liveZombies) return;
+    for (const L of G.liveZombies()) {
+      const id = L.def && L.def.id; if (!id || spotted.has(id)) continue;
+      if (!inSight(L)) { dwell.delete(id); continue; }
+      const t = (dwell.get(id) || 0) + 0.1; dwell.set(id, t); if (t < 0.25) continue;
+      spotted.add(id); G.emit('zombie:spotted', { id });
+      const d = headOf(L).distanceTo(ctx.camera.position);
+      if (d > 4 && !(L.alert > 0 && d < 9) && ctx.lookTo) { looking = 1.1; ctx.lookTo(headOf(L), { sec: 0.9, zoom: 1.35, speed: 4 }); }
+      return;
+    }
+  };
+  const lineAfterLook = (key, fn) => { if (seen.has(key)) return; seen.add(key); setTimeout(fn, looking > 0 ? Math.round(looking * 1000) + 350 : 350); };
   ext.registerSystem('yk-story', {
-    update() {
+    update(dt = 0.016) {
       if (!ctx || !ctx.state.started || ctx.state.ended || (ctx.blocked && ctx.blocked())) return;
+      if (looking > 0) looking = Math.max(0, looking - dt);
+      spot(dt);
       const p = ctx.camera.position, r = G.roomAtP(p.x, p.z, ctx.floor || 0), rid = r && r.id;
-      if (rid === 'H_ROKA' && p.x > 19.5 && !seen.has('glass')) { seen.add('glass'); talk('first_glass'); }
-      if (ctx.state.tasks.includes('T_TOOLBOX') && rid === 'H_ROKA' && !seen.has('crawl')) { seen.add('crawl'); talk('crawler'); }
-      if (ctx.state.tasks.includes('T_CHISATO') && rid === 'H_ROKA' && !seen.has('lesson')) { seen.add('lesson'); talk('lesson'); }
-      if (rid === 'P_URA' && !seen.has('byd')) { seen.add('byd'); talk('backyard'); }
-      if (rid === 'O_BOSAI' && !seen.has('nog')) { seen.add('nog'); talk('noguchi'); }
+      if (rid !== roomId) { roomId = rid; roomT = 0; } else roomT += dt;
+      // a few steps inside, a moment in the room: a line about a room is never said on its threshold
+      const settled = r && roomT > 1.2 && Math.min(p.x - r.x, r.x + r.w - p.x, p.z - r.z, r.z + r.d - p.z) > 1.0;
+      // the first one eating, seen through the treatment room's glass: once it has been spotted (or the player is beside the glass)
+      if (rid === 'H_ROKA' && !seen.has('glass') && (spotted.has('Z_SHO_EAT') || p.x > 26)) lineAfterLook('glass', () => talk('first_glass'));
+      if (ctx.state.tasks.includes('T_TOOLBOX') && rid === 'H_ROKA' && !seen.has('crawl') && (spotted.has('Z_CRAWL') || G.liveZombies().some((L) => L.def && L.def.id === 'Z_CRAWL' && L.alive && Math.hypot(L.z.pos[0] - p.x, L.z.pos[2] - p.z) < 5))) lineAfterLook('crawl', () => talk('crawler'));
+      if (ctx.state.tasks.includes('T_CHISATO') && rid === 'H_ROKA' && settled && !seen.has('lesson')) { seen.add('lesson'); talk('lesson'); }
+      if (rid === 'P_URA' && settled && !seen.has('byd')) { seen.add('byd'); talk('backyard'); }
+      if (rid === 'O_BOSAI' && settled && !seen.has('nog')) { seen.add('nog'); talk('noguchi'); }
       // 1.4.0 (#5 #14): the quarrels heard on the way in (the mart's two; the 公民館's leader and the one who doubts)
-      if (rid === 'S_MART' && !seen.has('margue') && !G.flags['hostile:mart'] && !ctx.state.tasks.includes('T_GONDO')) { seen.add('margue'); talk('mart_argue'); }
-      if (rid === 'S_KOMIN' && !seen.has('cargue') && !G.flags['hostile:cult'] && !ctx.state.tasks.includes('T_CULT')) { seen.add('cargue'); talk('cult_argue'); }
+      if (rid === 'S_MART' && settled && !seen.has('margue') && !G.flags['hostile:mart'] && !ctx.state.tasks.includes('T_GONDO')) { seen.add('margue'); talk('mart_argue'); }
+      if (rid === 'S_KOMIN' && settled && !seen.has('cargue') && !G.flags['hostile:cult'] && !ctx.state.tasks.includes('T_CULT')) { seen.add('cargue'); talk('cult_argue'); }
     },
   });
   G.on('zombie:died', () => { G.kills = (G.kills || 0) + 1; });
@@ -385,8 +422,9 @@ export function installStory(ext, G) {
     L('D_KLEAD', () => !(has('KLEADKEY') || G.flags['hostile:cult'] || (G.isDead && G.isDead('shirasaka'))), () => (G.flags['cult:taeko'] ? '妙子さんの合鍵がある。' : '白坂の部屋。鍵がかかっている。'));
     L('ST_KCHIKA', () => !has('CELLARKEY'), '床の上げ蓋。南京錠がかかっている。鍵は、白坂が持っているはず。');
     L('D_OROOF', () => !(has('ROOFKEY') || ctx.state.tasks.includes('T_FORCE')), () => (G.flags.hayase === 'gave' ? '鍵がかかっている。屋上の鍵は、早瀬が持ち逃げした。錠を壊すしかない。' : '屋上への扉。鍵がかかっている。'));
-    // the lift runs once the server room is cooled (the plan's lift EV12)
-    const ev = ctx.world.doors && ctx.world.doors.get('EV12'); if (ev) ctx.lockDoor('EV12', () => !ctx.state.tasks.includes('T_SERVER'), 'エレベーターは止まっている。非常電源が落ちている。');
+    // the shaft's door opens once the server room is cooled (the plan's EV12, a ladder since 1.5.0)
+    // 1.5.0 (play test 2026-11-23 "階段は全てはしご"): the lift became the shaft's ladder; its door is an electric lock on the emergency power
+    ctx.lockDoor('EV12', () => !ctx.state.tasks.includes('T_SERVER'), 'シャフトの扉は電気錠だ。非常電源が落ちていて開かない。');
   });
 
   // 1.4.0 #15: a knock at a shut door where people live: they ask who it is, let the player in, and close the door behind

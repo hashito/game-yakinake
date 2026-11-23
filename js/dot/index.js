@@ -29,16 +29,17 @@ const FURN_ID = { F_CAR1: 'car-doors-open', F_CAR2: 'car-stalled-red', F_AMBU: '
   F_CAR6: 'car-stalled-red', F_BUS: 'bus-side', F_SHOTEN_CAR: 'car-burnt', F_HIRO_CAR: 'police-car', F_P_CAR: 'police-car', F_P_CAR2: 'police-car', F_PL_CAR: 'car-stalled',
   F_MART_S1: 'shop-shelf', F_MART_S2: 'shop-shelf', F_YAMA_S1: 'shop-shelf', F_TOU_SOFA: 'sofa',
   // 1.4.0 (#10 the street is one way; #5 #14 the mart and the 公民館): barricades and wrecks that close the wide parts, a shelf
-  // pulled down across the food court door, the stock of the mart and the shrine
-  F_URA_BAR1: 'barricade', F_URA_BAR2: 'sandbags', F_OD_BAR1: 'sandbags', F_OD_BAR2: 'barricade', F_OD_CAR7: 'car-burnt', F_SH_BAR1: 'barricade', F_SH_BAR2: 'sandbags',
-  F_HI_BAR: 'sandbags', F_MART_BAR: 'barricade', F_MFOOD_SH: 'collapsed-shelf', F_MBACK_C: 'crate', F_MCOLD_S: 'shelf', F_YAMAURA_S: 'shop-shelf' };
+  // pulled down across the food court door, the stock of the mart and the shrine. 1.5.0 (play test 2026-11-23 「ボードみたいなもの…車やもので
+  // 塞いでください」): no board barricade is left - heaps of furniture, a pile of tyres, the rope of the shrine's approach, wheelie bins
+  F_URA_BAR1: 'junk-pile', F_URA_BAR2: 'sandbags', F_OD_BAR1: 'sandbags', F_OD_BAR2: 'tire-pile', F_OD_CAR7: 'car-burnt', F_SH_BAR1: 'junk-pile', F_SH_BAR2: 'sandbags',
+  F_HI_BAR: 'sandbags', F_MART_BAR: 'junk-pile', F_MFOOD_SH: 'collapsed-shelf', F_MBACK_C: 'crate', F_MCOLD_S: 'shelf', F_YAMAURA_S: 'shop-shelf' };
 // the stations' own things (the box the weapon comes out of, the safe, the radio): a part standing at the station
 const STATION_PART = { S_CART: 'crash-cart', S_TOOL: 'toolbox', S_SAFE: 'safe', S_RADIO: 'radio', S_BREAKER: 'breaker', S_BOARD: 'switchboard', S_TAPE: 'tape-deck',
   S_RACK: { k: 'gun-rack-full', after: [['T_RACK', () => (window.__yk && window.__yk.flags.rack === 'all' ? 'gun-rack-empty' : 'gun-rack-half')]] }, S_RIFLE: 'rifle-case',
-  S_NOTE: 'desk', S_MDESK: 'steel-desk', S_DRUGS: 'shelf', S_FCASE: 'toolbox', S_CAGE: 'locker', S_PACK: 'shop-shelf', S_AXE: 'locker', S_ROPE: 'barricade',
+  S_NOTE: 'desk', S_MDESK: 'steel-desk', S_DRUGS: 'shelf', S_FCASE: 'toolbox', S_CAGE: 'locker', S_PACK: 'shop-shelf', S_AXE: 'locker', S_ROPE: 'rope-fence',
   S_GEN: 'generator', S_RECORD: 'desk', S_EVID: 'locker', S_SERVER: 'server' };
 // stations whose thing is already there without a part: a person (their figure), a door or a lock (the door), the helipad (its Ｈ)
-const STATION_BARE = ['S_CHISATO', 'S_GENZO', 'S_GONDO', 'S_SHIRA', 'S_KATA', 'S_NOGUCHI', 'S_HAYASE', 'S_HELI', 'S_ODOOR', 'S_FORCE', 'S_ARMORY', 'S_MARTLOCK', 'S_SHUTTER'];
+const STATION_BARE = ['S_CHISATO', 'S_GENZO', 'S_GONDO', 'S_NISHINA', 'S_TAEKO', 'S_MIYAKE', 'S_SHIRA', 'S_KATA', 'S_NOGUCHI', 'S_HAYASE', 'S_HELI', 'S_ODOOR', 'S_FORCE', 'S_ARMORY', 'S_MARTLOCK', 'S_SHUTTER'];
 // how a station's thing stands: y (above the floor), back (toward the wall), seat (put down on the furniture under it, 1.2.0 #1: the radio,
 // the tape deck and the rifle case floated at a fixed height), size (its longest side in metres, 1.2.0 #3)
 const STATION_MOUNT = { S_TOOL: { y: 0, back: 0.2 }, S_RADIO: { back: 0.22, seat: true, size: 0.36 }, S_BREAKER: { y: 0, back: 0.02 }, S_TAPE: { back: 0.5, seat: true, size: 0.3 },
@@ -49,13 +50,13 @@ const REAL = { desk: { surf: 0.74, nat: 0.75 }, 'steel-desk': { surf: 0.74, nat:
   bed: { surf: 0.55, nat: 0.43 }, shelf: { h: 1.8 }, 'shop-shelf': { h: 1.55 }, locker: { h: 1.8 }, vending: { h: 1.8 }, fridge: { h: 1.75 }, server: { h: 1.9 },
   crate: { h: 0.6 }, bench: { h: 0.8 }, 'street-lamp': { h: 4.2 }, 'body-cabinets': { h: 1.9 },
   'car-stalled': { h: 1.45, len: 4.4 }, 'car-stalled-red': { h: 1.45, len: 4.4 }, 'car-burnt': { h: 1.35, len: 4.4 }, 'car-doors-open': { h: 1.45, len: 4.4 },
-  'police-car': { h: 1.5, len: 4.6 }, ambulance: { h: 2.3, len: 5.0 }, 'bus-side': { h: 2.5, len: 9.6 } };
+  'police-car': { h: 1.5, len: 4.6 }, 'junk-pile': { h: 1.5 }, 'tire-pile': { h: 0.95 }, 'rope-fence': { h: 0.9 }, bins: { h: 1.05 }, ambulance: { h: 2.3, len: 5.0 }, 'bus-side': { h: 2.5, len: 9.6 } };
 // mood props: [room, k, x, z, face (rad), scale]
 const PROPS = [
   ['H_ROKA', 'wheelchair', 7.5, 7.2, 0.6], ['H_ROKA', 'iv-fallen', 15.5, 5.6, 1.2], ['H_ROKA', 'gurney', 25.8, 6.8, 0], ['H_SHO', 'iv-fallen', 22, 4.2, 0.4],
   ['H_HAN', 'cone', 31.6, 2.2, 0], ['S_URA', 'cone', 40, 1.2, 0], ['S_URA', 'gurney', 44.2, 7.9, Math.PI / 2, 1, 'P_URA_GURNEY'], ['S_URA', 'street-lamp', 46.4, 0.6, Math.PI], ['S_URA', 'street-lamp', 34, 12.4, 0],
   ['S_ODORI', 'street-lamp', 50, 5.6, Math.PI], ['S_ODORI', 'street-lamp', 62, -3.6, 0], ['S_ODORI', 'street-lamp', 70, 5.6, Math.PI], ['S_ODORI', 'street-lamp', 56, -3.6, 0], ['S_SHOTEN', 'street-lamp', 65, 16.4, 0], ['O_PLAZA', 'street-lamp', 146, 23, 0], ['S_ODORI', 'cone', 68, 4.4, 0], ['S_ODORI', 'pole', 56, 5.6, 0],
-  ['S_MART', 'barricade', 62, 6.6, 0], ['S_SHOTEN', 'street-lamp', 54, 16.4, 0], ['S_SHOTEN', 'street-lamp', 76, 16.4, 0], ['S_SHOTEN', 'cone', 81.8, 17, 0],
+  ['S_MART', 'bins', 62, 6.6, 0], ['S_SHOTEN', 'street-lamp', 54, 16.4, 0], ['S_SHOTEN', 'street-lamp', 76, 16.4, 0], ['S_SHOTEN', 'cone', 81.8, 17, 0],
   ['S_HIROBA', 'sandbags', 94, 10, Math.PI / 2], ['S_HIROBA', 'street-lamp', 84, 7, 0], ['S_HIROBA', 'cone', 87, 20, 0],
   ['P_LOBBY', 'sandbags', 96.2, 10, -Math.PI / 2], ['P_URA', 'street-lamp', 128.4, 11, -Math.PI / 2], ['O_PLAZA', 'street-lamp', 130, 23, 0], ['O_PLAZA', 'cone', 136, 16, 0],
   ['O_OFF', 'collapsed-shelf', 142.4, 8, 0],

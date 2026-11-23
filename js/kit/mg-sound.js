@@ -1,4 +1,4 @@
-/* game-kit 0c515586: js/mg-sound.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 1948d108: js/mg-sound.js — edit in game-kit and run tools/kit-sync.js */
 // The default sounds of the library mini games (standard 1.10.18): every js/mg-<type>.js calls hooks.sound(name, ctx, v); a game that gives
 // no sound hook of its own gets these, made on the spot with WebAudio (ctx.audio = js/audio.js: tone / noiseBurst; no sound files).
 //   mgSound(type, name, audio, v)  plays one cue ('bell' v = which bell, 'turn' / 'hum' / 'step' v = 0..1); unknown names are silent
@@ -86,7 +86,8 @@ const BY_TYPE = {
   'switchboard': { ring: (a) => { for (let k = 0; k < 6; k++) T(a, { at: k * 0.05, dur: 0.045, freq: 1250, type: 'square', gain: 0.012, wet: 0.2 }); } },
   'steam-letter': { peel: (a) => N(a, { dur: 0.12, freq: 3800, q: 0.9, gain: 0.04, type: 'highpass', wet: 0.05 }) },
   'safe-listen': {
-    tick: (a) => tick(a, 3600, 0.025),
+    // 1.37.10: v 0.2 far .. 0.8 close to the next number - the tick grows louder and lower, a low knock under it near the end
+    tick: (a, v = 0.2) => { const k = Math.max(0, Math.min(1, (v - 0.2) / 0.6)); tick(a, 3600 - k * 1500, 0.025 + k * 0.07); if (k > 0.3) thud(a, 140 + k * 60, 0.03 + k * 0.08); },
     click: (a, v = 1) => { N(a, { dur: 0.02, freq: 1600, q: 6, gain: 0.08 * v, wet: 0.05 }); thud(a, 420, 0.1 * v); },
     set: (a) => { thud(a, 260, 0.3); tick(a, 900, 0.12); },
   },

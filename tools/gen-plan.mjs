@@ -89,7 +89,7 @@ const D = [
   ['D_YAKU', 'H_YAKU', 'H_ROKA', 16, 8, { unlock: 'ward', hint: '薬剤部は電気の錠。電気が戻るまで開かない。' }],
   ['D_REI', 'H_REI', 'H_ROKA', 23.5, 8, { unlock: 'morgue', hint: '霊安室は、警備室のカードで開く。' }],
   ['D_HAN', 'H_ROKA', 'H_HAN', 27, 6.5, { unlock: 'morgue', hint: '搬入口への扉は、警備室のカードで開く。' }],
-  ['D_SHUT', 'H_HAN', 'S_URA', 33, 6.5, { width: 2.6, unlock: 'street', hint: 'シャッターは下りたまま。霊安室の鍵束に、シャッターの鍵があるはず。' }],
+  ['D_SHUT', 'H_HAN', 'S_URA', 33, 6.5, { width: 2.6, unlock: 'street', label: 'シャッター', lockedWhy: '下りたまま', hint: 'シャッターは下りたまま。霊安室の鍵束に、シャッターの鍵があるはず。' }],
   ['D_URA_OD', 'S_URA', 'S_ODORI', 47, 2.5, { width: 5, open: true }],
   ['D_MART_F', 'S_ODORI', 'S_MART', 62, 6, { width: 1.8, look: 'glass', knock: 'mart' }],
   ['D_MSEC', 'S_MART', 'S_MSEC', 58, 8.5, {}],
@@ -100,7 +100,7 @@ const D = [
   ['D_MSTOCK', 'S_MFOOD', 'S_MSTOCK', 70, 14.5, { width: 1.2 }],
   ['D_MCOLD', 'S_MFOOD', 'S_MCOLD', 77, 9, { width: 1.2, hint: '冷蔵室。中から、何かが扉をこすっている。' }],
   ['D_MART_K', 'S_MSTOCK', 'S_SHOTEN', 68.5, 16, { width: 1.4, hint: '倉庫の搬入口の戸。内側から、南京錠でかんぬきが留めてある。' }],
-  ['ST_MROOF', 'S_MSEC', 'S_MROOF', null, null, { kind: 'stairs', look: 'flight', label: '屋上への階段', ends: { a: { x: 53.2, z: 7, arrive: [54.4, 10], yaw: Math.PI, label: '屋上へ上がる' }, b: { x: 53.2, z: 10.6, arrive: [53.4, 8.2], yaw: 0, label: '警備室へ降りる' } } }],
+  ['ST_MROOF', 'S_MSEC', 'S_MROOF', null, null, { kind: 'stairs', look: 'ladder', label: '屋上へのはしご', ends: { a: { x: 53.2, z: 7, arrive: [54.4, 10], yaw: Math.PI, label: '屋上へ上がる' }, b: { x: 53.2, z: 10.6, arrive: [53.4, 8.2], yaw: 0, label: '警備室へ降りる' } } }],
   ['D_YAMA', 'S_SHOTEN', 'S_YAMA', 51, 22, { width: 1.6, look: 'glass', closable: true, shelter: true }],
   ['D_YAMAURA', 'S_YAMA', 'S_YAMAURA', 51, 28, { width: 1.2 }],
   ['D_SHOBO', 'S_SHOTEN', 'S_SHOBO', 57.5, 22, { width: 1.6, hint: '消防団の倉庫。南京錠がかかっている。鍵は団員が持っている。' }],
@@ -111,7 +111,7 @@ const D = [
   ['D_KCELL', 'S_KOMIN', 'S_KCELL', 67, 32, { width: 1.2, open: true }],
   ['D_KHAN', 'S_KCELL', 'S_KHAN', 70, 33.2, { width: 1.0, knock: 'khan' }],
   ['D_KLEAD', 'S_KOMIN', 'S_KLEAD', 74.5, 32, { width: 1.0, hint: '白坂の部屋。鍵がかかっている。' }],
-  ['ST_KCHIKA', 'S_KCHIKA', 'S_KCELL', null, null, { kind: 'stairs', look: 'flight', label: '地下室への階段', hint: '床の上げ蓋。南京錠がかかっている。', ends: { a: { x: 64.9, z: 33.2, arrive: [65.9, 36.4], yaw: Math.PI, label: '寝所へ上がる' }, b: { x: 64.9, z: 36.8, arrive: [65.6, 34.2], yaw: 0, label: '地下室へ降りる' } } }],
+  ['ST_KCHIKA', 'S_KCHIKA', 'S_KCELL', null, null, { kind: 'stairs', look: 'ladder', label: '地下室へのはしご', hint: '床の上げ蓋。南京錠がかかっている。', ends: { a: { x: 64.9, z: 33.2, arrive: [65.9, 36.4], yaw: Math.PI, label: '寝所へ上がる' }, b: { x: 64.9, z: 36.8, arrive: [65.6, 34.2], yaw: 0, label: '地下室へ降りる' } } }],
   ['D_SHO_HI', 'S_SHOTEN', 'S_HIROBA', 83, 19, { width: 4, unlock: 'police', hint: '商店街の出口に縄が張られ、鎖につながれたゾンビが並んでいる。公民館の人たちのしわざだ。' }],
   ['D_PLOBBY', 'S_HIROBA', 'P_LOBBY', 95, 10, { width: 1.8, look: 'glass', unlock: 'police', hint: '署の入口は、中から土のうでふさがれている。' }],
   ['D_PKYU', 'P_LOBBY', 'P_KYU', 100, 6, { hint: '休憩室の戸は、中から机で押さえられている。', closable: true, shelter: true }],
@@ -135,10 +135,10 @@ const D = [
   ['D_OKAI3', 'O_YAKU', 'O_KAI3', 145, 10.5, {}],
   ['D_OROOF', 'O_KAI4', 'O_ROOF', 145, 10.5, { width: 1.4, unlock: 'rooftop', hint: '屋上への扉。鍵がかかっている。鍵は会長室にあると、野口さんが言っていた。' }],
   // floors of the tower
-  ['ST01', 'O_KAI0', 'O_KAI1', null, null, { kind: 'stairs', look: 'flight', label: '非常階段を上がる', ends: { a: { x: 149, z: 9, arrive: [148, 12], yaw: Math.PI }, b: { x: 149, z: 12.6, arrive: [149, 10.2], yaw: 0 } } }],
-  ['EV12', 'O_OFF', 'O_SHOK', null, null, { kind: 'lift', label: 'エレベーターで3階へ', ends: { a: { x: 143.5, z: 7, arrive: [142, 7], yaw: -Math.PI / 2 }, b: { x: 143.5, z: 7, arrive: [142, 7], yaw: -Math.PI / 2 } } }],
-  ['ST23', 'O_KAI2', 'O_KAI3', null, null, { kind: 'stairs', look: 'flight', label: '非常階段を上がる', ends: { a: { x: 149, z: 9, arrive: [148, 12], yaw: Math.PI }, b: { x: 149, z: 12.6, arrive: [149, 10.2], yaw: 0 } } }],
-  ['ST34', 'O_KAI3', 'O_KAI4', null, null, { kind: 'stairs', look: 'flight', label: '塔屋へ上がる', ends: { a: { x: 151.5, z: 9, arrive: [151, 12], yaw: Math.PI }, b: { x: 151.5, z: 12.6, arrive: [150, 10], yaw: 0 } } }],
+  ['ST01', 'O_KAI0', 'O_KAI1', null, null, { kind: 'stairs', look: 'ladder', label: 'はしごを上がる', ends: { a: { x: 149, z: 9, arrive: [148, 12], yaw: Math.PI }, b: { x: 149, z: 12.6, arrive: [149, 10.2], yaw: 0 } } }],
+  ['EV12', 'O_OFF', 'O_SHOK', null, null, { kind: 'stairs', look: 'ladder', label: 'はしごで3階へ', ends: { a: { x: 143.5, z: 7, arrive: [142, 7], yaw: -Math.PI / 2 }, b: { x: 143.5, z: 7, arrive: [142, 7], yaw: -Math.PI / 2 } } }],
+  ['ST23', 'O_KAI2', 'O_KAI3', null, null, { kind: 'stairs', look: 'ladder', label: 'はしごを上がる', ends: { a: { x: 149, z: 9, arrive: [148, 12], yaw: Math.PI }, b: { x: 149, z: 12.6, arrive: [149, 10.2], yaw: 0 } } }],
+  ['ST34', 'O_KAI3', 'O_KAI4', null, null, { kind: 'stairs', look: 'ladder', label: 'はしごで塔屋へ上がる', ends: { a: { x: 151.5, z: 9, arrive: [151, 12], yaw: Math.PI }, b: { x: 151.5, z: 12.6, arrive: [150, 10], yaw: 0 } } }],
 ];
 
 // [id, room, x, z, label, { talk, reach }]
@@ -332,8 +332,12 @@ for (const [id, name, x, z, w, d, o] of R) {
   const r = { id, name, x, z, w, d, kind: o.kind || 'room', ...(o.floor ? { floor: o.floor } : {}), type: o.type, ...(o.safe ? { safe: true } : {}), ...(o.inhabited ? { inhabited: true } : {}), ...(o.edgeReason ? { edgeReason: o.edgeReason } : {}), ...(o.edge ? { edge: o.edge } : {}), ...(o.lamp ? { lamp: o.lamp } : {}), ...(o.step ? { step: o.step } : {}) };
   plan.rooms.push(r);
 }
+// 1.5.0 (play test 2026-11-23 「扉を締めたいのですが締められません」): every hinged door shuts again with [E] (not the openings, the
+// ladders, the shutter of the loading bay: js/ext/shutter.js rolls it)
+const NOT_CLOSABLE = new Set(['D_SHUT']);
 for (const [id, a, b, x, z, o] of D) {
   const dd = { id, a, b, ...(x != null ? { x, z } : {}), width: o.width || 1.4, ...o };
+  if (dd.closable == null && !dd.open && !dd.kind && x != null && !NOT_CLOSABLE.has(id)) dd.closable = true;
   delete dd.width; dd.width = o.width || 1.4;
   if (dd.ends) for (const k of ['a', 'b']) { const e = dd.ends[k]; if (e.yaw != null) e.yaw = round(e.yaw); }
   if (/^(D_O|ST|EV)/.test(id) || REASON[id]) dd.reason = REASON[id] || (/^(ST|EV)/.test(id) ? REASON.stair : REASON.default);

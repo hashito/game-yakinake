@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/npc-audit.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 1948d108: js/npc-audit.js — edit in game-kit and run tools/kit-sync.js */
 // People in walls, on desks, in the air (standard 1.20.0, from 水無瀬病院 2nd play test #4 #6 #11: 「下に行く部屋の前で待つ日向がかべに
 // 埋まっています」「他の場所でも日向が埋まっています」「日向が机の上に登って、その後空中を歩きます」).
 // A person (js/character.js) is checked by its bones, not its box: the lean pose puts the head 18 cm behind the feet, so a spot "0.28 m off the
@@ -33,8 +33,8 @@ export function supportAt(x, z, y, { colliders = [], floorAt = () => 0, skip } =
 /** points: [{ name, p: {x,y,z} }] (bone positions in the world), root: {x,y,z}; perch: allowed on furniture */
 export function bodyProblems({ points = [], root, perch = false, name = 'person' }, { colliders = [], floorAt = () => 0, skip } = {}) {
   const out = [], cols = solidCols(colliders, skip);
-  for (const { name: bn, p } of points) {
-    const r = BONE_R[bn] ?? 0.06; if (!r) continue;
+  for (const { name: bn, p, r: r0 } of points) {
+    const r = r0 ?? BONE_R[bn] ?? 0.06; if (!r) continue;
     for (const c of cols) { const d = sphereIn(p, r, c.box); if (d > TOL) { out.push({ what: 'wall', detail: `${name} ${bn} ${(d * 100).toFixed(0)} cm into a collider ${[c.box.min.x, c.box.min.z, c.box.max.x, c.box.max.z].map((v) => v.toFixed(2)).join(',')}${c.low ? ' (low)' : ''}` }); break; } }
   }
   if (root) {
@@ -43,6 +43,10 @@ export function bodyProblems({ points = [], root, perch = false, name = 'person'
     else if (sup.col && sup.y - fl > 0.3 && !perch) out.push({ what: 'perch', detail: `${name} stands on furniture ${(sup.y - fl).toFixed(2)} m up at ${root.x.toFixed(1)},${root.z.toFixed(1)} (root.userData.perch if meant)` });
   }
   return out;
+}
+/** a figure with no bones (a frame set, a sprite) as a column of spheres: [{ name, y, r }] above its feet (1.37.10) */
+export function columnPoints({ r = 0.24, h = 1.65 } = {}) {
+  return [['shinL', 0.3], ['hips', 0.85], ['chest', h * 0.72], ['head', h - 0.12]].map(([name, y]) => ({ name, y, r: name === 'head' ? Math.min(r, 0.12) : r }));
 }
 /** a walking route: pts [{ x, z, y? }] (y = the floor height there); a body of radius r between 0.35 and 1.55 m must fit at every 20 cm */
 export function pathProblems(pts, { colliders = [], floorAt = () => 0, r = 0.22, skip, step = 0.2 } = {}) {
@@ -67,6 +71,9 @@ export function installNpcAudit(ctx, { systems }) {
     c.root.updateMatrixWorld(true);
     // a seated person rests on the chair: the hips and legs are not checked (a chair seat is under them by design)
     const st = (c.motion && c.motion.state) || '', seated = /sit|seat|kneel|lie/i.test(st) || c.seated;
+    // 1.37.10 (夜勤明けの街 play test 2026-11-23 「マートで人がオブジェクトに埋まっています」「オブジェクトに埋まった人がたくさんいます」): a person with no
+    // bones (a frame-set / sprite figure) registers { root, body: { r, h }, station } in globalThis.__gfPeople (the station it talks from: its box is the person) and is checked as a column of spheres
+    if (!c.bones && c.body) { const r = c.body.r || 0.24, h = c.body.h || 1.65; const pts = columnPoints({ r, h }).map((q) => ({ ...q, p: c.root.localToWorld(new THREE.Vector3(0, q.y, 0)) })); c.root.getWorldPosition(v); const dc = doorCols(); return bodyProblems({ points: pts, root: v.clone(), perch: !!(c.root.userData && c.root.userData.perch), name: c.root.name || 'person' }, { colliders: [...(W.colliders || []), ...extra], floorAt, skip: (col) => dc.has(col) || col.person === c || (c.station && col.station === c.station) || (col.mesh && /^(lamp|stair|door|wall|ceil|floor|puddle)/.test(col.name)) }); }
     const points = Object.entries(c.bones || {}).filter(([n, b]) => b && b.getWorldPosition && !(seated && /hips|pelvis|waist|thigh|shin|foot|base/.test(n))).map(([name, b]) => ({ name, p: b.getWorldPosition(new THREE.Vector3()) }));
     c.root.getWorldPosition(v);
     const dc = doorCols();

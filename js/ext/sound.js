@@ -71,6 +71,8 @@ export function installSound(ext, G) {
     bang: (o) => { const n = 2 + Math.floor(Math.random() * 2); for (let i = 0; i < n; i++) setTimeout(() => { thump(95, 48, 0.2, 0.9 * o.g); burst({ dur: 0.12, f: 520, gain: 0.45 * o.g, pan: o.pan }); }, i * 230); },
     shut: (o) => { thump(120, 60, 0.18, 0.7 * o.g); click(700, 0.04, 0.2); },
     knock: (o) => { for (let i = 0; i < 3; i++) setTimeout(() => { thump(240, 160, 0.06, 0.5 * o.g); click(1100, 0.02, 0.12); }, i * 170); },
+    // 1.5.0: the loading bay's shutter rolling up - steel slats clattering over the drum
+    rattle: (o) => { for (let i = 0; i < 6; i++) setTimeout(() => { click(900 + Math.random() * 500, 0.03, 0.22 * o.g); burst({ dur: 0.06, f: 1800, type: 'bandpass', q: 3, gain: 0.2 * o.g, pan: o.pan }); }, i * 85); thump(90, 50, 0.2, 0.35 * o.g); },
     gasp: (o) => burst({ dur: 0.35, f: 1400, type: 'bandpass', q: 1.2, gain: 0.3 * o.g, attack: 0.03, sweep: 0.6 }),
   };
   G.sfx = (name, o = {}) => {

@@ -77,8 +77,10 @@
 //       two panels overlap (errors), the portrait notice is missing (tools/phone-layout.mjs: 「メッセージや通知で領域を使いすぎている」)
 //   1.36.0 (札の家 play test 2026-11-22): P53 a loud guide mark (over 30 px at 3 m, or nearly opaque: a warning); P54 a closed door or a story
 //   gate a body walks through (an error); P55 an [E] spot with nothing visible within 0.45 m of its centre (a warning)
+//   P59 (1.37.8, 札の家 2.4.0) on the shortest route to an end task (the walk out), the guide shows another task (an error) or a task of the branch
+//       not taken still starts (a warning) (tools/stale-guide.mjs: 「作業台で、考えをまとめる」 on the way to the front door)
 //   1.31.0: P49 a document read keeps its emphasis (glow, marks) or cannot be read again (「読んだら強調表示をやめるようにしてください」)
-// Exit 1 on an error (P54, P4, P7, P9, P19, P24, P25 overlap, P26, P30, P31, P32, P33, P34, P35, P36, P37, P38, P39, P40, P41, P42, P43, P44, P46, P49, P56, P57, P58, P47 / P48 with checks.rest = "error", P52 over 600 MB) or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
+// Exit 1 on an error (P54, P4, P7, P9, P19, P24, P25 overlap, P26, P30, P31, P32, P33, P34, P35, P36, P37, P38, P39, P40, P41, P42, P43, P44, P46, P49, P56, P57, P58, P59, P47 / P48 with checks.rest = "error", P52 over 600 MB) or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -98,6 +100,7 @@ import { markSightSource } from './mark-sight.mjs';
 import { pickOverlapSource } from './pick-overlap.mjs';
 import { restSource, sizeSource } from './rest-check.mjs';
 import { cueOrderSource } from './cue-order.mjs';
+import { staleGuideSource } from './stale-guide.mjs';
 const MARK_MAX = 30;   // P53: the guide mark's height on screen at 3 m, px on a 720 px view (js/guidance.js MARK_MAX_PX)
 // P26: in ctx.readLog order, a 'say' / 'talk' after an 'open' and before its 'close'
 const docOpenSay = (lg) => { let open = 0; for (const k of lg) { if (k === 'open') open++; else if (k === 'close') open = Math.max(0, open - 1); else if ((k === 'say' || k === 'talk') && open) return true; } return false; };
@@ -629,7 +632,9 @@ try {
         ball.geometry.dispose(); mat.dispose();
         const lum = (x, y) => { x = Math.round(x); y = Math.round(y); if (x < 0 || y < 0 || x >= w || y >= h) return 0; const i = (y * w + x) * 4; return buf[i] * 0.2126 + buf[i + 1] * 0.7152 + buf[i + 2] * 0.0722; };
         const cx = w / 2, cy = h / 2, rows = [];
-        for (const d of [2, 3, 4, 5, 6, 8]) { const ax = (lum(cx + d, cy) + lum(cx - d, cy) + lum(cx, cy + d) + lum(cx, cy - d)) / 4, q = d / Math.SQRT2, dg = (lum(cx + q, cy + q) + lum(cx - q, cy + q) + lum(cx + q, cy - q) + lum(cx - q, cy - q)) / 4; rows.push([d, +ax.toFixed(1), +dg.toFixed(1)]); }
+        // 1.37.9: from 3 px (at 2 px the diagonal sample rounds to 1 px off the centre, onto the ball itself on an even buffer: 63 against
+        // 2.5 on a game whose bloom leaves no halo at all - a false P57 on 水無瀬病院's normal version at 1280x720)
+        for (const d of [3, 4, 5, 6, 8]) { const ax = (lum(cx + d, cy) + lum(cx - d, cy) + lum(cx, cy + d) + lum(cx, cy - d)) / 4, q = d / Math.SQRT2, dg = (lum(cx + q, cy + q) + lum(cx - q, cy + q) + lum(cx + q, cy - q) + lum(cx - q, cy - q)) / 4; rows.push([d, +ax.toFixed(1), +dg.toFixed(1)]); }
         return { rows, w, h, small: !!P.small };
       } finally { if (L.tier !== tier0) L.setTier(tier0); }
     })()`);
@@ -723,6 +728,9 @@ try {
   }
   // P58 (1.37.0, 水無瀬病院 #6 「音が聞こえたの前にしっかり音を出してください」): every thought about a sound said during this run came after a sound
   { const C = await G(cueOrderSource()); if (C && C.missing) Wn('P58', 'ctx.cueLog is missing (kit < 1.37.0): sound-before-line order unchecked'); else for (const x of (Array.isArray(C) ? C : []).slice(0, 8)) E('P58', `「${x.text}」: ${x.why}`); }
+  // P59 (1.37.8, 札の家 2.4.0 「玄関まで歩くのに、案内が『作業台で、考えをまとめる』のまま」): on the shortest route to each end task, the guide shows that task
+  // and no task of a branch the player decided against still starts (tools/stale-guide.mjs)
+  { const S = await G(staleGuideSource()); if (S && S.missing) Wn('P59', 'ctx.nextTask is missing: the guide after a branch is unchecked'); else for (const x of (Array.isArray(S) ? S : [])) (x.error ? E : Wn)('P59', x.error ? `on the way to "${x.end}" the guide shows "${x.guide}" (a stale step: close it with a canStart once the branch is decided, or order the end task first)${x.left.length ? `; still open: ${x.left.join(', ')}` : ''}` : `on the way to "${x.end}" these tasks still start: ${x.left.join(', ')} (a branch already decided: give them a canStart that closes them)`); }
   if (p.errors.length) for (const e of [...new Set(p.errors)].filter((x) => !/favicon/.test(x)).slice(0, 5)) Wn('P0', `page error: ${e.slice(0, 200)}`);
 } catch (e) { E('P0', `the check could not run: ${e.message}`); }
 finally { await p.close(); server.kill(); }

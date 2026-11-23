@@ -1,4 +1,4 @@
-/* game-kit d9e67113: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 1948d108: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -77,7 +77,7 @@ import { installTimedShot } from './timed-shot.js';
 import { VoiceQueue } from './voice-queue.js';
 import { installNpcAudit } from './npc-audit.js';
 
-export const CORE_VERSION = '1.37.7';
+export const CORE_VERSION = '1.37.10';
 // the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
 export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board', 'darkroom-develop', 'tape-splice', 'switchboard', 'steam-letter', 'puzzle-box', 'rubbing', 'knot-untangle', 'torn-paper', 'safe-listen', 'footprint-track'];
 const $ = (id) => document.getElementById(id);
@@ -263,6 +263,13 @@ export function createGame(cfg) {
   // doors the story locks (standard 1.10.15, deguchi K1): ctx.lockDoor(id, fn, hint) adds a lock (fn() true = shut) and the [E] answer while
   // it holds (a text or a function); plan.doors[i].needs = { flags, items, tasks } (every one must hold), hints = { <missing id>: text }
   ctx.lockDoor = (id, fn, hint) => {
+    // 1.37.10 (夜勤明けの街: the cellar's ladder and the lift shaft were never locked - a ladder / flight / lift is not in world.doors):
+    // a plan "door" of kind stairs / lift locks both its ends the same way
+    const ends = ['a', 'b'].map((k) => world.stairs && world.stairs.get(`${id}:${k}`)).filter(Boolean);
+    if (ends.length && !(world.doors && world.doors.get(id))) {
+      for (const m of ends) { const I = m.userData.interact, base = I.locked || (() => false), h0 = I.hint; I.locked = () => base() || !!fn(); Object.defineProperty(I, 'hint', { configurable: true, enumerable: true, get: () => (fn() && hint != null ? (typeof hint === 'function' ? hint() : hint) : h0) }); }
+      return true;
+    }
     const d = world.doors && world.doors.get(id); if (!d || !d.def) return false;
     const base = d.locked || (() => false); d.locked = () => base() || !!fn();
     if (hint != null) {
@@ -556,7 +563,7 @@ export function createGame(cfg) {
 
   // ---- interaction ----
   const builtin = {
-    door: { prompt: (o) => { const d = world.doors.get(o.id); return d.isOpen ? (d.def.closable ? '[E] 扉を閉める' : '') : d.locked() ? `[E] ${lockedLabel('扉', '鍵がかかっている')}` : '[E] 扉を開ける'; },   // [E] on a locked door says why (its hint)
+    door: { prompt: (o) => { const d = world.doors.get(o.id); return d.isOpen ? (d.def.closable ? '[E] 扉を閉める' : '') : d.locked() ? `[E] ${lockedLabel(d.def.label || '扉', d.def.lockedWhy || '鍵がかかっている')}` : `[E] ${d.def.label || '扉'}を開ける`; },   // 1.37.10: plan door "label" / "lockedWhy" (夜勤明けの街: a shutter said 扉（鍵がかかっている）)   // [E] on a locked door says why (its hint)
       run: (o) => { const d = world.doors.get(o.id);
         if (d.isOpen && d.def.closable) {   // standard 1.10.4: a closable door shuts again (never on the player standing in the doorway)
           const b = new THREE.Box3().setFromObject(d.mesh).expandByScalar(0.3), p = camera.position;
@@ -1090,7 +1097,9 @@ ${it.desc}` : ''}`, ...(it.photo ? { img: it.photo } : {}) };
       const testDef = { ...(ext.testScenes || {}), list: [...((ext.testScenes && ext.testScenes.list) || []), ...stageScenes(prog.levels, tasks)] }, testId = o.scene && sceneIn(testDef.list, o.scene) ? o.scene : null;
       state.started = true; unlockAudio(); bus.emit('game:start', { ...o, scene: testId || undefined, resume });
       if (testId) runTestScene(ctx, testDef, testId); else if (o.scene) ui.say(esc(`テストの場面「${o.scene}」はありません。最初から始めます。`), 6);
-      if (!resume && !o.quiet && !td.intro) ui.say(esc(data.stages.goal.sub || data.stages.goal.title), 6);
+      // 1.37.10 (夜勤明けの街 play test 2026-11-23 「最初に経路が出るのをやめてほしい」): goal "sub": "" says nothing at the start (the
+      // whole route at once spoils the way); without a "sub" the goal's title is said, as before
+      { const G0 = data.stages.goal || {}, line = 'sub' in G0 ? G0.sub : G0.title; if (!resume && !o.quiet && !td.intro && line) ui.say(esc(line), 6); }
       if (!blocked()) fp.lock();
       checkEndings();
     };

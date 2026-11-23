@@ -300,6 +300,34 @@
   "src": "atmos-k2-iv-fallen",
   "mpp": 0.025
  },
+ "junk-pile": {
+  "w": 71,
+  "d": 43,
+  "n": 84,
+  "src": "atmos-k3-furniture-pile",
+  "mpp": 0.025
+ },
+ "tire-pile": {
+  "w": 58,
+  "d": 46,
+  "n": 20,
+  "src": "atmos-k3-tire-pile",
+  "mpp": 0.025
+ },
+ "rope-fence": {
+  "w": 130,
+  "d": 23,
+  "n": 32,
+  "src": "atmos-k4-rope-fence",
+  "mpp": 0.025
+ },
+ "bins": {
+  "w": 21,
+  "d": 23,
+  "n": 35,
+  "src": "env-props-wheelie-bin",
+  "mpp": 0.025
+ },
  "wheelchair": {
   "w": 25,
   "d": 33,

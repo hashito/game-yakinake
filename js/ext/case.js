@@ -1,7 +1,8 @@
 // The case: a grid bag the player packs like a puzzle (往診かばん 6x4, later the 登山リュック 8x5), the storage box of the safe rooms,
 // the things lying in the world (loot) and the boxes that give several at once. [B] / the ケース button / [I] opens it.
-//   PC: drag a thing to a cell ([R] or the wheel turns it while held); a click picks it up and a second click puts it down.
-//   Phone: tap a thing (it is held), tap a cell to put it; 回す turns it. The buttons under the grid use, equip, combine or store it.
+//   PC: drag a thing to a cell, in the case or into the storage box and back (1.5.0); [R] or the wheel turns it while held; a click picks it
+//   up and a second click puts it down.
+//   Phone: drag it with a finger (1.5.0), or tap a thing (it is held) and tap a cell to put it; 回す turns it. The buttons under the grid use, equip, combine or store it.
 import * as THREE from 'three';
 import { CATALOG, BAGS, STORE, fits, findPlace, dims, comboOf } from './case-data.js';
 
@@ -199,10 +200,11 @@ export function installCase(ext, G) {
       const [w, hh] = dims(it), c = CATALOG[it.id];
       const eq = G.equip === it.uid ? ' yk-eq' : '', sel = C.sel && C.sel.uid === it.uid ? ' yk-sel' : '', held = C.held === it ? ' yk-held' : '';
       const gun = c.gun ? `<b class="yk-ammo">${it.loaded}/${c.gun.mag}</b>` : it.n > 1 ? `<b class="yk-ammo">×${it.n}</b>` : '';
-      h += `<button class="yk-it yk-k-${c.kind}${eq}${sel}${held}" data-uid="${it.uid}" style="left:${it.x * cs + 2}px;top:${it.y * cs + 2}px;width:${w * cs - 4}px;height:${hh * cs - 4}px" aria-label="${esc(c.name)}">${iconHtml(it.id, w, hh, cs)}${gun}</button>`;
+      h += `<button class="yk-it yk-k-${c.kind}${eq}${sel}${held}" data-uid="${it.uid}" style="left:${it.x * cs + 2}px;top:${it.y * cs + 2}px;width:${w * cs - 4}px;height:${hh * cs - 4}px;touch-action:none" aria-label="${esc(c.name)}">${iconHtml(it.id, w, hh, cs)}${gun}</button>`;
     }
     return h + '<div class="yk-ghost" hidden></div></div>';
   }
+  let swallow = false;   // the click that follows a drag's release is not a second pick-up
   function draw() {
     if (!host) return;
     const B = bagDim(), sel = C.held || C.sel, c = sel && CATALOG[sel.id];
@@ -216,7 +218,7 @@ export function installCase(ext, G) {
     ].join('') : '';
     const [sw, sh] = sel ? dims({ ...sel, rot: 0 }) : [1, 1];
     const big = sel ? Math.min(side() ? 64 : 48, Math.floor((side() ? 230 : 300) / Math.max(sw, sh))) : 0;
-    const help = C.held ? `「${esc(CATALOG[C.held.id].name)}」を持っている。置きたい所を押す。` : '物を押すと持ち上がる。置きたい所を押すと置ける。';
+    const help = C.held ? `「${esc(CATALOG[C.held.id].name)}」を持っている。置きたい所を押す。` : (C.atStore ? '物は、ドラッグでケースと保管箱のあいだを動かせる。押して持ち上げ、置きたい所を押してもよい。' : '物は、ドラッグで動かせる。押して持ち上げ、置きたい所を押してもよい。');
     const info = sel
       ? `<div class="yk-pic yk-k-${c.kind}" style="width:${sw * big + 8}px;height:${sh * big + 8}px">${iconHtml(sel.id, sw, sh, big)}</div>
           <p class="yk-name"><b>${esc(c.name)}</b><small>${sw}×${sh}${c.gun ? `　弾 ${sel.loaded}/${c.gun.mag}（${esc(CATALOG[c.gun.ammo].name)} 残り ${C.count(c.gun.ammo)}）` : sel.n > 1 ? `　×${sel.n}` : ''}</small></p>
@@ -258,10 +260,40 @@ export function installCase(ext, G) {
     }
     host.querySelectorAll('.yk-grid').forEach((g) => {
       g.addEventListener('pointermove', (e) => { if (C.held) ghost(g, spot(g, e)); });
-      g.addEventListener('click', (e) => { if (C.held) tryPlaceOn(g, e); });
+      g.addEventListener('click', (e) => { if (C.held && !swallow) tryPlaceOn(g, e); });
     });
+    // 1.5.0 (play test 2026-11-23 「アイテムの倉庫移動はドラッグで移動してもらえないでしょうか？」): a thing can be dragged - inside the case, or
+    // between the case and the storage box - with the mouse or a finger. The thing follows the pointer, the cells it would take light up
+    // under it (red where it does not fit), and letting go puts it there; a tap without moving still picks it up as before.
+    host.querySelectorAll('.yk-it').forEach((b) => b.addEventListener('pointerdown', (e) => {
+      if (e.button > 0) return;
+      const uid = +b.dataset.uid, it = C.items.find((i) => i.uid === uid) || C.store.find((i) => i.uid === uid); if (!it || (C.held && C.held !== it)) return;
+      const x0 = e.clientX, y0 = e.clientY, from = b.closest('.yk-grid').dataset.which, r0 = b.getBoundingClientRect();
+      let drag = null;
+      const gridAt = (ev) => { const el = document.elementFromPoint(ev.clientX, ev.clientY); return el && el.closest ? el.closest('.yk-grid') : null; };
+      const move = (ev) => {
+        if (!drag) {
+          if (Math.hypot(ev.clientX - x0, ev.clientY - y0) < 8) return;
+          C.sel = it; C.held = it; C.heldFrom = from;
+          const fl = b.cloneNode(true); fl.classList.add('yk-drag'); Object.assign(fl.style, { position: 'fixed', left: `${r0.left}px`, top: `${r0.top}px`, width: `${r0.width}px`, height: `${r0.height}px`, pointerEvents: 'none', zIndex: 9999, opacity: 0.85 });
+          document.body.appendChild(fl); b.style.visibility = 'hidden'; drag = { fl };
+        }
+        drag.fl.style.left = `${r0.left + ev.clientX - x0}px`; drag.fl.style.top = `${r0.top + ev.clientY - y0}px`;
+        const g = gridAt(ev); if (g) ghost(g, spot(g, ev)); else ghost(null);
+        ev.preventDefault();
+      };
+      const up = (ev) => {
+        removeEventListener('pointermove', move); removeEventListener('pointerup', up); removeEventListener('pointercancel', up);
+        if (!drag) return;
+        drag.fl.remove(); swallow = true; setTimeout(() => { swallow = false; }, 0);
+        const g = ev.type === 'pointerup' && gridAt(ev);
+        if (g && spot(g, ev).ok) tryPlaceOn(g, ev);
+        else { C.held = null; draw(); if (g) ctx.ui.say('そこには入らない。回すか、ほかの物を動かす。', 3, { urgent: true }); }
+      };
+      addEventListener('pointermove', move, { passive: false }); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+    }));
     host.querySelectorAll('.yk-it').forEach((b) => b.addEventListener('click', (e) => {
-      e.stopPropagation();
+      e.stopPropagation(); if (swallow) return;
       const uid = +b.dataset.uid, it = C.items.find((i) => i.uid === uid) || C.store.find((i) => i.uid === uid);
       if (C.held && C.held !== it) { tryPlaceOn(b.closest('.yk-grid'), e); return; }
       if (C.held === it) { C.held = null; draw(); return; }

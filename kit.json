@@ -1,5 +1,5 @@
 {
-  "kit": "d9e67113",
+  "kit": "309c8e4c",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -181,7 +181,7 @@
     "bake-prop-boxes.mjs"
   ],
   "hashes": {
-    "js\\kit\\game-core.js": "2b1cdbafb0d6",
+    "js\\kit\\game-core.js": "b9f5b243a982",
     "js\\kit\\item-kinds.js": "1df558ca9be9",
     "js\\kit\\item-models.js": "8c5988e07991",
     "js\\kit\\prop-geo.js": "6015f33a97f7",
@@ -212,7 +212,7 @@
     "js\\kit\\audio.js": "a073e3263600",
     "js\\kit\\audio-at.js": "7963d200be53",
     "js\\kit\\task-minigames.js": "3dc8e341ef20",
-    "js\\kit\\world-from-plan.js": "2f5ac1531112",
+    "js\\kit\\world-from-plan.js": "42b302b100fb",
     "js\\kit\\interact-select.js": "5df8cf8adc1c",
     "js\\kit\\room-types.js": "e3dd75863c22",
     "js\\kit\\barrier-look.js": "13e40328718e",
@@ -250,7 +250,7 @@
     "js\\kit\\wall-paste.js": "b095ea87709a",
     "js\\kit\\timed-shot.js": "18050d42421a",
     "js\\kit\\voice-queue.js": "b1cd83863922",
-    "js\\kit\\npc-audit.js": "5da2e7a1ae2e",
+    "js\\kit\\npc-audit.js": "30dbfb1f022c",
     "js\\kit\\schema-check.js": "5c6246af7444",
     "js\\kit\\monster-ai.js": "4db0bb2c39df",
     "js\\kit\\things-data.js": "18d17cf1af3a",
@@ -313,7 +313,7 @@
     "tools/review-shots.mjs": "8442e751189f",
     "tools/scene-links.mjs": "a7c96d3e129b",
     "tools/check-copy.mjs": "2a54b9214aba",
-    "tools/check-playtest.mjs": "b1c48aa8b8f9",
+    "tools/check-playtest.mjs": "59328fe51a7f",
     "tools/dot-scene.mjs": "ca5eb9b31cfe",
     "tools/frame-flicker.mjs": "ce7b9b4c2524",
     "tools/frame-nest.mjs": "f8b51a40e0ff",
@@ -333,7 +333,7 @@
     "js\\kit\\mg-torn-paper.js": "9f6161e5c565",
     "js\\kit\\mg-stage.js": "5fb09c2bcbbc",
     "js\\kit\\mg-read.js": "8cb0899f7ee5",
-    "js\\kit\\mg-safe-listen.js": "46d6907135d3",
+    "js\\kit\\mg-safe-listen.js": "0c7427393c4e",
     "js\\kit\\mg-sort-items.js": "7f49627fd173",
     "js\\kit\\mg-search-dark.js": "784d2d52276c",
     "js\\kit\\mg-pump-gauge.js": "0e62586caec4",
@@ -354,7 +354,7 @@
     "js\\kit\\sprite-stack-mesh.js": "b10ca38d7e6f",
     "js\\kit\\sprite-stack-anim.js": "760d53cbfba8",
     "js\\kit\\mg-library.js": "fcc07a893fef",
-    "js\\kit\\mg-sound.js": "887ba6e46d12",
+    "js\\kit\\mg-sound.js": "f86bdcfa4137",
     "js\\kit\\mg-footprint-track.js": "e027bad1a9f0",
     "js\\kit\\mg-steam-letter.js": "c623b9908476",
     "js\\kit\\mg-darkroom-develop.js": "a7a6ef9b4e25",
@@ -367,7 +367,8 @@
     "tools/bake-prop-boxes.mjs": "3bd46492d944",
     "js\\kit\\fp-voxel.js": "fb19e0285d15",
     "js\\kit\\fp-voxel-parts.js": "54b0bf46e58d",
-    "tools/cue-order.mjs": "28ab5482036a"
+    "tools/cue-order.mjs": "28ab5482036a",
+    "tools/stale-guide.mjs": "0558b8d49f91"
   },
   "textures": []
 }

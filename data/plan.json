@@ -698,6 +698,7 @@
    "z": 5,
    "unlock": "ward",
    "hint": "中から何かで押さえられている。叩くと、女の人の声が「電気が戻るまで開けられない」と言った。",
+   "closable": true,
    "width": 1.4
   },
   {
@@ -708,6 +709,7 @@
    "z": 5,
    "unlock": "ward",
    "hint": "病室の戸は電気の錠。電気が戻るまで開かない。",
+   "closable": true,
    "width": 1.4
   },
   {
@@ -719,6 +721,7 @@
    "unlock": "morgue",
    "look": "glass",
    "hint": "ガラス戸の向こうで、何かが床の人を食べている。いまは開けない。",
+   "closable": true,
    "width": 1.4
   },
   {
@@ -727,6 +730,7 @@
    "b": "H_ROKA",
    "x": 3,
    "z": 8,
+   "closable": true,
    "width": 1.4
   },
   {
@@ -737,6 +741,7 @@
    "z": 8,
    "unlock": "ward",
    "hint": "電気の錠が落ちている。電気が戻るまで開かない。",
+   "closable": true,
    "width": 1.4
   },
   {
@@ -747,6 +752,7 @@
    "z": 8,
    "unlock": "ward",
    "hint": "薬剤部は電気の錠。電気が戻るまで開かない。",
+   "closable": true,
    "width": 1.4
   },
   {
@@ -757,6 +763,7 @@
    "z": 8,
    "unlock": "morgue",
    "hint": "霊安室は、警備室のカードで開く。",
+   "closable": true,
    "width": 1.4
   },
   {
@@ -767,6 +774,7 @@
    "z": 6.5,
    "unlock": "morgue",
    "hint": "搬入口への扉は、警備室のカードで開く。",
+   "closable": true,
    "width": 1.4
   },
   {
@@ -776,6 +784,8 @@
    "x": 33,
    "z": 6.5,
    "unlock": "street",
+   "label": "シャッター",
+   "lockedWhy": "下りたまま",
    "hint": "シャッターは下りたまま。霊安室の鍵束に、シャッターの鍵があるはず。",
    "width": 2.6
   },
@@ -796,6 +806,7 @@
    "z": 6,
    "look": "glass",
    "knock": "mart",
+   "closable": true,
    "width": 1.8
   },
   {
@@ -804,6 +815,7 @@
    "b": "S_MSEC",
    "x": 58,
    "z": 8.5,
+   "closable": true,
    "width": 1.4,
    "reason": "the security office opens off the sales floor: the guard watches the floor and the stair to the roof"
   },
@@ -814,6 +826,7 @@
    "x": 55,
    "z": 11,
    "hint": "休憩室。中で、女の子が熱を出して寝ている。権藤が「入るな」と言った。",
+   "closable": true,
    "width": 1.4,
    "reason": "the staff room is reached through the security office: the sick girl sleeps where the guard can hear her"
   },
@@ -823,6 +836,7 @@
    "b": "S_MBACK",
    "x": 61,
    "z": 13,
+   "closable": true,
    "width": 1.2,
    "reason": "the staff corridor behind the sales floor (the back of a shop)"
   },
@@ -833,6 +847,7 @@
    "x": 62,
    "z": 16,
    "hint": "従業員通路の裏口。権藤が、レジの前から見張っている。話をつけるまで、通してくれない。",
+   "closable": true,
    "width": 1.6
   },
   {
@@ -851,6 +866,7 @@
    "b": "S_MSTOCK",
    "x": 70,
    "z": 14.5,
+   "closable": true,
    "width": 1.2,
    "reason": "the food court kitchen back door into the storeroom (a shopping centre service side)"
   },
@@ -861,6 +877,7 @@
    "x": 77,
    "z": 9,
    "hint": "冷蔵室。中から、何かが扉をこすっている。",
+   "closable": true,
    "width": 1.2,
    "reason": "the cold room opens off the food court kitchen"
   },
@@ -871,6 +888,7 @@
    "x": 68.5,
    "z": 16,
    "hint": "倉庫の搬入口の戸。内側から、南京錠でかんぬきが留めてある。",
+   "closable": true,
    "width": 1.4
   },
   {
@@ -878,8 +896,8 @@
    "a": "S_MSEC",
    "b": "S_MROOF",
    "kind": "stairs",
-   "look": "flight",
-   "label": "屋上への階段",
+   "look": "ladder",
+   "label": "屋上へのはしご",
    "ends": {
     "a": {
      "x": 53.2,
@@ -922,6 +940,7 @@
    "b": "S_YAMAURA",
    "x": 51,
    "z": 28,
+   "closable": true,
    "width": 1.2,
    "reason": "the back store of a small shop, behind its counter"
   },
@@ -932,6 +951,7 @@
    "x": 57.5,
    "z": 22,
    "hint": "消防団の倉庫。南京錠がかかっている。鍵は団員が持っている。",
+   "closable": true,
    "width": 1.6
   },
   {
@@ -941,6 +961,7 @@
    "x": 70,
    "z": 22,
    "knock": "cult",
+   "closable": true,
    "width": 1.8
   },
   {
@@ -971,6 +992,7 @@
    "z": 28.5,
    "look": "glass",
    "hint": "お還りさまの囲い。ガラス戸の向こうで、鎖が鳴っている。鍵は白坂が持っている。",
+   "closable": true,
    "width": 1.4,
    "reason": "the pen is the old stage store, behind glass so the members can see it from the hall"
   },
@@ -991,6 +1013,7 @@
    "x": 70,
    "z": 33.2,
    "knock": "khan",
+   "closable": true,
    "width": 1,
    "reason": "the small room off the sleeping room"
   },
@@ -1001,6 +1024,7 @@
    "x": 74.5,
    "z": 32,
    "hint": "白坂の部屋。鍵がかかっている。",
+   "closable": true,
    "width": 1,
    "reason": "the leader room opens off the hall (the old manager office)"
   },
@@ -1009,8 +1033,8 @@
    "a": "S_KCHIKA",
    "b": "S_KCELL",
    "kind": "stairs",
-   "look": "flight",
-   "label": "地下室への階段",
+   "look": "ladder",
+   "label": "地下室へのはしご",
    "hint": "床の上げ蓋。南京錠がかかっている。",
    "ends": {
     "a": {
@@ -1045,6 +1069,7 @@
    "z": 19,
    "unlock": "police",
    "hint": "商店街の出口に縄が張られ、鎖につながれたゾンビが並んでいる。公民館の人たちのしわざだ。",
+   "closable": true,
    "width": 4
   },
   {
@@ -1056,6 +1081,7 @@
    "look": "glass",
    "unlock": "police",
    "hint": "署の入口は、中から土のうでふさがれている。",
+   "closable": true,
    "width": 1.8
   },
   {
@@ -1076,6 +1102,7 @@
    "b": "P_ROKA",
    "x": 105,
    "z": 7.5,
+   "closable": true,
    "width": 1.4
   },
   {
@@ -1084,6 +1111,7 @@
    "b": "P_SHI",
    "x": 109,
    "z": 6,
+   "closable": true,
    "width": 1.4
   },
   {
@@ -1093,6 +1121,7 @@
    "x": 117,
    "z": 6,
    "hint": "通信室は、電気が来るまで電気錠が開かない。",
+   "closable": true,
    "width": 1.4
   },
   {
@@ -1101,6 +1130,7 @@
    "b": "P_HATSU",
    "x": 108,
    "z": 9,
+   "closable": true,
    "width": 1.4
   },
   {
@@ -1110,6 +1140,7 @@
    "x": 113.5,
    "z": 9,
    "hint": "武器庫の扉は、金庫のような番号錠。番号は、片桐さんも知らない。",
+   "closable": true,
    "width": 1.4
   },
   {
@@ -1118,6 +1149,7 @@
    "b": "P_SHOKO",
    "x": 118.5,
    "z": 9,
+   "closable": true,
    "width": 1.4
   },
   {
@@ -1127,6 +1159,7 @@
    "x": 100,
    "z": 14,
    "hint": "留置場の扉。中で何かが鉄格子を叩いている。",
+   "closable": true,
    "width": 1.4,
    "reason": "the cells are reached through the lobby desk, so the desk officer watches them"
   },
@@ -1138,6 +1171,7 @@
    "z": 7.5,
    "unlock": "backyard",
    "hint": "裏口は、片桐さんたちが鎖で縛ってある。署の用が済むまで開けない、と言っていた。",
+   "closable": true,
    "width": 1.4
   },
   {
@@ -1158,6 +1192,7 @@
    "look": "glass",
    "unlock": "tower",
    "hint": "ガラスの自動ドアは止まっている。",
+   "closable": true,
    "width": 2.4,
    "reason": "an open-plan office floor: the side rooms and the fire stair open straight off it"
   },
@@ -1178,6 +1213,7 @@
    "b": "O_KAI0",
    "x": 145,
    "z": 10.5,
+   "closable": true,
    "width": 1.4,
    "reason": "an open-plan office floor: the side rooms and the fire stair open straight off it"
   },
@@ -1187,6 +1223,7 @@
    "b": "O_SRV",
    "x": 145,
    "z": 3.5,
+   "closable": true,
    "width": 1.4,
    "reason": "an open-plan office floor: the side rooms and the fire stair open straight off it"
   },
@@ -1196,6 +1233,7 @@
    "b": "O_KAI1",
    "x": 145,
    "z": 10.5,
+   "closable": true,
    "width": 1.4,
    "reason": "an open-plan office floor: the side rooms and the fire stair open straight off it"
   },
@@ -1206,6 +1244,7 @@
    "x": 145,
    "z": 3.5,
    "hint": "厨房の戸は、中から押さえられている。",
+   "closable": true,
    "width": 1.4,
    "reason": "an open-plan office floor: the side rooms and the fire stair open straight off it"
   },
@@ -1215,6 +1254,7 @@
    "b": "O_KAI2",
    "x": 145,
    "z": 10.5,
+   "closable": true,
    "width": 1.4,
    "reason": "an open-plan office floor: the side rooms and the fire stair open straight off it"
   },
@@ -1224,6 +1264,7 @@
    "b": "O_KAICHO",
    "x": 145,
    "z": 3.5,
+   "closable": true,
    "width": 1.4,
    "reason": "an open-plan office floor: the side rooms and the fire stair open straight off it"
   },
@@ -1233,6 +1274,7 @@
    "b": "O_KAI3",
    "x": 145,
    "z": 10.5,
+   "closable": true,
    "width": 1.4,
    "reason": "an open-plan office floor: the side rooms and the fire stair open straight off it"
   },
@@ -1244,6 +1286,7 @@
    "z": 10.5,
    "unlock": "rooftop",
    "hint": "屋上への扉。鍵がかかっている。鍵は会長室にあると、野口さんが言っていた。",
+   "closable": true,
    "width": 1.4,
    "reason": "an open-plan office floor: the side rooms and the fire stair open straight off it"
   },
@@ -1252,8 +1295,8 @@
    "a": "O_KAI0",
    "b": "O_KAI1",
    "kind": "stairs",
-   "look": "flight",
-   "label": "非常階段を上がる",
+   "look": "ladder",
+   "label": "はしごを上がる",
    "ends": {
     "a": {
      "x": 149,
@@ -1281,8 +1324,9 @@
    "id": "EV12",
    "a": "O_OFF",
    "b": "O_SHOK",
-   "kind": "lift",
-   "label": "エレベーターで3階へ",
+   "kind": "stairs",
+   "look": "ladder",
+   "label": "はしごで3階へ",
    "ends": {
     "a": {
      "x": 143.5,
@@ -1311,8 +1355,8 @@
    "a": "O_KAI2",
    "b": "O_KAI3",
    "kind": "stairs",
-   "look": "flight",
-   "label": "非常階段を上がる",
+   "look": "ladder",
+   "label": "はしごを上がる",
    "ends": {
     "a": {
      "x": 149,
@@ -1341,8 +1385,8 @@
    "a": "O_KAI3",
    "b": "O_KAI4",
    "kind": "stairs",
-   "look": "flight",
-   "label": "塔屋へ上がる",
+   "look": "ladder",
+   "label": "はしごで塔屋へ上がる",
    "ends": {
     "a": {
      "x": 151.5,

@@ -1,4 +1,4 @@
-/* game-kit 91f5d7e8: js/mg-safe-listen.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 1948d108: js/mg-safe-listen.js — edit in game-kit and run tools/kit-sync.js */
 // Library mini game "safe-listen" (金庫の聞き取り, standard 1.24.0: the director's safe, a pawnshop's strongbox, a temple's offering safe).
 // Turn the dial with a stethoscope on the door. At the right number a faint click comes and the dial trembles; then turn the other way for
 // the next number: right, left, right. Some numbers give a weaker false click. Sound is optional: the stethoscope's trace shows every click
@@ -10,7 +10,9 @@
 //   - a click you can see: a ring out of the rim, カチッ！ beside the dial, the dial face goes green, a level meter in the stethoscope strip
 //   - a hint after a few tries that went wrong (turning back before a click, passing it, a wrong pull): the line says what to do, the rim glows
 //   - the dial turns clockwise on screen when the value goes up (right), and the drag uses the angle round the centre: it follows the pointer
-//   cfg: title, help, code ([n, n, n] 0..99; default from the seed), seed (8), dirs ([1, -1, 1]: 1 = right / clockwise), visual (false:
+//   cfg: title, help, code ([n, n, n] 0..99; default from the seed), seed (8), dirs ([1, -1, 1]: 1 = right / clockwise), catch (0: the click
+//        comes within this many of the number), slack (2: it holds within this), near (10: the steps before the number where the ticks grow
+//        louder and the door warms; 0 = off), visual (false:
 //        start in the look mode), ok, skin, stamp
 //   hooks: { sound(name, ctx, v) }  name = 'tick' | 'click' | 'set' | 'wrong' | 'ok'
 //   play scripts: host.mgSolve() turns the dial through the three numbers and pulls the handle through the same rule;
@@ -32,23 +34,33 @@ export function makeSafe(seed = 8) {
 // the click holds while the dial stays within SLACK of its number; turned further the same way it is lost ('passed': 通り過ぎた), and a
 // turn back after 3+ steps with no click is counted ('back') so the game can hint after a few
 export const SLACK = 2;
+// 1.37.10 (夜勤明けの街 play test 2026-11-23 「金庫のクエストで問題ない範囲を増やしてやりやすく」): tol = { catch, slack } - the click comes
+// when the dial is within `catch` of the number (0: on it, as before) and holds within `slack` (at least catch + 1); cfg.catch / cfg.slack
+const tolOf = (t) => { const c = Math.max(0, (t && t.catch) || 0); return { catch: c, hold: Math.max(c + 1, (t && t.slack) ?? SLACK) }; };
 /** the rule (pure): one step of the dial (dir +1 / -1) at stage k -> what is heard and the new stage state */
-export function dialStep(s, dir, safe, dirs = [1, -1, 1]) {
-  const o = { ...s, heard: null };
+export function dialStep(s, dir, safe, dirs = [1, -1, 1], tol = null) {
+  const o = { ...s, heard: null }, T = tolOf(tol);
   if (o.lastDir && dir !== o.lastDir) {
     if (o.k < 2) {   // turning back sets the wheel - only where its click was heard
-      if (o.armed === o.k && near(o.value, safe.code[o.k], SLACK)) { o.k++; o.armed = -1; o.heard = 'set'; }
+      if (o.armed === o.k && near(o.value, safe.code[o.k], T.hold)) { o.k++; o.armed = -1; o.heard = 'set'; }
       else { o.armed = -1; if ((o.run || 0) >= 3) o.heard = 'back'; }
     }
     o.run = 0;
   }
   o.lastDir = dir; o.value = wrap(o.value + dir); o.run = (o.run || 0) + 1;
-  if (dir === dirs[o.k] && o.value === safe.code[o.k]) { o.armed = o.k; o.heard = o.heard || 'click'; }
-  else if (o.armed === o.k && !near(o.value, safe.code[o.k], SLACK)) { o.armed = -1; o.heard = o.heard || 'passed'; }
+  if (dir === dirs[o.k] && o.armed !== o.k && near(o.value, safe.code[o.k], T.catch)) { o.armed = o.k; o.heard = o.heard || 'click'; }
+  else if (o.armed === o.k && !near(o.value, safe.code[o.k], T.hold)) { o.armed = -1; o.heard = o.heard || 'passed'; }
   else if (safe.fakes.includes(o.value)) o.heard = o.heard || 'fake';
   return o;
 }
-export const pullOk = (s, safe) => s.k === 2 && s.armed === 2 && near(s.value, safe.code[2], SLACK);
+export const pullOk = (s, safe, tol = null) => s.k === 2 && s.armed === 2 && near(s.value, safe.code[2], tolOf(tol).hold);
+/** 1.37.10 (the same play test 「対象の範囲の前に雰囲気が変わるように（音や色？）」, pure): how close the dial is to the next number, 0..1,
+ *  turning the right way and within `span` steps before it (cfg.near, default 10; 0 = off) - the ticks grow louder and the door warms */
+export function closeness(s, safe, dirs = [1, -1, 1], span = 10) {
+  if (!span || s.k > 2 || s.armed === s.k) return 0;
+  const d = dirs[s.k], ahead = wrap((safe.code[s.k] - s.value) * d);   // steps still to go the right way
+  return ahead > span ? 0 : 1 - ahead / (span + 1);
+}
 /** the dial on screen (pure): its turn in radians, clockwise on the screen as the value goes up (right = clockwise), so a drag round the
  *  centre and the dial turn the same way. The numbers run anticlockwise round the face; the one under the index is the value. */
 export const dialTurn = (value) => (value / SIZE) * Math.PI * 2;
@@ -69,7 +81,7 @@ export default {
     return new Promise((done) => {
       const snd = (k, v) => hooks.sound && hooks.sound(k, ctx, v), calm = calmOf(ctx);
       const safe = cfg.code ? { code: cfg.code.map(wrap), fakes: makeSafe(cfg.seed ?? 8).fakes.filter((v) => cfg.code.every((c) => !near(c, v, 5))) } : makeSafe(cfg.seed ?? 8);
-      const dirs = cfg.dirs || [1, -1, 1];
+      const dirs = cfg.dirs || [1, -1, 1], tol = { catch: cfg.catch || 0, slack: cfg.slack ?? SLACK }, span = cfg.near ?? 10;
       const side = (d) => (d > 0 ? '右' : '左');
       const f = mgFrame(host, { cfg, ctx, title: cfg.title || '金庫の音を聞く', help: cfg.help || `ダイヤルを回して、カチッと鳴る数を三つ探す。鳴ったら止めて、逆へ回す（${side(dirs[0])}・${side(dirs[1])}・${side(dirs[2])}）。三つ目で「開ける」。` }, done);
       const slot = (k) => `<span class="mgx-sf-slot" data-k="${k}"><small>${k + 1}つ目 ${dirs[k] > 0 ? '右→' : '←左'}</small><b>--</b></span>`;
@@ -101,8 +113,10 @@ export default {
       const step = (dir) => {
         if (f.done) return;
         const k0 = S.k;
-        S = dialStep(S, dir, safe, dirs);
-        snd('tick', 0.2);
+        S = dialStep(S, dir, safe, dirs, tol);
+        st.near = closeness(S, safe, dirs, span);
+        snd('tick', 0.2 + st.near * 0.6);
+        if (st.near > 0 && !S.heard) { st.level = Math.max(st.level, st.near * 0.45); st.trace[st.trace.length - 1] = st.near * 0.22; }
         if (S.heard === 'click') { st.trace[st.trace.length - 1] = st.visual ? 1 : 0.7; st.shake = st.visual ? 1 : 0.5; st.pulse = 1; st.level = 1; st.say = ''; snd('click', 1); if (!st.notes.some((n) => n.v === S.value)) st.notes.push({ v: S.value, real: true }); }
         else if (S.heard === 'fake') { st.trace[st.trace.length - 1] = st.visual ? 0.38 : 0.25; st.shake = st.visual ? 0.3 : 0.12; st.level = Math.max(st.level, 0.35); snd('click', 0.3); if (!st.notes.some((n) => n.v === S.value)) st.notes.push({ v: S.value, real: false }); }
         else if (S.heard === 'set') { st.set[k0] = safe.code[k0]; snd('set'); st.say = `${k0 + 1}つ目が掛かった。次は${side(dirs[S.k])}へ回して、カチッを探す。`; f.say(`${S.k} つ目の数が掛かった。`); f.progress(S.k, 3); }
@@ -113,7 +127,7 @@ export default {
       };
       const pull = () => {
         if (f.done) return;
-        if (pullOk(S, safe)) { st.set[2] = safe.code[2]; st.open = 0.01; snd('ok'); f.say(cfg.ok || '重い扉が動いた。'); f.progress(3, 3); note(); solved(f); f.win(1100); return; }
+        if (pullOk(S, safe, tol)) { st.set[2] = safe.code[2]; st.open = 0.01; snd('ok'); f.say(cfg.ok || '重い扉が動いた。'); f.progress(3, 3); note(); solved(f); f.win(1100); return; }
         st.pulls++; snd('wrong'); f.miss();
         S = { value: S.value, k: 0, armed: -1, lastDir: 0, run: 0 }; st.set = [null, null, null]; f.progress(0, 3);
         st.say = `開かない。ダイヤルが戻った。一つ目から：${side(dirs[0])}へ回してカチッを探す。`;
@@ -155,6 +169,8 @@ export default {
         g.fillStyle = '#1a1c1e'; g.fillRect(0, 0, G.w, G.h);
         // the door's steel with rivets
         g.fillStyle = '#2c3034'; g.fillRect(6, 4, G.w - 12, G.h - 8);
+        // getting close (1.37.10): the door warms towards amber and its edge glows, before the click
+        const nr = st.nearShow || 0; if (nr > 0.01 && !st.open) { const pu = 0.85 + 0.15 * Math.sin(performance.now() / (260 - nr * 140)); g.fillStyle = `rgba(210,120,30,${(nr * 0.5 * pu).toFixed(3)})`; g.fillRect(6, 4, G.w - 12, G.h - 8); g.strokeStyle = `rgba(255,190,90,${Math.min(1, nr * 1.1).toFixed(3)})`; g.lineWidth = 3 + nr * 9; g.strokeRect(8, 6, G.w - 16, G.h - 12); }   // the door warms and throbs faster the nearer (a first look at it read as nothing)
         g.fillStyle = '#4a5056'; for (const [x, y] of [[16, 14], [G.w - 16, 14], [16, G.h - 14], [G.w - 16, G.h - 14]]) { g.beginPath(); g.arc(x, y, 3, 0, Math.PI * 2); g.fill(); }
         const sh = calm ? 0 : st.shake * 2.2, jx = (Math.random() - 0.5) * sh, jy = (Math.random() - 0.5) * sh;
         g.save(); g.translate(G.cx + jx, G.cy + jy);
@@ -195,6 +211,7 @@ export default {
       loop(f, (dt) => {
         st.t += dt;
         st.trace.push(0); st.trace.shift();   // the trace scrolls
+        st.nearShow = (st.nearShow || 0) + (((S.armed === S.k && !st.open) ? 0 : (st.near || 0)) - (st.nearShow || 0)) * Math.min(1, dt * 6);
         st.shake = Math.max(0, st.shake - dt * 4); st.pulse = Math.max(0, st.pulse - dt * 1.6); st.level = Math.max(0, st.level - dt * 0.9);
         if (st.open) st.open = Math.min(1, st.open + dt * 0.8);
         draw();

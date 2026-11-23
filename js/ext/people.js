@@ -59,6 +59,9 @@ export function installPeople(ext, G) {
     if (f.warm) { f.warm.visible = false; ctx.scene.add(f.warm); warmOf.set(P.id, f.warm); }
     figs.set(P.id, { P, f, set, room, floor: (R && R.floor) || 0, yaw, home: f.root.position.clone(), hp: P.hp || 100, max: P.hp || 100, mode: 'stand', cool: 0, hidden: false });
     applySaved(figs.get(P.id));
+    // 1.5.0 (play test 2026-11-23 「人がオブジェクトに埋まっています」): the kit's people audit (js/kit/npc-audit.js, check-playtest P17) checks this
+    // figure as a column (it has no bones); a caged one stands in its cell on purpose (the bars are not furniture)
+    if (!P.caged) { const a = { root: f.root, body: { r: 0.24, h: P.h }, station: sid }; figs.get(P.id).audit = a; (globalThis.__gfPeople = globalThis.__gfPeople || new Set()).add(a); }
   }
   // 1.4.0 #13: who is dead or has given up is kept with the save (and the log save a death goes back to)
   let saved = {};
@@ -106,7 +109,7 @@ export function installPeople(ext, G) {
     const K = new Set(keep || []);
     for (const [id, p] of [...figs]) {
       if (K.has(id)) continue;
-      p.f.root.removeFromParent();
+      p.f.root.removeFromParent(); if (p.audit && globalThis.__gfPeople) globalThis.__gfPeople.delete(p.audit);
       const w = warmOf.get(id); if (w) { w.removeFromParent(); warmOf.delete(id); }
       if (p.set && p.set.geo) { for (const g of p.set.geo.values()) g.dispose(); p.set.geo.clear(); }
       figs.delete(id);

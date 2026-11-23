@@ -93,7 +93,7 @@
   "name": "エレベーターの鍵",
   "given": "T_NOGUCHI",
   "desc": "「非常運転」と刻まれた鍵。",
-  "why": "ビルのエレベーターを動かす。",
+  "why": "止まったエレベーターのシャフトの扉を開ける。中に点検はしごがある。",
   "feeling": "野口さんの血がついている。",
   "photo": "assets/photos/item-LIFTKEY.webp",
   "room": "O_BOSAI",

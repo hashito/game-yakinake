@@ -1,4 +1,4 @@
-/* game-kit 93a3e709: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 1948d108: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
 // The standard world builder (docs/standard-3d.md, layer "world"): plan.json (rooms, corridors, doors, stations) -> THREE objects,
 // colliders, doors that open and a room lookup. Boxes only: floors, ceilings, walls with door gaps and lintels, door panels, task
 // stations. The look is a flat palette per room kind + the preset lighting; richer looks (texture-library, props, env-props) are added
@@ -308,7 +308,7 @@ export function buildWorld(plan, o = {}) {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.1, 0.5), stationM);
     mesh.position.y = 0.55; mesh.name = `station:${s.id}`; mesh.userData.interact = { kind: 'station', id: s.id, label: s.label, ...(s.talk ? { talk: true } : {}), ...(s.reach ? { reach: s.reach } : {}) };   /* 1.20.3: plan station "talk": true (a person to speak to) / "reach": m */
     place(mesh, s.room, s.x, s.z);
-    const col = { box: new THREE.Box3().setFromObject(mesh), off: false };
+    const col = { box: new THREE.Box3().setFromObject(mesh), off: false, station: s.id };   // 1.37.10: the person who is this station stands in it (js/npc-audit.js)
     colliders.push(col);
     interactables.push(mesh);
     if (s.look) { const R = roomsById.get(s.room); dressStation(s, R.room, mesh, col, group, R.y); }   // s.look / s.mount: the thing itself, not the green box (standard 1.10.15, js/station-looks.js)
