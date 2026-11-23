@@ -311,7 +311,7 @@ export function installCombat(ext, G) {
   // ---------------------------------------------------------------- the body: hurt by zombies and people
   // 1.4.0 #3 「襲われたらヤバい感じ」: a grab is a struggle - press 殴る ([V] / right button / Space) three times before the teeth
   // come down, or the bite takes a big chunk (22). Every hurt shakes the view (less with 揺れを抑える), and the edges go red.
-  const NEED = 3, BITE = 22;
+  const NEED = 3, BITE = 28;   // 1.6.0 (play test 2 #5): 22 -> 28
   const paintGrab = () => { grabTag.innerHTML = `<b>つかまれた！</b><span>${ctx.isTouch ? '「殴る」を連打' : '[V]・右クリック・スペースを連打'}</span><i>${'●'.repeat(grab.n)}${'○'.repeat(NEED - grab.n)}</i><u style="--k:${Math.max(0, grab.t / grab.t0).toFixed(3)}"></u>`; };
   const freeGrab = (won) => {
     if (!grab) return; const by = grab.by; grab = null; grabTag.classList.remove('on');
@@ -388,7 +388,7 @@ export function installCombat(ext, G) {
         // on the cover's backdrop, not on the canvas: the kit's approach effect owns the canvas filter and clears it every frame
         if (f !== lastSat) { lastSat = f; dying.style.backdropFilter = f; dying.style.webkitBackdropFilter = f; } }
       // slow mending while nothing hurts (to 40 at most: real healing needs the case)
-      regen += dt; if (regen > 8 && G.hp < 40) G.hp = Math.min(40, G.hp + dt * 0.8);
+      regen += dt; if (regen > 10 && G.hp < 30) G.hp = Math.min(30, G.hp + dt * 0.5);   // 1.6.0 (play test 2 #5): the slow mend after a fight stops at 30 (was 40, 0.8/s after 8 s)
       // a struggle press counts at once, even while the last swing is still recovering (and does not swing)
       if (grab && want.melee && !busy) { want.melee = false; grab.n++; G.sfx('shove'); G.shake(0.3, 0.15); if (grab.n >= NEED) freeGrab(true); else paintGrab(); }
       if (!busy && cool <= 0) {

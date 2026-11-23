@@ -1,4 +1,4 @@
-/* game-kit d9e67113: js/ending-scene.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 795fc9be: js/ending-scene.js — edit in game-kit and run tools/kit-sync.js */
 // The ending as a scene (standard 1.8.1, feedback 2026-11-01 "最後にも写真を置いて手前に文字をつけるなど雰囲気を出して"): the picture fills the
 // screen and slowly comes closer, the kicker and the title stand in front of it, the epilogue appears a line at a time, and the stats and
 // the buttons come last. A click / Enter / Space shows the rest at once; reduced motion (ctx.calm or the OS setting) shows it all still.
@@ -60,8 +60,38 @@ export function laterOn(tops, ats, viewH) {
   return ats.map((at) => tops[at] != null && tops[at] < viewH * 0.6);
 }
 
+// 1.38.0 (水無瀬病院 2026-11-23 #12 「最後のエンディングは２ページに分けていいと思います。長文を１度に出すと読みづらいです」): a line
+// "---" in the text is a page break. Each page shows its own lines; a page that is not the last ends with one button 「次へ」 (no timer
+// turns the page). The kicker and the title head every page, with 「1 / 2」 by the kicker; the stats, the endings found, the share row and
+// the buttons come on the last page only. scenes[].at counts the lines without the breaks (data written before 1.38.0 keeps its pictures);
+// each page starts on the picture its first line had. Pure: endingPages(text, scenes, photo) -> [{ text, scenes, photo }]
+export const PAGE_BREAK = /^\s*-{3,}\s*$/;
+export function endingPages(text, scenes = [], photo = null) {
+  const all = String(text || "").split("\n"), lines = all.filter((p) => p.trim() && !PAGE_BREAK.test(p)), pages = [[]];
+  let n = 0;
+  for (const p of all) { if (PAGE_BREAK.test(p)) { if (pages[pages.length - 1].length) pages.push([]); continue; } if (p.trim()) pages[pages.length - 1].push(n++); }
+  if (!pages[pages.length - 1].length) pages.pop();
+  return pages.map((idx) => {
+    const a = idx[0], b = idx[idx.length - 1];
+    const before = (scenes || []).filter((s) => s && s.photo && s.at <= a).sort((x, y) => y.at - x.at)[0];
+    return { text: idx.map((i) => lines[i]).join("\n"), scenes: (scenes || []).filter((s) => s && s.photo && s.at > a && s.at <= b).map((s) => ({ ...s, at: s.at - a })), photo: before ? before.photo : photo };
+  });
+}
+
 export function showEndingScene(ctx, o = {}) {
-  const paras = String(o.text || "").split("\n").filter((p) => p.trim());
+  if (!o.page) {
+    const P = endingPages(o.text, o.scenes, o.photo);
+    if (P.length > 1) {
+      const show = (i) => {
+        const last = i === P.length - 1;
+        return showEndingScene(ctx, { ...o, page: `${i + 1} / ${P.length}`, text: P[i].text, scenes: P[i].scenes, photo: P[i].photo,
+          roll: last ? o.roll : null, stats: last ? o.stats : null, endings: last ? o.endings : null, share: last ? o.share : false,
+          buttons: last ? o.buttons : [{ label: "次へ", primary: true, next: true, fn: () => show(i + 1) }] });
+      };
+      return show(0);
+    }
+  }
+  const paras = String(o.text || "").split("\n").filter((p) => p.trim() && !PAGE_BREAK.test(p));
   const still = !!(ctx && ctx.calm) || (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) || !!(ctx && ctx.qa);
   const roll = Array.isArray(o.roll) ? o.roll.filter((r) => r && (r.photo || r.text)) : [];
   const tl = endingTimeline(paras, o.timing, roll);
@@ -74,13 +104,13 @@ export function showEndingScene(ctx, o = {}) {
   const later = (o.scenes || []).filter((s) => s && s.photo && tl.lines[s.at] != null).map((s) => `<div class="gf-ending-photo gf-ending-later" data-at="${s.at}" style="background-image:url('${esc(s.photo)}');--d:${tl.lines[s.at].toFixed(2)}s"></div>`).join("");
   el.innerHTML = `${o.photo ? `<div class="gf-ending-photo" style="background-image:url('${esc(o.photo)}')"></div>` : ""}${later}<div class="gf-ending-shade"></div>
     <div class="gf-ending-text">
-      ${o.kicker ? `<p class="gf-ending-kicker" ${d(tl.kicker)}>${esc(o.kicker)}</p>` : ""}
+      ${o.kicker || o.page ? `<p class="gf-ending-kicker" ${d(tl.kicker)}>${esc(o.kicker || "")}${o.page ? `<span class="gf-ending-page">${esc(o.page)}</span>` : ""}</p>` : ""}
       ${o.title ? `<h2 class="gf-ending-title" ${d(tl.title)}>${esc(o.title)}</h2>` : ""}
       ${paras.map((p, i) => `<p class="gf-ending-line" ${d(tl.lines[i])}>${esc(p)}</p>`).join("")}
       ${roll.map((r, k) => `${r.photo ? `<figure class="gf-ending-roll" ${d(tl.roll[k].pic)}><img src="${esc(r.photo)}" alt="${esc(r.title || "")}" loading="eager"></figure>` : ""}${r.title ? `<p class="gf-ending-roll-title" ${d(tl.roll[k].pic + 0.4)}>${esc(r.title)}</p>` : ""}${rollLines(r).map((p, i) => `<p class="gf-ending-line" ${d(tl.roll[k].lines[i])}>${esc(p)}</p>`).join("")}`).join("")}
       ${o.stats ? `<p class="gf-ending-stats" ${d(tl.stats)}>${esc(o.stats)}</p>` : ""}
       ${en && en.length > 1 ? `<p class="gf-ending-found" ${d(tl.stats)}>見つけた結末 ${en.filter((x) => x.found).length} / ${en.length}：${en.map((x) => (x.current ? `<b>${esc(x.title)}</b>` : esc(x.title))).join("　／　")}</p>` : ""}
-      <div class="gf-ending-buttons" ${d(tl.buttons)}>${(o.buttons || []).map((b, i) => `<button type="button" class="btn ${b.primary ? "primary" : ""}" data-i="${i}">${esc(b.label)}</button>`).join("")}</div>
+      <div class="gf-ending-buttons" ${d(tl.buttons)}>${(o.buttons || []).map((b, i) => `<button type="button" class="btn ${b.primary ? "primary" : ""}${b.next ? " gf-ending-next" : ""}" data-i="${i}">${esc(b.label)}</button>`).join("")}</div>
     </div>`;
   const so = endingShareOptions(ctx && ctx.manifest, o);
   if (so) { const sh = document.createElement("div"); sh.className = "gf-ending-share"; sh.setAttribute("style", `--d:${tl.buttons.toFixed(2)}s`); el.querySelector(".gf-ending-text").appendChild(sh); mountShareBar(sh, so); }

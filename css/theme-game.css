@@ -194,3 +194,6 @@ body:not(.yk-playing) .yk-status.yk-float { display: none; }
 .yk-pm-fac li.s-wary span { color: #e8c060; }
 .yk-pm-fac li.s-hostile span { color: #ff7a6a; }
 .yk-pm-fac li.s-gone span { color: #a0a0a0; }
+
+/* 1.6.0 (D-11 / D-18): while the eyes turn to the first one seen, nothing in the middle of the screen but it */
+body.yk-looking #prompt, body.yk-looking #crosshair, body.yk-looking #yk-aimtag, body.yk-looking #yk-hitmark { visibility: hidden !important; }

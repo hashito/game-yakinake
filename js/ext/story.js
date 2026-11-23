@@ -110,7 +110,8 @@ export function installStory(ext, G) {
   after('T_RADIO', () => talk('radio_done'));
   after('T_SAFE', () => talk('safe_done'));
   ext.registerTask('T_GENZO', { run: async (c, task) => { if (!(await ctx.runMinigame(task))) return false; await talk('genzo'); ctx.state.inv.splice(ctx.state.inv.indexOf('INSULIN'), 1); return true; } });
-  after('T_REI', () => { setTimeout(() => talk('morgue_wake'), 300); });
+  // 1.6.0 (play test 2 #6): the three under the sheets were there all along; with the keys in hand, the sheets move - one, then the next
+  after('T_REI', () => { const ids = ['Z_REI1', 'Z_REI3', 'Z_REI2']; ids.forEach((id, i) => setTimeout(() => { const L = G.liveZombies().find((x) => x.def.id === id); if (L && L.z.lying && L.z.lying() && G.riseNow) { L.rising = null; G.wakeSlow && G.wakeSlow(id); } }, 200 + i * 1100)); setTimeout(() => talk('morgue_wake'), 1500); });
   after('T_SHUTTER', () => { G.noise(ctx.camera.position, 30); setTimeout(() => talk('outside'), 3000); });   // 1.5.0: the line waits for the shutter to be up (js/ext/shutter.js rolls it for 2.6 s)
 
   // the mart: trade / sneak / fight
@@ -381,7 +382,10 @@ export function installStory(ext, G) {
       const d = headOf(L).distanceTo(ctx.camera.position);
       // 1.5.1 (play test #3 again: the zoom showed a door, not the one behind it): the glass-door one is seen from 3.5-4 m across the corridor,
       // so the first two (WIDE) turn the eyes from 2.5 m on
-      if (d > (WIDE[id] ? 2.5 : 4) && !(L.alert > 0 && d < 9) && ctx.lookTo) { looking = 1.1; ctx.lookTo(headOf(L), { sec: 0.9, zoom: 1.35, speed: 4 }); }
+      // 1.6.0 (play test 2 #7 「敵が出るたびにアップにする演出は不要です」): no zoom on an ordinary zombie. Only the first reveal, the one
+      // eating behind the treatment room's glass, turns the eyes - slowly, a slight 1.08 zoom - and the [E] and centre prompts wait
+      // until the look is over (D-11 / D-18: nothing on the screen but the thing seen)
+      if (id === 'Z_SHO_EAT' && d > 2.5 && !(L.alert > 0 && d < 9) && ctx.lookTo) { looking = 1.5; document.body.classList.add('yk-looking'); ctx.lookTo(headOf(L), { sec: 1.3, zoom: 1.08, speed: 2 }).then(() => setTimeout(() => document.body.classList.remove('yk-looking'), 150)); }
       return;
     }
   };
@@ -430,6 +434,23 @@ export function installStory(ext, G) {
     ctx.lockDoor('EV12', () => !ctx.state.tasks.includes('T_SERVER'), 'シャフトの扉は電気錠だ。非常電源が落ちていて開かない。');
   });
 
+  // 1.6.0 (D-21 「オフィスの3階へのはしごが平ら」): the first climb up the shaft stops halfway in the dark - a blow on the steel above, something
+  // comes rattling down the shaft past the ladder and hits the bottom, a breath somewhere close in the dark; then on up (kit ctx.climbBeat)
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  ext.on('game:ready', (c) => {
+    c.climbBeat = (o, { up }) => {
+      if (o.id !== 'EV12' || !up || seen.has('shaft') || c.qa) return null;
+      seen.add('shaft');
+      return (async () => {
+        const p = c.camera.position.clone();
+        G.sfx('bang'); G.shake && G.shake(0.45, 0.35); await wait(650);
+        G.sfx('rattle'); await wait(420); G.sfx('fall'); G.shake && G.shake(0.3, 0.25); await wait(380);
+        G.sfx3d('z-groan-4', new THREE.Vector3(p.x + 0.6, p.y + 0.4, p.z)); G.sfx('heart', { g: 0.8 });
+        c.ui.say('上で、何かが落ちてきた。……すぐそばで、何かが息をしている。', 3.4);
+        await wait(1500);
+      })();
+    };
+  });
   // 1.4.0 #15: a knock at a shut door where people live: they ask who it is, let the player in, and close the door behind
   const KNOCK = { mart: { door: 'D_MART_F', talk: 'knock_mart', fac: 'mart', who: ['gondo', 'nishina'] }, cult: { door: 'D_KOMIN', talk: 'knock_cult', fac: 'cult', who: ['shirasaka', 'taeko'] }, khan: { door: 'D_KHAN', talk: 'knock_khan', fac: 'cult', who: ['taeko'] } };
   const openDoor = (id) => { const w = ctx.world.doors && ctx.world.doors.get(id); if (!w || w.isOpen) return; w.locked = () => false; if (w.open()) { if (!ctx.state.doors.includes(id)) ctx.state.doors.push(id); ctx.bus.emit('door:open', { id }); } };

@@ -49,6 +49,13 @@
         },
         "description": "task ids that must be done first"
       },
+      "notYet": {
+        "anyOf": [
+          { "type": "string", "minLength": 1 },
+          { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } }
+        ],
+        "description": "1.39.6 (D-15): what the thing itself says while a need is not done (the shutter: the handle is rusted), instead of 先に済ませることがある：<titles>; an object keys it by the need id, \"*\" for the rest"
+      },
       "needItems": {
         "type": "array",
         "items": {

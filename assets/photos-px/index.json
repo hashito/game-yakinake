@@ -15,6 +15,10 @@
   "file": "doc-handover.png",
   "src": "1514d68cb08675eb"
  },
+ "doc-kdiary.webp": {
+  "file": "doc-kdiary.png",
+  "src": "9ccf05e1765b77f0"
+ },
  "doc-policelog.webp": {
   "file": "doc-policelog.png",
   "src": "ffe588b23a2201de"
@@ -230,6 +234,42 @@
  "th-glass.webp": {
   "file": "th-glass.png",
   "src": "d40957fa9fa75a0e"
+ },
+ "th-kcell.webp": {
+  "file": "th-kcell.png",
+  "src": "fdf6a50bb8046edd"
+ },
+ "th-kchika.webp": {
+  "file": "th-kchika.png",
+  "src": "cbae230374b82af0"
+ },
+ "th-kgraf.webp": {
+  "file": "th-kgraf.png",
+  "src": "6aebf10a05572391"
+ },
+ "th-kmon.webp": {
+  "file": "th-kmon.png",
+  "src": "8dca8a3605b178f8"
+ },
+ "th-kshin.webp": {
+  "file": "th-kshin.png",
+  "src": "e75e7d6ec631f7dc"
+ },
+ "th-mcold.webp": {
+  "file": "th-mcold.png",
+  "src": "44806bec60c17fd2"
+ },
+ "th-mfood.webp": {
+  "file": "th-mfood.png",
+  "src": "1cfd91fe515ca66f"
+ },
+ "th-msec.webp": {
+  "file": "th-msec.png",
+  "src": "e20cddef7b0e801d"
+ },
+ "th-mstaff.webp": {
+  "file": "th-mstaff.png",
+  "src": "6cce733c946cf461"
  },
  "th-roofh.webp": {
   "file": "th-roofh.png",

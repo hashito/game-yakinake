@@ -311,6 +311,56 @@
    "key": "item-CELLARKEY",
    "size": "1024x768",
    "prompt": "an old iron padlock key with a small blank brown paper tag tied with string, nothing written, a single object close up, top three-quarter view, centred, on a dark worn wooden surface, dramatic small light, sharp focus, product shot"
+  },
+  {
+   "key": "th-mstaff",
+   "size": "1024x768",
+   "prompt": "a handwritten paper note taped to a closed grey staff room door in a dark shopping centre back corridor, the writing illegible scribble, dim emergency light, close up"
+  },
+  {
+   "key": "th-msec",
+   "size": "1024x768",
+   "prompt": "a security monitor showing four grainy CCTV views, one of a dark food court with toppled chairs and dark stains on the floor and blurred figures shuffling, a dark security office at night, close up of the screen"
+  },
+  {
+   "key": "th-mfood",
+   "size": "1024x768",
+   "prompt": "a shopping centre direction sign on a wall with arrows and blank pictograms, no readable letters, in a dark abandoned mall corridor, dim light, close up"
+  },
+  {
+   "key": "th-kshin",
+   "size": "1024x768",
+   "prompt": "through a glass door, people chained to a wall in a dim community hall, shadows, one figure at the back in a white kimono, eerie, unclear faces, horror"
+  },
+  {
+   "key": "th-kmon",
+   "size": "1024x768",
+   "prompt": "a community centre notice board with pinned papers and one new sheet, papers with illegible scribbles, at a gate at night, flashlight beam, close up"
+  },
+  {
+   "key": "th-kgraf",
+   "size": "1024x768",
+   "prompt": "small pencil graffiti scribbles on a pale plaster wall, half rubbed out, illegible, close up, flashlight beam, dark"
+  },
+  {
+   "key": "th-kchika",
+   "size": "1024x768",
+   "prompt": "iron bars of a cellar cell, inside a blanket on the concrete floor and empty plastic water bottles, a padlock on the outside, flashlight beam, dark basement"
+  },
+  {
+   "key": "th-kcell",
+   "size": "1024x768",
+   "prompt": "a small handwritten paper note lying on a thin futon in a dark room, the writing illegible, close up, dim light"
+  },
+  {
+   "key": "doc-kdiary",
+   "size": "1024x768",
+   "prompt": "an open diary notebook with dense illegible handwriting on a low wooden desk, a candle beside it, dark room, close up"
+  },
+  {
+   "key": "th-mcold",
+   "size": "1024x768",
+   "prompt": "a handwritten cardboard sign hanging on the steel door of a walk-in cold room in a dark mall kitchen, illegible marker writing, frost on the door handle, dim light"
   }
  ],
  "seeds": {

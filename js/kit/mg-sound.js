@@ -1,4 +1,4 @@
-/* game-kit 1948d108: js/mg-sound.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 910568bb: js/mg-sound.js — edit in game-kit and run tools/kit-sync.js */
 // The default sounds of the library mini games (standard 1.10.18): every js/mg-<type>.js calls hooks.sound(name, ctx, v); a game that gives
 // no sound hook of its own gets these, made on the spot with WebAudio (ctx.audio = js/audio.js: tone / noiseBurst; no sound files).
 //   mgSound(type, name, audio, v)  plays one cue ('bell' v = which bell, 'turn' / 'hum' / 'step' v = 0..1); unknown names are silent
@@ -87,9 +87,12 @@ const BY_TYPE = {
   'steam-letter': { peel: (a) => N(a, { dur: 0.12, freq: 3800, q: 0.9, gain: 0.04, type: 'highpass', wet: 0.05 }) },
   'safe-listen': {
     // 1.37.10: v 0.2 far .. 0.8 close to the next number - the tick grows louder and lower, a low knock under it near the end
-    tick: (a, v = 0.2) => { const k = Math.max(0, Math.min(1, (v - 0.2) / 0.6)); tick(a, 3600 - k * 1500, 0.025 + k * 0.07); if (k > 0.3) thud(a, 140 + k * 60, 0.03 + k * 0.08); },
-    click: (a, v = 1) => { N(a, { dur: 0.02, freq: 1600, q: 6, gain: 0.08 * v, wet: 0.05 }); thud(a, 420, 0.1 * v); },
-    set: (a) => { thud(a, 260, 0.3); tick(a, 900, 0.12); },
+    // 1.39.6 (夜勤明けの街 play test 2 「金庫のゲームは音がなったほうが良い」: the old ticks were 0.025 - not heard on a phone): every step
+    // is a clear dry tick of the wheel, the number a heavy double click with a knock, a wheel set a clunk, the open a bolt drawn back
+    tick: (a, v = 0.2) => { const k = Math.max(0, Math.min(1, (v - 0.2) / 0.6)); tick(a, 3400 - k * 1500, 0.09 + k * 0.08); N(a, { dur: 0.012, freq: 5200, q: 4, gain: 0.03, wet: 0.02 }); if (k > 0.3) thud(a, 140 + k * 60, 0.06 + k * 0.1); },
+    click: (a, v = 1) => { N(a, { dur: 0.025, freq: 1500, q: 6, gain: 0.22 * v, wet: 0.06 }); N(a, { at: 0.045, dur: 0.02, freq: 1100, q: 6, gain: 0.16 * v, wet: 0.06 }); thud(a, 380, 0.3 * v); },
+    set: (a) => { thud(a, 240, 0.45); tick(a, 900, 0.2); N(a, { at: 0.06, dur: 0.05, freq: 600, q: 3, gain: 0.12, wet: 0.1 }); },
+    ok: (a) => { thud(a, 180, 0.5); N(a, { at: 0.05, dur: 0.35, freq: 700, q: 1.2, gain: 0.16, wet: 0.2, sweep: 0.5 }); N(a, { at: 0.42, dur: 0.04, freq: 1300, q: 5, gain: 0.2, wet: 0.15 }); thud(a, 120, 0.4); T(a, { at: 0.5, dur: 0.6, freq: 98, type: 'triangle', gain: 0.05, wet: 0.4 }); },
   },
 };
 

@@ -1,4 +1,4 @@
-/* game-kit f89b1fcd: js/sprite-stack-mesh.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 795fc9be: js/sprite-stack-mesh.js — edit in game-kit and run tools/kit-sync.js */
 // Sprite stacks as three.js meshes (docs/sprite-motions.md): the horizontal slices are read as a voxel volume and turned
 // into one mesh per frame (faces only where a voxel meets air, coplanar faces of one colour merged into rectangles, colour
 // per vertex). The model reads the same from every angle, also at eye level where stacked slice planes would vanish.
@@ -374,4 +374,74 @@ export function stackThumb(vol, o = {}) {
   const out = document.createElement('canvas'); out.width = W * s; out.height = H * s;
   const og = out.getContext('2d'); og.imageSmoothingEnabled = false; og.drawImage(c, 0, 0, W * s, H * s);
   return out.toDataURL('image/png');
+}
+
+// ---- HD tier (2026-11-23, docs/sprite-stacks.md 「高解像度（HD）」): a catalog entry may carry `hd` (tools/sprite-stacks/hd_build.py +
+// hd_merge.py): the same part redrawn at res 4 (0.625 cm a voxel for furniture scale), its slices as a grid over one or more PNG pages,
+// each at most 4096 x 4096 px (the iOS canvas cap, P50): hd.grid = { cols, rowsPerPage }, hd.files.slices = [{ file }, ...].
+// A prop shows the HD mesh near the camera and the base mesh farther than `near` metres (a band so it does not flicker), like the res 2
+// LOD of createFigure. Both are built at load (pixel games load first): put prop.warm through the warm-up.
+
+/** a volume view of a slice grid split over pages (each { data, width, height }): slice z at page floor(z / (cols * rowsPerPage)) */
+export function gridVolume(pages, w, d, n, cols, rowsPerPage) {
+  const per = cols * rowsPerPage;
+  return {
+    w, d, n,
+    at(x, y, z) {
+      const p = pages[(z / per) | 0]; if (!p) return -1;
+      const k = z % per, i = ((((k / cols) | 0) * d + y) * p.width + (k % cols) * w + x) * 4;
+      return p.data[i + 3] > 127 ? (((z / per) | 0) * 0x4000000) + i : -1;   // the page in the high bits (pages are < 64 MB)
+    },
+    rgb(i) { const p = pages[Math.floor(i / 0x4000000)], j = i % 0x4000000; return [p.data[j], p.data[j + 1], p.data[j + 2]]; },
+  };
+}
+
+/** HD or base for a distance, with a band of `band` metres: lod(prevIsHd, distance, near) -> true = HD */
+export function hdLod(wasHd, dist, near = 4, band = 0.5) {
+  return wasHd ? dist < near + band : dist < near - band;
+}
+
+const urlOf = (file, base) => new URL(file, new URL(base, typeof location !== 'undefined' ? location.href : 'file:///')).href;
+
+/** the volumes of a catalog entry: { base, hd (null when the entry has none or o.hd === false) }. base: the catalog's directory URL */
+export async function loadStackVolumes(entry, base, o = {}) {
+  const [w, d] = entry.sliceSize;
+  const bpx = await loadPixels(urlOf(entry.files.slices.file, base));
+  const out = { base: stripVolume(bpx, w, d, entry.sliceCount), hd: null };
+  const h = entry.hd;
+  if (h && o.hd !== false) {
+    const pages = await Promise.all(h.files.slices.map((f) => loadPixels(urlOf(f.file, base))));
+    out.hd = gridVolume(pages, h.sliceSize[0], h.sliceSize[1], h.sliceCount, h.grid.cols, h.grid.rowsPerPage);
+  }
+  return out;
+}
+
+/** a prop from the library: { root, mesh, warm, res, update({ camera }), dispose() }.
+ *  o: { hd (default true: use the HD tier when the entry has one), near (m, default 4), material, scale, camera } */
+export async function createStackProp(THREE, entry, base, o = {}) {
+  const vols = await loadStackVolumes(entry, base, o);
+  const scale = o.scale || 1;
+  const baseMpp = entry.metersPerPixel || 0.025;
+  const gBase = buildStackGeometry(THREE, vols.base, { mpp: baseMpp, scale, pivot: entry.pivot });
+  const gHd = vols.hd ? buildStackGeometry(THREE, vols.hd, { mpp: entry.hd.metersPerPixel, scale, pivot: entry.hd.pivot }) : null;
+  const mat = o.material || new THREE.MeshLambertMaterial({ vertexColors: true });
+  const root = new THREE.Group(); root.name = `prop:${entry.id}`;
+  const mesh = new THREE.Mesh(gHd || gBase, mat); mesh.castShadow = true; root.add(mesh);
+  const warm = new THREE.Group(); warm.name = `warm:${entry.id}`;
+  warm.add(new THREE.Mesh(gBase, mat)); if (gHd) warm.add(new THREE.Mesh(gHd, mat));
+  let isHd = !!gHd;
+  const P = new THREE.Vector3();
+  const prop = {
+    root, mesh, warm, material: mat, res: isHd ? entry.hd.res : (entry.res || 1), hasHd: !!gHd,
+    update(u = {}) {
+      const cam = u.camera || o.camera;
+      if (!gHd || !cam) return prop.res;
+      root.getWorldPosition(P);
+      const next = hdLod(isHd, P.distanceTo(cam.position || cam), o.near ?? 4);
+      if (next !== isHd) { isHd = next; mesh.geometry = isHd ? gHd : gBase; prop.res = isHd ? entry.hd.res : (entry.res || 1); }
+      return prop.res;
+    },
+    dispose() { gBase.dispose(); if (gHd) gHd.dispose(); },
+  };
+  return prop;
 }

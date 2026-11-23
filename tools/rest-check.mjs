@@ -9,6 +9,8 @@
 //   A thick thing standing against a wall in the air (a radio at 1 m with no shelf under it) does not rest: that was the floating radio.
 //   -> [{ name, at: [x, y, z], size: [x, y, z], above: m | null (the gap to what is under it; null = nothing within 2.5 m), against }]
 //   userData.hangs / floats = true on an object (or a parent) leaves it out (a lamp on a wire, a bird, a helicopter in the air).
+//   1.39.10: an object a game hides only for distance (userData.culled = true while hidden) still counts as there (a desk far away still holds its papers).
+//   1.39.9: so does a wall's lintel over a door gap (userData.lintel, js/world-from-plan.js): with a sliding door open there is nothing under it.
 //   1.29.2 (鏡屋): a thing in the player's hands is left out too - userData.held, or within 0.7 m of the camera (the camera the player
 //   carries hung in the scene at hip height was reported floating 1.1 m over the floor).
 //
@@ -27,7 +29,7 @@ export function restSource(o = {}) {
     const g = window.__game, T = g && (g.THREE || window.THREE); if (!g || !T) return { error: 'no game' };
     const W = g.world, SH = new RegExp(${JSON.stringify(shell)}), GAP = ${gap}, THIN = ${thin};
     g.scene.updateMatrixWorld(true);
-    const shown = (o) => { for (let q = o; q; q = q.parent) if (q.visible === false) return false; return true; };
+    const shown = (o) => { for (let q = o; q; q = q.parent) if (q.visible === false && !(q.userData && q.userData.culled)) return false; return true; };   // 1.39.10: hidden only for distance (userData.culled) is still there
     const drawn = (m) => { const mt = [].concat(m.material || [])[0]; return !!mt && mt.visible !== false && mt.colorWrite !== false && !(mt.transparent && mt.opacity < 0.05); };
     const flag = (o, k) => { for (let q = o; q; q = q.parent) if (q.userData && q.userData[k]) return true; return false; };
     // everything drawn (the targets of the rays), with its top-level object
@@ -41,7 +43,7 @@ export function restSource(o = {}) {
     const hitDist = (from, dir, far, own) => { rc.set(from, dir); rc.far = far; const hs = rc.intersectObjects(cands, false); for (const h of hs) if (!own.has(h.object)) return h.distance; return null; };
     let cands = all;
     for (const [t, ms] of tops) {
-      const nm = t.name || ''; if (SH.test(nm) || flag(t, 'hangs') || flag(t, 'floats') || t.isLight || t.isCamera) continue;
+      const nm = t.name || ''; if (SH.test(nm) || flag(t, 'hangs') || flag(t, 'floats') || flag(t, 'lintel') || t.isLight || t.isCamera) continue;
       const b = new T.Box3(); for (const m of ms) b.expandByObject(m); if (b.isEmpty()) continue;
       const s = b.getSize(new T.Vector3()); if ([s.x, s.y, s.z].filter((v) => v > 3).length >= 2 || Math.max(s.x, s.y, s.z) < 0.02) continue;
       if (flag(t, 'held') || (g.camera && b.distanceToPoint(g.camera.getWorldPosition(new T.Vector3())) < 0.7)) continue;   // in the hands (1.29.4)
@@ -71,7 +73,9 @@ export function restSource(o = {}) {
 
 // [regex, measure, min, max]: real sizes for a body with eyes at 1.6 m (a 1.7 m adult). Names: plan furniture kinds, kit props, the dot parts.
 export const SIZE_RULES = [
-  ['desk|steel-?desk', 'surf', 0.66, 0.8],
+  ['desk|steel-?desk', 'surf', 0.72, 0.8],   // 1.39.2 (水無瀬病院 第 5 回 #2 「机が他のオブジェクトに比べて小さく感じる」): at least 0.72 m and 1.5 m long
+  ['desk|steel-?desk', 'len', 1.5, 1.9],
+  ['chair|office-?chair|pipe-?chair', 'h', 0.8, 1.15],
   ['counter', 'surf', 0.82, 1.05],
   ['table', 'surf', 0.4, 0.8],
   ['shelf|shop-shelf|bookshelf', 'h', 1.1, 2.3],

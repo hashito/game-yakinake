@@ -1,4 +1,4 @@
-/* game-kit 2f52fcd4: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 910568bb: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
 // The standard world builder (docs/standard-3d.md, layer "world"): plan.json (rooms, corridors, doors, stations) -> THREE objects,
 // colliders, doors that open and a room lookup. Boxes only: floors, ceilings, walls with door gaps and lintels, door panels, task
 // stations. The look is a flat palette per room kind + the preset lighting; richer looks (texture-library, props, env-props) are added
@@ -376,7 +376,10 @@ export function buildWorld(plan, o = {}) {
       for (const sw of [-1, 1]) add(sz(L, 0.05, 0.05), railM, mid, side + sw * (W / 2 + 0.06), y0 + 0.93);
       add(sz(0.05, W + 0.12, 0.05), railM, far, side, y0 + 0.93);
     }
-    const hit = new THREE.Mesh(sz(L, W, up && !ladder ? 2.0 : up ? 1.8 : 0.9), hitM); hit.position.set(...at(mid, side, y0 + (up ? 1.0 : 0.45)));
+    // 1.39.6 (夜勤明けの街: the shaft ladder EV12 and the cellar hatch ST_KCHIKA were [E]-able only when looked at from the front and down):
+    // the way down is a box up to the eye as well (1.6 m, inside its rails), so it is picked from every side one can climb from, looking
+    // ahead or down - tools/ladder-aim.mjs, check-playtest P66
+    const hit = new THREE.Mesh(sz(L, W, up && !ladder ? 2.0 : up ? 1.8 : 1.6), hitM); hit.position.set(...at(mid, side, y0 + (up ? 1.0 : 0.8)));
     // the room's pendant hangs off the flight, over where the player arrives (its cord must not run through the steps)
     const lampU = near - sgn * 0.45;
     for (const k of ['lamp', 'lampshade', 'lampbulb', 'lampcord']) { const o = group.getObjectByName(`${k}:${R.id}`); if (o) { if (alongX) o.position.x = lampU; else o.position.z = lampU; } }

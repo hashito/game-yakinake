@@ -1,4 +1,4 @@
-/* game-kit a4da8f61: css/kit.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 910568bb: css/kit.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: shared styles for first-person browser games (windows, HUD, buttons, touch controls,
    status chips, steppers, kanban, app-like software screens, tabs, stamps, share buttons; at the end
    progression pg-*, sim UI nt-/tb-/dl-/ch-*, journal jr-* / stream veil st-* / hiding hd-*, chat cx-*).
@@ -3196,6 +3196,9 @@ body.gf-warming .wm-layer, body.gf-warming .rn-wrap, body.gf-warming #mg, body.g
 .mgx-radio.warm .mgx-radio-needle { box-shadow: 0 0 5px #ff5a40; }  /* pair-ok */
 .mgx-radio-knob { --a: 0deg; position: relative; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #6a6e70, #1a1c1e); border: 3px solid #2a2e30; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: grab; touch-action: none; transform: rotate(var(--a)); }  /* pair-ok */
 .mgx-radio-knob i { position: absolute; left: 50%; top: 8px; width: 6px; height: 30px; margin-left: -3px; background: #e8e0c8; border-radius: 3px; }  /* pair-ok */
+/* 1.39.2 (水無瀬病院 第 5 回 #4 「無線機合わせるつまみはまるで良い」): the knob stays a round dial with a grip ring in every style - a dot game's
+   "no rounded corners" rule (:root[data-dot] * { border-radius: 0 !important }) had made it a square plate that turned like a card */
+:root .mgx-radio-knob, :root[data-dot] .mgx-radio-knob { border-radius: 50% !important; background: radial-gradient(circle at 50% 50%, #3a3e40 0 52%, transparent 53%), repeating-conic-gradient(#4a4e50 0 6deg, #222527 6deg 12deg) !important; }  /* pair-ok: a knob */
 .mgx-radio-knob:focus-visible { outline: 3px solid var(--gf-accent, #3a7a5a); outline-offset: 4px; }
 .mgx-trace { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .mgx-trace svg { width: min(420px, 100%); height: auto; aspect-ratio: 400 / 260; border: 1px solid var(--gf-border-strong, #b8b0a0); border-radius: 6px; background: #f2ead6; touch-action: none; }  /* pair-ok: paper */

@@ -41,6 +41,9 @@ PARTS = {
     'truck': 'miru-delivery-truck', 'van': 'env-props-car-van', 'kei': 'env-props-car-kei', 'rubble': 'atmos-k3-brick-rubble',
     'crate-stack': 'tidegate-crate-stack', 'pallet-stack': 'turnback-pallet-stack',
     'wheelchair': 'atmos-k2-wheelchair-overturned', 'gurney': 'atmos-k2-gurney-slipped', 'collapsed-shelf': 'atmos-k3-collapsed-shelf',
+    # 1.6.0 (play test 2 #1 「机が小さすぎる」 and D-7 / D-12): chairs at the desks and tables, the barrel fire, the street barriers
+    'office-chair': 'props-office-chair', 'pipe-chair': 'props-pipe-chair', 'chair-toppled': 'atmos-k2-office-chair-toppled',
+    'barrel': 'glb-barrel', 'tiger-fence': 'atmos-k4-tiger-fence', 'barrier-arm': 'miru-delivery-barrier-arm',
     # the things lying in the world (loot)
     'pistol': 'game-arakawa-pistol', 'shotgun': 'game-arakawa-shotgun', 'medkit': 'game-arakawa-medkit', 'ammo-9mm': 'game-arakawa-ammo-9mm',
     'ammo-12g': 'game-arakawa-ammo-12g',

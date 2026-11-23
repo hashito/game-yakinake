@@ -1,4 +1,4 @@
-/* game-kit d9e67113: js/hide-looks.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 795fc9be: js/hide-looks.js — edit in game-kit and run tools/kit-sync.js */
 // Hiding places you can see (standard 1.10.13, rule G7 "隠れる場所は、見て隠れ場所と分かる物にする"; feedback 2026-11-03 出口はこちらです
 // 「棚の隙間に隠れるの分かりづらい。ロッカーとかおいて」). plan.hides[i].look builds the thing at the hide spot (x, z = its centre):
 //   'locker'   a grey steel locker, a louvre at eye height to peek through (offices, stations, schools, plant rooms)
@@ -14,6 +14,19 @@ import * as THREE from 'three';
 /** how far a locker / cabinet whose centre is dist from its wall's line must move forward so its back clears the wall's face */
 export const HIDE_BACK = 0.425;
 export function backClear(dist) { return dist < HIDE_BACK ? +(HIDE_BACK - dist).toFixed(4) : 0; }
+/** the footprint of a locker / cabinet (local: x +-0.47, back -0.325, front door 0.345) in the world at (x, z, yaw) */
+export function hideFootprint(x, z, yaw, o = {}) {
+  const hx = o.hx ?? 0.47, zb = o.zb ?? -0.325, zf = o.zf ?? 0.345, c = Math.cos(yaw), s = Math.sin(yaw);
+  const pts = [[-hx, zb], [hx, zb], [-hx, zf], [hx, zf]].map(([lx, lz]) => [x + lx * c + lz * s, z - lx * s + lz * c]);
+  return { x0: Math.min(...pts.map((p) => p[0])), x1: Math.max(...pts.map((p) => p[0])), z0: Math.min(...pts.map((p) => p[1])), z1: Math.max(...pts.map((p) => p[1])) };
+}
+/** (x, z) moved so the footprint stays inside the room's wall faces (half a wall 0.08 m + 2 cm in from the room's lines) */
+export function clampInRoom(room, x, z, yaw, o = {}) {
+  const f = hideFootprint(x, z, yaw, o), m = o.margin ?? 0.1;
+  const dx = f.x0 < room.x + m ? room.x + m - f.x0 : f.x1 > room.x + room.w - m ? room.x + room.w - m - f.x1 : 0;
+  const dz = f.z0 < room.z + m ? room.z + m - f.z0 : f.z1 > room.z + room.d - m ? room.z + room.d - m - f.z1 : 0;
+  return { x: +(x + dx).toFixed(4), z: +(z + dz).toFixed(4) };
+}
 
 /** the wall nearest to (x, z) in a room { x, z, w, d }: its side and the yaw that turns a front (+z) away from it */
 export function nearestWallYaw(room, x, z) {
@@ -66,6 +79,9 @@ export function buildHideLook(h, room) {
   // backed onto its nearest wall keeps its back clear of the wall's face (half a wall 0.08 m + its own back 0.325 m + 2 cm)
   const push = h.yaw == null && nw && kind !== 'oshiire' ? backClear(nw.dist) : 0;
   if (push > 0) { g.position.x += Math.sin(yaw) * push; g.position.z += Math.cos(yaw) * push; }
+  // 1.38.0 (水無瀬病院 2026-11-23 #3 「地下のロッカーが壁に埋まっています」): in a corner the SIDE stood in the other wall (a locker 0.35 m from
+  // both walls of a 1.6 m corridor). The whole footprint stays inside the room's wall faces (P62)
+  if (room && h.yaw == null && kind !== 'oshiire') { const c = clampInRoom(room, g.position.x, g.position.z, yaw); g.position.x = c.x; g.position.z = c.z; }
   const rest = h.open || kind === 'oshiire' ? 0 : 1;   // a locker / cabinet stands shut (1.36.0); an oshiire keeps its open fusuma
   setShut(rest);
   return { group: g, solids, setShut, front, rest };

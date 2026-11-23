@@ -391,6 +391,48 @@
   "src": "atmos-k3-collapsed-shelf",
   "mpp": 0.025
  },
+ "office-chair": {
+  "w": 19,
+  "d": 22,
+  "n": 36,
+  "src": "props-office-chair",
+  "mpp": 0.025
+ },
+ "pipe-chair": {
+  "w": 19,
+  "d": 21,
+  "n": 37,
+  "src": "props-pipe-chair",
+  "mpp": 0.025
+ },
+ "chair-toppled": {
+  "w": 41,
+  "d": 24,
+  "n": 24,
+  "src": "atmos-k2-office-chair-toppled",
+  "mpp": 0.025
+ },
+ "barrel": {
+  "w": 15,
+  "d": 15,
+  "n": 22,
+  "src": "glb-barrel",
+  "mpp": 0.025
+ },
+ "tiger-fence": {
+  "w": 130,
+  "d": 13,
+  "n": 35,
+  "src": "atmos-k4-tiger-fence",
+  "mpp": 0.025
+ },
+ "barrier-arm": {
+  "w": 54,
+  "d": 10,
+  "n": 21,
+  "src": "miru-delivery-barrier-arm",
+  "mpp": 0.025
+ },
  "pistol": {
   "w": 22,
   "d": 15,

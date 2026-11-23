@@ -9,7 +9,7 @@
 //   P3  a corridor narrowed below 1.2 m, or by more than 30 %, by furniture or a hiding place, away from its ends (#14)
 //   P4  a low zone a standing body can walk into (#18)
 //   P5  a person who jumped more than 1.2 m between two frames while visible (a teleport, #13): window.__gfNpcJumps (js/character.js)
-//   P6  an item with no picture; a speaker of the talks with no portrait (#8, #9)
+//   P6  an item with no picture; a thing / document with no picture or a missing file (an error, 水無瀬病院 第 5 回 #3); a speaker of the talks with no portrait (#8, #9)
 //   P7  the death card of each game.json "deaths" reason: it must cover the screen, have its button, and give play back (#23)
 //   P8  a things.json ひとこと that repeats the text (#6)
 //   P9  the menu has 操作方法 (#16)
@@ -77,10 +77,17 @@
 //       two panels overlap (errors), the portrait notice is missing (tools/phone-layout.mjs: 「メッセージや通知で領域を使いすぎている」)
 //   1.36.0 (札の家 play test 2026-11-22): P53 a loud guide mark (over 30 px at 3 m, or nearly opaque: a warning); P54 a closed door or a story
 //   gate a body walks through (an error); P55 an [E] spot with nothing visible within 0.45 m of its centre (a warning)
+//   P66 (1.39.6, 夜勤明けの街 1.6.0) a ladder / flight end picked in under half of the poses around it (under a quarter: an error) (tools/ladder-aim.mjs)
+//   P65 (1.39.6, 夜勤明けの街 D-15) a task with needs and no tasks.json "notYet" (the thing's own reason while a need is open) (a warning)
+//   P64 (1.39.0, 札の家 2.5.0 #7) an ending's kamishibai cards (endings.json pages): picture and voice files exist, words fit a phone card (js/kamishibai.js)
+//   P63 (1.39.0, 札の家 2.5.0 #2) a station that another [E] takes when aimed at from 1.2 / 1.8 m (over a quarter of the poses a warning, over half an error) (tools/station-aim.mjs)
 //   P59 (1.37.8, 札の家 2.4.0) on the shortest route to an end task (the walk out), the guide shows another task (an error) or a task of the branch
-//       not taken still starts (a warning) (tools/stale-guide.mjs: 「作業台で、考えをまとめる」 on the way to the front door)
+//       not taken still starts (a warning) (tools/stale-guide.mjs: 「作業台で、考えをまとめる」 on the way to the front door); 1.39.2 (札の家 2.5.2): the end task's card also closes while its run plays (an error)
 //   1.31.0: P49 a document read keeps its emphasis (glow, marks) or cannot be read again (「読んだら強調表示をやめるようにしてください」)
-// Exit 1 on an error (P54, P4, P7, P9, P19, P24, P25 overlap, P26, P30, P31, P32, P33, P34, P35, P36, P37, P38, P39, P40, P41, P42, P43, P44, P46, P49, P56, P57, P58, P59, P47 / P48 with checks.rest = "error", P52 over 600 MB) or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
+//   1.38.0 (水無瀬病院 4th play test 2026-11-23; tools/water-edge.mjs): P60 a water surface whose side stands open over a lower or dry floor
+//   (a cut face: 「水の断面が見える」) (an error); P61 a figure reaching through a shut door (「モンスターが扉を少し貫通」) (an error); P62 a
+//   hiding place's look standing in a wall of its room (「ロッカーが壁に埋まっています」) (an error)
+// Exit 1 on an error (P54, P4, P7, P9, P19, P24, P25 overlap, P26, P30, P31, P32, P33, P34, P35, P36, P37, P38, P39, P40, P41, P42, P43, P44, P46, P49, P56, P57, P58, P59, P60, P61, P62, P63 (over half), P64, P66 (under a quarter), P47 / P48 with checks.rest = "error", P52 over 600 MB) or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -101,6 +108,10 @@ import { pickOverlapSource } from './pick-overlap.mjs';
 import { restSource, sizeSource } from './rest-check.mjs';
 import { cueOrderSource } from './cue-order.mjs';
 import { staleGuideSource } from './stale-guide.mjs';
+import { waterEdgeSource, doorClipSource, hideRoomSource } from './water-edge.mjs';
+import { KS_MAX_CHARS } from '../js/kit/kamishibai.js';
+import { stationAimSource } from './station-aim.mjs';
+import { ladderAimSource } from './ladder-aim.mjs';
 const MARK_MAX = 30;   // P53: the guide mark's height on screen at 3 m, px on a 720 px view (js/guidance.js MARK_MAX_PX)
 // P26: in ctx.readLog order, a 'say' / 'talk' after an 'open' and before its 'close'
 const docOpenSay = (lg) => { let open = 0; for (const k of lg) { if (k === 'open') open++; else if (k === 'close') open = Math.max(0, open - 1); else if ((k === 'say' || k === 'talk') && open) return true; } return false; };
@@ -118,6 +129,16 @@ const data = game.data || {};
 {
   const items = data.items ? readJson(data.items) : null;
   for (const it of (Array.isArray(items) ? items : (items && items.items) || [])) if (!it.photo && !it.img && !it.image) Wn('P6', `item "${it.id}" (${it.name || ''}) has no picture`);
+  // 1.39.2 (水無瀬病院 第 5 回 #3 「画像がない部分があります」): every thing to look at and every document has a picture, and the file is there (an error)
+  for (const [key, label] of [['things', 'thing'], ['docs', 'document'], ['items', 'item']]) {
+    const raw = data[key] ? readJson(data[key]) : null, list = Array.isArray(raw) ? raw : (raw && (raw[key] || raw.list)) || [];
+    for (const x of list) {
+      if (!x || !x.id || x.given === true) continue;
+      const pic = x.photo || x.img || x.image;
+      if (!pic) { if (key !== 'items') E('P6', `${label} "${x.id}" (${x.label || x.title || x.name || ''}) has no picture: the card shows the empty picture box`); continue; }
+      if (typeof pic === 'string' && !/^(https?:|data:)/.test(pic) && !fs.existsSync(path.join(dir, pic)) && !fs.existsSync(path.join(dir, 'public', pic))) E('P6', `${label} "${x.id}": picture ${pic} is missing`);
+    }
+  }
   const talk = data.talk ? readJson(data.talk) : null, portraits = game.portraits || {};
   const who = new Set();
   const walk = (v) => { if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object') { if (typeof v.who === 'string') who.add(v.who); Object.values(v).forEach(walk); } };
@@ -139,6 +160,24 @@ if (game.deaths) {
 {
   const walk = (d) => { for (const f of fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true }) : []) { const q = path.join(d, f.name); if (f.isDirectory()) { if (!['kit', 'vendor', 'node_modules'].includes(f.name)) walk(q); } else if (/\.m?js$/.test(f.name)) { const src = fs.readFileSync(q, 'utf8'); if (/new Audio\([^)]*voice|voice[^\n]{0,80}decodeAudioData|createBufferSource\(\)[^\n]{0,200}voice/i.test(src)) Wn('P22', `${path.relative(dir, q)} plays a voice by itself: use ctx.voiceLine(src, null, { prio }) so two voices never overlap`); } } };
   walk(path.join(dir, 'js'));
+}
+// P64 (1.39.0, 札の家 2.5.0 #7 「最後は紙芝居風に各場面と言葉を見せて…ここも喋るように」): an ending told as a kamishibai (endings.json "pages",
+// js/kamishibai.js) has every card's picture and voice on disk and words that fit a phone card (KS_MAX_CHARS); a card without a voice is a warning
+{
+  const ends = data.endings ? readJson(data.endings) : null;
+  for (const e of Array.isArray(ends) ? ends : []) for (const [i, pg] of (Array.isArray(e.pages) ? e.pages : []).entries()) {
+    const at = `ending "${e.id}" card ${i + 1}`;
+    if (!pg.photo) E('P64', `${at} has no picture`); else if (!fs.existsSync(path.join(dir, pg.photo))) E('P64', `${at}: picture ${pg.photo} is missing`);
+    if (!pg.voice) Wn('P64', `${at} is not voiced (the kamishibai reads every card aloud)`); else if (!fs.existsSync(path.join(dir, pg.voice))) E('P64', `${at}: voice ${pg.voice} is missing`);
+    if ([...String(pg.text || '')].length > KS_MAX_CHARS) E('P64', `${at}: ${[...String(pg.text)].length} characters (over ${KS_MAX_CHARS}: split the card)`);
+  }
+}
+// P65 (1.39.6, 夜勤明けの街 D-15 「先に済ませることがある：〜」): a task with needs says what the thing itself is waiting for (tasks.json
+// "notYet": the shutter's handle is rusted, the locker wants a key) - the kit's generic line names other tasks like a to-do list (a warning)
+{
+  const tj = data.tasks ? readJson(data.tasks) : null, tl = Array.isArray(tj) ? tj : (tj && tj.tasks) || [];
+  const bare = tl.filter((t) => (t.needs || []).length && !t.notYet).map((t) => t.id);
+  if (bare.length) Wn('P65', `${bare.length} task(s) with needs and no "notYet" (${bare.slice(0, 8).join(', ')}${bare.length > 8 ? ' ...' : ''}): while a need is open, [E] says 先に済ませることがある：<task titles>; give the thing's own reason`);
 }
 // P16: room names that do not fit their room on the map
 {
@@ -174,7 +213,7 @@ try {
   for (let i = 0; i < 30 && (await G('g.blocked ? g.blocked() : false')); i++) { await G(`([...document.querySelectorAll('.wm-layer .btn.primary, .wm-layer button, [role=dialog] .btn.primary')].filter((b) => b.offsetParent).slice(0, 1).forEach((b) => b.click()), 1)`); await sleep(350); }
   const audit = await G(`(() => {
     const T = g.THREE, W = g.world, out = { p1: [], p2: [], p3: [], p4: [] };
-    const shown = (o) => { for (let x = o; x; x = x.parent) if (x.visible === false) return false; return true; };
+    const shown = (o) => { for (let x = o; x; x = x.parent) if (x.visible === false && !(x.userData && x.userData.culled)) return false; return true; };   // 1.39.11: hidden only for distance is still there
     const drawn = (m) => { const mats = [].concat(m.material || []); return mats.some((mt) => mt && mt.visible !== false && mt.colorWrite !== false && !(mt.opacity === 0 && mt.transparent)); };
     const meshes = []; g.scene.updateMatrixWorld(true);
     g.scene.traverse((m) => {
@@ -345,8 +384,8 @@ try {
   {
     const loudOk = !!(game.pointer && game.pointer.look === 'loud');
     const r = await G(`(() => {
-      const T = g.THREE, W = g.world, cam = g.camera, out = { p53: [], p54: [], p55: [] };
-      const shown = (o) => { for (let x = o; x; x = x.parent) if (x.visible === false) return false; return true; };
+      const T = g.THREE, W = g.world, cam = g.camera, out = { p53: [], p54: [], p54u: [], p55: [] };
+      const shown = (o) => { for (let x = o; x; x = x.parent) if (x.visible === false && !(x.userData && x.userData.culled)) return false; return true; };   // 1.39.11: hidden only for distance is still there
       g.scene.updateMatrixWorld(true);
       const fov = (cam.fov || 72) * Math.PI / 180, px = (m) => (m / (2 * 3 * Math.tan(fov / 2))) * 720;
       const seen = new Set();
@@ -369,6 +408,10 @@ try {
         if (!d || !d.def || d.isOpen || d.def.x == null || d.def.kind === 'stairs' || d.def.kind === 'lift') continue;
         if (d.def.open && !d.def.unlock) continue;
         const room = (g.data.plan.rooms || []).find((r) => r.id === d.def.a), fy = W.floorY ? W.floorY((room && room.floor) || 0) : 0;
+        // 1.39.4: a game's own world (ext.registerWorld) keeps its doors in its own walls (a cell grid): its contract door gives blocks(a, b),
+        // true when the step a -> b is stopped there; a provided world without it is listed as not measured (a warning), not as a door with no collider
+        if (!d.col && typeof d.blocks === 'function') { const R = room || {}, onX = R.w != null && (Math.abs(d.def.x - R.x) < 0.6 || Math.abs(d.def.x - (R.x + R.w)) < 0.6), ux = onX ? 1 : 0, uz = onX ? 0 : 1; const p = { x: d.def.x - 0.6 * ux, z: d.def.z - 0.6 * uz }, q = { x: d.def.x + 0.6 * ux, z: d.def.z + 0.6 * uz }; if (!(d.blocks(p, q) && d.blocks(q, p))) out.p54.push(id + ': closed, but a body walks through it (the game world)'); continue; }
+        if (!d.col && W.provided) { out.p54u.push(id); continue; }
         if (!d.col) { out.p54.push(id + ': closed, but it has no collider'); continue; }
         const b = d.col.box, ax = (b.max.x - b.min.x) < (b.max.z - b.min.z) ? 'x' : 'z';
         if (!across(d.def.x, d.def.z, ax, fy)) out.p54.push(id + ': closed, but a body walks through it');
@@ -391,6 +434,7 @@ try {
     })()`);
     for (const x of r.p53) Wn('P53', `a guide mark is loud (make it small and plain: kit js/guidance.js QUIET_MARK): ${x}`);
     for (const x of r.p54) E('P54', `a closed door lets a body through: ${x}`);
+    if (r.p54u.length) Wn('P54', `not measured: the game's own world gives no collider and no blocks(a, b) for ${r.p54u.length} closed door(s) (${r.p54u.slice(0, 6).join(', ')})`);
     for (const x of r.p55) Wn('P55', `an [E] spot floats beside its thing (nothing visible within 0.45 m of its centre): ${x}`);
   }
   // P17: people (js/npc-audit.js, 1.20.0): what the audit saw while the game ran, and now
@@ -536,6 +580,7 @@ try {
       if (w === 390) for (const t of (await Q(`g.data.tasks.filter((t) => t.minigame && t.minigame.type).map((t) => t.id)`)) || []) {
         const r = await Q(mgStableSource(t)); if (!r || !r.open) continue;
         for (const m of r.moved) E('P36', `${w}x${h} task "${t}" (${r.type}): a longer text moves a control: ${m}`);
+        for (const c of r.square || []) E('P36', `${w}x${h} task "${t}" (${r.type}): the knob ${c} is not round (a dial you turn is a round knob, 水無瀬病院 第 5 回 #4)`);
         for (let i = 0; i < 10 && (await Q('g.blocked ? g.blocked() : false')); i++) { await closeAll(); await sleep(400); }
       }
       { await Q(`(g.tm && g.tm.open && g.tm.open('tasks'), 1)`); await sleep(400); const hb = await Q(headButtonsSource()); for (const [k, d] of ((hb && hb.bad) || []).slice(0, 4)) E('P38', `${w}x${h} the menu window: ${k}: ${d}`); await Q(`(g.tm && g.tm.close && g.tm.close(), 1)`); await sleep(200); }
@@ -602,7 +647,7 @@ try {
   // opened again (js/map-svg.js baked a second, stale arrow into its static layer until 1.36.0)
   if (await G('!!(g.tm && g.tm.open)')) {
     const M = await G(`(async () => {
-      const sleep = (ms) => new Promise((r) => setTimeout(r, ms)), n = () => document.querySelectorAll('.ms-svg .ms-playerG').length, out = [];
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms)), n = () => (document.querySelector('.ms-svg') ? document.querySelectorAll('.ms-svg .ms-playerG').length : -1), out = [];
       const c = g.camera.position, x0 = c.x, z0 = c.z;
       try {
         g.tm.open('map'); await sleep(400); out.push(n()); g.tm.close(); await sleep(150);
@@ -611,7 +656,9 @@ try {
       } finally { c.x = x0; c.z = z0; }
       return out;
     })()`);
-    if (Array.isArray(M)) M.forEach((k, i) => { if (k !== 1) E('P56', `the map shows ${k} player arrows (${i ? 'opened again after a step in the same room' : 'first open'}); one is the live arrow (js/map-svg.js renderFloor marker: false)`); });
+    // 1.39.3 (荒川 rollout): a game with its own map in the map tab (荒川's canvas map, no js/map-svg.js) is not this check's - noted, not failed
+    if (Array.isArray(M) && M.every((k) => k === -1)) Wn('P56', 'the map tab has no js/map-svg.js map (.ms-svg): the game draws its own map, its arrow is not checked here');
+    else if (Array.isArray(M)) M.forEach((k, i) => { if (k !== 1) E('P56', `the map shows ${k} player arrows (${i ? 'opened again after a step in the same room' : 'first open'}); one is the live arrow (js/map-svg.js renderFloor marker: false)`); });
   }
   // P57 (1.37.0, 水無瀬病院 #16 「光が四角形に見える」): the bloom halo round one bright point is round, not a square tile. The game is set to the
   // high tier (bloom on) for a moment; one tiny over-bright ball 3 m ahead is drawn alone through the post pass; the halo is measured at the
@@ -730,7 +777,15 @@ try {
   { const C = await G(cueOrderSource()); if (C && C.missing) Wn('P58', 'ctx.cueLog is missing (kit < 1.37.0): sound-before-line order unchecked'); else for (const x of (Array.isArray(C) ? C : []).slice(0, 8)) E('P58', `「${x.text}」: ${x.why}`); }
   // P59 (1.37.8, 札の家 2.4.0 「玄関まで歩くのに、案内が『作業台で、考えをまとめる』のまま」): on the shortest route to each end task, the guide shows that task
   // and no task of a branch the player decided against still starts (tools/stale-guide.mjs)
-  { const S = await G(staleGuideSource()); if (S && S.missing) Wn('P59', 'ctx.nextTask is missing: the guide after a branch is unchecked'); else for (const x of (Array.isArray(S) ? S : [])) (x.error ? E : Wn)('P59', x.error ? `on the way to "${x.end}" the guide shows "${x.guide}" (a stale step: close it with a canStart once the branch is decided, or order the end task first)${x.left.length ? `; still open: ${x.left.join(', ')}` : ''}` : `on the way to "${x.end}" these tasks still start: ${x.left.join(', ')} (a branch already decided: give them a canStart that closes them)`); }
+  { const S = await G(staleGuideSource()); if (S && S.missing) Wn('P59', 'ctx.nextTask is missing: the guide after a branch is unchecked'); else for (const x of (Array.isArray(S) ? S : [])) if (x.noRunning) Wn('P59', 'ctx.runningTasks is missing: the card of a running task is unchecked (kit 1.39.2)'); else if (x.running) E('P59', `the step card of "${x.end}" stays while its run plays (the [E] was pressed: close it, kit 1.39.2 ctx.runningTasks)`); else (x.error ? E : Wn)('P59', x.error ? `on the way to "${x.end}" the guide shows "${x.guide}" (a stale step: close it with a canStart once the branch is decided, or order the end task first)${x.left.length ? `; still open: ${x.left.join(', ')}` : ''}` : `on the way to "${x.end}" these tasks still start: ${x.left.join(', ')} (a branch already decided: give them a canStart that closes them)`); }
+  // P60 / P61 / P62 (1.38.0, 水無瀬病院 #1 #6 #3): no water shows a cut face, no figure reaches through a shut door, no hiding place stands in a wall
+  { const Wt = await G(waterEdgeSource()); for (const x of (Array.isArray(Wt) ? Wt : []).slice(0, 8)) E('P60', `the side of ${x.water} (y ${x.y}) stands open at ${x.open} points, e.g. ${x.at.map((p) => p.join(',')).join(' / ')}: a sill higher than the water in the doorway, or one level for rooms an open door joins`); }
+  { const Dc = await G(doorClipSource()); for (const x of (Array.isArray(Dc) ? Dc : []).slice(0, 8)) E('P61', `${x.figure} reaches ${x.depth} m through the shut door ${x.door}: stop it 1 m before the door`); }
+  { const Hr = await G(hideRoomSource()); for (const x of (Array.isArray(Hr) ? Hr : []).slice(0, 8)) E('P62', `the hiding place ${x.id} stands ${x.over} m into a wall of ${x.room} (js/hide-looks.js clampInRoom; move its x / z)`); }
+  // P63 (1.39.0, 札の家 2.5.0 #2 「黒電話をクリックするのに取れない」): aimed at a station from 1.2 / 1.8 m, the station is what the pick gives (tools/station-aim.mjs)
+  // P66 (1.39.6, 夜勤明けの街 1.6.0 「はしごが正面からしか選べない」): a ladder or a flight is picked from every side one can stand beside it (tools/ladder-aim.mjs)
+  { const S = await G(ladderAimSource()); if (S && S.missing) Wn('P66', 'ctx.pickNow is missing: ladder aim unchecked'); else for (const x of (Array.isArray(S) ? S : [])) (x.got / x.poses < 0.25 ? E : Wn)('P66', `stairs "${x.id}" (end ${x.end}): picked in ${x.got} of ${x.poses} poses around it (straight ahead and at its middle): a taller [E] box (world-from-plan hit), or nothing else in front of it`); }
+  { const S = await G(stationAimSource()); if (S && S.missing) Wn('P63', 'ctx.pickNow is missing: station aim unchecked'); else for (const x of (Array.isArray(S) ? S : [])) (x.lost / x.poses > 0.5 ? E : Wn)('P63', `station "${x.id}": aimed at its middle, another [E] wins in ${x.lost} of ${x.poses} poses (${Object.entries(x.by).map(([k, n]) => k + ' ' + n).join(', ')}): one [E] per thing`); }
   if (p.errors.length) for (const e of [...new Set(p.errors)].filter((x) => !/favicon/.test(x)).slice(0, 5)) Wn('P0', `page error: ${e.slice(0, 200)}`);
 } catch (e) { E('P0', `the check could not run: ${e.message}`); }
 finally { await p.close(); server.kill(); }

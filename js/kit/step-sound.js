@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/step-sound.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 795fc9be: js/step-sound.js — edit in game-kit and run tools/kit-sync.js */
 // Footsteps by the floor underfoot, and the small noises of a house (standard 1.8). Pure data + rules; js/audio.js plays them.
 // The survey (2026-11, 24 games): 16 games each wrote their own audio.step(surface) with 2-6 surfaces (arakawa grass/carpet/metal/
 // water, miru-delivery grating/asphalt/tile, heiengo asphalt, yakkyoku vinyl ...) and game-core always said 'lino'. Now one table:
@@ -22,7 +22,10 @@ export const STEP_SURFACES = {
   dirt: [{ dur: 0.07, freq: 500, q: 0.9, gain: 0.09, type: 'lowpass', wet: 0.05 }, { dur: 0.04, freq: 1600, q: 1, gain: 0.03, wet: 0.05 }],
   snow: [{ dur: 0.16, freq: 1100, q: 1.4, gain: 0.08, wet: 0.03, sweep: 1.4 }, { at: 0.02, dur: 0.1, freq: 2600, q: 3, gain: 0.03, wet: 0.03 }],
   mud: [{ dur: 0.16, freq: 420, q: 1.2, gain: 0.1, type: 'lowpass', wet: 0.1, sweep: 0.5 }, { at: 0.06, dur: 0.08, freq: 900, q: 4, gain: 0.04, wet: 0.1 }],
-  water: [{ dur: 0.18, freq: 900, q: 0.7, gain: 0.1, wet: 0.4, sweep: 0.5 }, { at: 0.04, dur: 0.06, freq: 2200, q: 3, gain: 0.03, wet: 0.4 }],
+  // 1.38.0 (minase 2026-11-23 #5: no water sound while walking in water): ankle water is louder (it was under the concrete),
+  // and 'wade' is water to the shin / knee: the leg pushed through (a low slosh), the foot lifted out (a splash), the drops falling back
+  water: [{ dur: 0.2, freq: 900, q: 0.7, gain: 0.17, wet: 0.4, sweep: 0.5 }, { at: 0.04, dur: 0.07, freq: 2200, q: 3, gain: 0.05, wet: 0.4 }],
+  wade: [{ dur: 0.34, freq: 420, q: 0.9, gain: 0.3, type: 'lowpass', wet: 0.45, sweep: 0.6 }, { at: 0.08, dur: 0.16, freq: 1300, q: 1.2, gain: 0.12, wet: 0.5, sweep: 1.4 }, { at: 0.22, dur: 0.05, freq: 2800, q: 4, gain: 0.04, wet: 0.6 }, { at: 0.3, dur: 0.04, freq: 3400, q: 5, gain: 0.03, wet: 0.6 }],
   metal: [{ dur: 0.06, freq: 380, q: 1.5, gain: 0.12, type: 'lowpass', wet: 0.5 }, { tone: true, dur: 0.12, freq: 220, type: 'triangle', gain: 0.025, wet: 0.6 }],
   grating: [{ dur: 0.06, freq: 1600, q: 5, gain: 0.15, wet: 0.5 }, { at: 0.01, dur: 0.12, freq: 700, q: 8, gain: 0.075, wet: 0.5 }],
 };

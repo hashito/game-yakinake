@@ -61,8 +61,10 @@ export function mgStableSource(id) {
       const now = at(); now.forEach((p, i) => { const d = Math.hypot(p[0] - before[i][0], p[1] - before[i][1]); if (d > 2) moved.push((el.className || el.tagName) + ' -> ' + (ctl[i].className || ctl[i].tagName) + ' ' + Math.round(d) + 'px'); });
       el.textContent = old; await new Promise((r) => requestAnimationFrame(r));
     }
+    // 1.39.2 (水無瀬病院 第 5 回 #4 「つまみはまるで良い」): a knob / dial you turn is drawn round in every style (the dot rule squared it)
+    const square = [...host.querySelectorAll('[class*="knob"], [class*="dial"]')].filter((e) => e.offsetWidth > 30 && Math.abs(e.offsetWidth - e.offsetHeight) < 4).filter((e) => { const r = getComputedStyle(e).borderTopLeftRadius, v = parseFloat(r) || 0; return (/%/.test(r) ? v / 100 * e.offsetWidth : v) < e.offsetWidth * 0.45; })   // 1.39.7: a radius in % (50%) is a share of the width.map((e) => e.className);
     ${mgCloseJs('host')} await Promise.race([run, new Promise((r) => setTimeout(r, 800))]);
-    return { type: (t.minigame || {}).type, open: true, controls: ctl.length, texts: texts.length, moved: [...new Set(moved)].slice(0, 6) };
+    return { type: (t.minigame || {}).type, open: true, controls: ctl.length, texts: texts.length, moved: [...new Set(moved)].slice(0, 6), square };
   })()`;
 }
 

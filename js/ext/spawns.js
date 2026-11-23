@@ -10,10 +10,12 @@ export const SPAWNS = [
   { id: 'Z_CRAWL', room: 'H_ROKA', x: 20.5, z: 6.5, p: 'crawler', yaw: -W, after: 'T_TOOLBOX', sight: 20 },
   { id: 'Z_ROKA1', room: 'H_ROKA', x: 13.5, z: 6.8, p: 'nurse-rot', yaw: W, stage: 'L2' },
   { id: 'Z_YAKU', room: 'H_YAKU', x: 14, z: 10.6, p: 'patient', yaw: 0, stage: 'L2' },
-  { id: 'Z_ROKA2', room: 'H_ROKA', x: 5, z: 6.6, p: 'cleaner', yaw: W, after: 'T_SAFE', riser: true },
-  { id: 'Z_REI1', room: 'H_REI', x: 21.6, z: 10.2, p: 'old-man', state: 'wake', after: 'T_REI' },
-  { id: 'Z_REI2', room: 'H_REI', x: 23.6, z: 9.6, p: 'old-woman', state: 'wake', after: 'T_REI' },
-  { id: 'Z_REI3', room: 'H_REI', x: 25.6, z: 10.0, p: 'salaryman', state: 'wake', after: 'T_REI' },
+  // 1.6.0 (play test 2 #6 「死体は最初からあって動き出した感じに」): a body that gets up later lies there from the start (sleepUntil: it does not
+  // stir before that task is done, however close the player comes; a hit still wakes it). The morgue's three lie under sheets (sheet).
+  { id: 'Z_ROKA2', room: 'H_ROKA', x: 5, z: 6.6, p: 'cleaner', yaw: W, stage: 'L2', riser: true, sleepUntil: 'T_SAFE' },
+  { id: 'Z_REI1', room: 'H_REI', x: 21.6, z: 10.2, p: 'old-man', yaw: 0, stage: 'L3', riser: true, sheet: true, sleepUntil: 'T_REI' },
+  { id: 'Z_REI2', room: 'H_REI', x: 23.6, z: 9.6, p: 'old-woman', yaw: 0, stage: 'L3', riser: true, sheet: true, sleepUntil: 'T_REI' },
+  { id: 'Z_REI3', room: 'H_REI', x: 25.6, z: 10.0, p: 'salaryman', yaw: 0, stage: 'L3', riser: true, sheet: true, sleepUntil: 'T_REI' },
   { id: 'Z_HAN1', room: 'H_HAN', x: 30.2, z: 7.5, p: 'worker', yaw: -W, stage: 'L3' },
   // ---- the streets ----
   // the parking lot: bodies on the asphalt when the shutter goes up - two of them get up as the player passes (1.4.0 #4)

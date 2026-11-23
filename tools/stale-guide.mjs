@@ -7,6 +7,7 @@
 //   error  ctx.nextTask() (the STEP card and the map's 次) is another task, not the end task: the guide shows a stale step
 //   warn   another required task still starts there (a branch the player already decided against): it pins the map, takes [E], and a
 //          later guide change can bring it back - give it a canStart that closes it once the branch is decided
+//   error  (1.39.2) the end task's card stays while its own run plays (ctx.runningTasks: the [E] was pressed, the card must close)
 // The save is put back afterwards. An end task that wants more than tasks (an item, a flag in its canStart) is not judged.
 export function staleGuideSource() {
   return `(() => {
@@ -31,6 +32,9 @@ export function staleGuideSource() {
         const left = req.filter((t) => t.id !== F.id && !endIds.has(t.id) && !done.includes(t.id) && g.canStart(t) === true).map((t) => t.id);
         if (nx && nx.id !== F.id && !endIds.has(nx.id)) out.push({ end: F.id, guide: nx.id, left, error: true });
         else if (left.length) out.push({ end: F.id, guide: nx && nx.id, left });
+        // 1.39.2 (札の家 2.5.2, D-10): while the end task's run plays (the door opening, the words after it), its card is closed
+        if (g.runningTasks) { g.runningTasks.add(F.id); try { const n2 = g.nextTask(); if (n2 && n2.id === F.id) out.push({ end: F.id, guide: F.id, left: [], error: true, running: true }); } finally { g.runningTasks.delete(F.id); } }
+        else out.push({ end: F.id, guide: null, left: [], noRunning: true });
       }
     } catch (e) { out.push({ error: true, end: '?', guide: 'exception: ' + e.message, left: [] }); }
     finally { g.state.tasks.splice(0, g.state.tasks.length, ...s0); g.prog.s.level = L0; if (g.refreshGuide) g.refreshGuide(); }

@@ -122,6 +122,16 @@ export function installZombies(ext, G) {
   G.TOUGH = { H: 1.3, S: 1.6, P: 1.9, O: 2.2, ROOF: 2.4, giant: 1.6 };
   const BLOCK_OF = { O_PLAZA: 'P' };   // the plaza in front of the tower is still the police block's fight
   G.toughOf = (def) => def.p === 'giant' ? G.TOUGH.giant : def.room === 'O_ROOF' ? G.TOUGH.ROOF : G.TOUGH[BLOCK_OF[def.room] || String(def.room || '').charAt(0)] || 1;
+  // 1.6.0 (play test 2 #5 「敵をもう少し強くしてダメージを食らうように」): by block they hit harder, strike again sooner and close in a little
+  // faster (bite 15 -> hospital 18, streets 20, police and tower 23, roof 20; the strike every 1.4 s -> 1.26 / 1.19 / 1.12 / 1.12 / 1.26 s). The roof
+  // was x1.75 first: a human-paced bot fell in all four tries within 55 s, so the roof is x1.3
+  G.FIERCE = { H: [1.2, 0.9, 1.08], S: [1.35, 0.85, 1.12], P: [1.5, 0.8, 1.15], O: [1.5, 0.8, 1.15], ROOF: [1.3, 0.9, 1.08] };
+  // the giant keeps its own numbers (40 a blow, every 2 s): it is the set piece, and at x1.45 two blows ended the roof in the bot runs
+  const fiercen = (z, def) => {
+    if (def.p === 'giant') return;
+    const b = def.room === 'O_ROOF' ? 'ROOF' : BLOCK_OF[def.room] || String(def.room || '').charAt(0), F = G.FIERCE[b]; if (!F) return;
+    z.stats.damage = Math.round((z.stats.damage || 15) * F[0]); z.stats.attack = +((z.stats.attack || 1.4) * F[1]).toFixed(2); if (z.stats.walk) z.stats.walk = +(z.stats.walk * F[2]).toFixed(3);
+  };
   const toughen = (z, k) => { if (k === 1) return; for (const P of Object.values(z.parts)) { P.max = Math.round(P.max * k); P.hp = P.hp > 0 ? P.max : 0; } z.life = z.maxLife = Math.round(z.maxLife * k); z.tough = k; };
   // 1.4.0 #6 「釘が効かないヘルメットや装備の個体。体の一部だけ」: armour on some parts (a helmet, a vest, pads). Nails, the scalpel, the
   // fists and the pistol glance off it (a spark and a clink, no harm); the bar knocks through a little; the axe, the shotgun and the
@@ -150,6 +160,7 @@ export function installZombies(ext, G) {
     const tall = def.brute ? 1.45 : def.p === 'crawler' || def.p === 'giant' ? 1 : 0.9 + r() * 0.18;
     z.root.scale.setScalar(tall);
     toughen(z, G.toughOf(def) * (def.brute ? 3 : 1));
+    fiercen(z, def);
     if (def.brute) { z.stats.walk = (z.stats.walk || 0.5) * 0.85; z.stats.damage = Math.round((z.stats.damage || 15) * 1.6); z.stats.grab = Math.max(z.stats.grab || 0, 1.1); z.stats.knockImmune = true; }
     z.body.rotation.x = (r() - 0.35) * 0.12;   // some lean forward, a few lean back
     const rot = def.rot ?? (/-rot|drowned|bloated/.test(def.p) ? 0.6 : /-dry|skeletal|burnt/.test(def.p) ? 0.3 : r() * 0.45);
@@ -172,6 +183,7 @@ export function installZombies(ext, G) {
     for (const p of L.armor) z.parts[p].armor = 1;   // the game's armour rule decides (hitZombie), not the kit's flat factor
     if (def.armor && def.armor.length) addArmorLook(L);
     if (dead) { L.alive = false; setTimeout(() => layBody(L, { quiet: true }), 50); }
+    else if (def.sheet && state === 'lie') L.sheet = { g: makeSheet(def), t: 0, placed: false };
     z.on('attack', (e) => {
       const p = ctx.camera.position;
       if (Math.hypot(p.x - z.pos[0], p.z - z.pos[2]) > 1.55 || ctx.floor !== L.floor) return;
@@ -204,7 +216,7 @@ export function installZombies(ext, G) {
     // #12: a pool spreads under a fallen body (at once under one that lay there already)
     if (fx && fx.pool && !L.pooled) { L.pooled = true; fx.pool([L.z.pos[0], ctx.world.floorY(L.floor), L.z.pos[2]], L.def.brute ? 1.5 : 1.0, o.quiet ? 0.01 : 9); }
     const z = L.z, c = new THREE.Vector3(); let n = 0;
-    z.root.updateMatrixWorld(true);
+    { const a = z.root.matrixWorldAutoUpdate; z.root.matrixWorldAutoUpdate = true; z.root.updateMatrixWorld(true); z.root.matrixWorldAutoUpdate = a; }   // an unseen body too (1.6.0)
     z.root.traverse((m) => { if (m.isBone && /chest|pelvis|spine|head/i.test(m.name)) { c.add(m.getWorldPosition(new THREE.Vector3())); n++; } });
     if (n) c.multiplyScalar(1 / n); else c.set(z.pos[0], z.pos[1], z.pos[2]);
     const y = ctx.world.floorY(L.floor), b = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.5, 1.2), bodyMat);
@@ -218,7 +230,7 @@ export function installZombies(ext, G) {
   });
   G.corpseLine = (id) => { const L = live.get(id); return corpseLine(L ? L.def : SPAWNS.find((d) => d.id === id)); };
   G.bodyBox = (id) => bodyBoxes.get(id) || null;
-  const despawn = (id) => { const L = live.get(id); if (!L) return; unbody(id); L.z.dispose(); live.delete(id); };
+  const despawn = (id) => { const L = live.get(id); if (!L) return; unbody(id); if (L.sheet) L.sheet.g.removeFromParent(); L.z.dispose(); live.delete(id); };
 
   // which spawns are in the world now: their condition (a stage reached, a task done, a flag) holds and they are not dead
   const wanted = (def) => {
@@ -312,13 +324,48 @@ export function installZombies(ext, G) {
   }
   // 1.4.0 #4: a riser - a body on the floor that is not dead. It gets up when the player passes close (3 m), or turns away from it
   // nearby (7 m, 1.2 s), or a noise reaches it, or it is hit. First a twitch and a wet breath (0.9 s) - a fair warning - then up.
+  // 1.6.0 (play test 2 #6): a body under a sheet - an off-white sheet of dot cloth over the lying body (its outline: the head, the chest,
+  // the feet), stained at the head. When the body stirs the sheet slides off it to the floor and stays there.
+  const sheetMat = new THREE.MeshLambertMaterial({ color: 0xc8cec8 }); sheetMat.name = 'yk-sheet';
+  const sheetStain = new THREE.MeshLambertMaterial({ color: 0x6e1a16 }); sheetStain.name = 'yk-sheet-stain';
+  function makeSheet() {
+    const g = new THREE.Group(); g.name = 'yk-sheet';
+    const add = (w, h, d, x, y, z, m = sheetMat) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = true; o.receiveShadow = true; g.add(o); return o; };
+    add(1.9, 0.03, 0.78, 0, 0.02, 0);          // the cloth on the floor round the body
+    add(0.3, 0.2, 0.32, 0.72, 0.12, 0);        // over the head
+    add(0.62, 0.24, 0.5, 0.28, 0.13, 0);       // over the chest
+    add(0.8, 0.22, 0.46, -0.42, 0.12, 0);      // over the legs
+    add(0.2, 0.27, 0.36, -0.84, 0.14, 0);      // the toes
+    add(0.16, 0.025, 0.2, 0.7, 0.225, 0.02, sheetStain);
+    return g;
+  }
+  // laid over the body once its bones lie still: from the feet to the head
+  function placeSheet(L) {
+    const b = L.z.bones || {}, hd = b.head, fl = b.shinL || b.shinR; if (!hd || !fl) return false;
+    { const a = L.z.root.matrixWorldAutoUpdate; L.z.root.matrixWorldAutoUpdate = true; L.z.root.updateMatrixWorld(true); L.z.root.matrixWorldAutoUpdate = a; }
+    const h = hd.getWorldPosition(new THREE.Vector3()), f = fl.getWorldPosition(new THREE.Vector3()), y0 = ctx.world.floorY(L.floor);
+    const S = L.sheet.g; S.position.set((h.x + f.x) / 2 + (h.x - f.x) * 0.08, y0, (h.z + f.z) / 2 + (h.z - f.z) * 0.08); S.rotation.y = Math.atan2(-(h.z - f.z), h.x - f.x);
+    // the cloth covers the whole body: as high as the body lies (the voxel bodies lie 0.35-0.5 m thick) and a little wider
+    S.scale.set(1.05, 1.6, 1.15);
+    ctx.scene.add(S); L.sheet.placed = true; return true;
+  }
+  function slideSheet(L) { const S = L.sheet; if (!S || S.off) return; S.off = 0.001; S.dir = S.g.rotation.y + Math.PI / 2; }
+  function sheetTick(L, dt) {
+    const S = L.sheet; if (!S) return;
+    S.g.visible = L.z.root.visible || !!S.off;
+    if (!S.placed) { S.t += dt; if (S.t > 0.25) placeSheet(L); return; }
+    if (!S.off) L.z.root.visible = false;   // under the cloth only its shape shows (the voxel legs stood through it)
+    if (S.off && S.off < 1) { S.off = Math.min(1, S.off + dt * 1.4); S.g.position.x += Math.cos(S.dir) * dt * 0.8; S.g.position.z -= Math.sin(S.dir) * dt * 0.8; S.g.children.forEach((c, i) => { if (i) c.scale.y = Math.max(0.15, 1 - S.off); }); S.g.rotation.z = 0; }
+  }
   function riseNow(L, now = false) {
     if (L.rising || !L.z.lying || !L.z.lying()) return;
     L.rising = now ? 0.01 : 0.9; L.twitch = 0;
+    if (L.sheet) slideSheet(L);
     G.sfx3d(`z-groan-${1 + Math.floor(L.r() * 6)}`, L.z.root.position);
     G.emit('zombie:twitch', { id: L.def.id });
   }
   G.riseNow = (id) => { const L = live.get(id); if (L) riseNow(L, true); };
+  G.wakeSlow = (id) => { const L = live.get(id); if (L) riseNow(L); };   // the twitch and the wet breath first (0.9 s), then up
   const look = new THREE.Vector3();
   function riserTick(L, d, dt) {
     const z = L.z;
@@ -328,6 +375,7 @@ export function installZombies(ext, G) {
       if (L.rising <= 0) { L.rising = null; z.body.rotation.z = 0; z.rise(); L.alert = 30; G.emit('zombie:rise', { id: L.def.id }); }
       return;
     }
+    if (L.def.sleepUntil && !ctx.state.tasks.includes(L.def.sleepUntil)) return;   // 1.6.0: lies still until its moment (a hit still wakes it)
     const cam = ctx.camera; cam.getWorldDirection(look);
     const to = new THREE.Vector3(z.pos[0] - cam.position.x, 0, z.pos[2] - cam.position.z), away = to.length() > 0.01 && look.setY(0).normalize().angleTo(to.normalize()) > 1.75;
     L.awayT = away && d < 7 ? (L.awayT || 0) + dt : 0;
@@ -364,13 +412,16 @@ export function installZombies(ext, G) {
       const proom = roomAtP(p.x, p.z, fl);
       // nearest first: the MAX nearest on this floor move and show; the rest wait unseen
       const list = [...live.values()].filter((L) => L.floor === fl).map((L) => ({ L, d: Math.hypot(L.z.pos[0] - p.x, L.z.pos[2] - p.z) })).sort((a, b) => a.d - b.d);
-      for (const L of live.values()) if (L.floor !== fl) L.z.root.visible = false;
+      for (const L of live.values()) if (L.floor !== fl) { L.z.root.visible = false; L.z.root.matrixWorldAutoUpdate = false; }
       let shown = 0, bodies = 0;
       for (const { L, d } of list) {
         // the bodies on the floor have their own count (they do not push the living out of sight)
         const lying = !L.alive || (L.z.lying && L.z.lying() && L.rising == null);
         const on = d < RADIUS && (lying ? bodies < (touch() ? 8 : 12) : shown < MAX());
-        L.z.root.visible = on; if (!on) continue; if (lying) bodies++; else shown++;
+        const was = L.z.root.matrixWorldAutoUpdate;
+        L.z.root.visible = on; L.z.root.matrixWorldAutoUpdate = on;
+        if (on && !was) L.z.root.updateMatrixWorld(true);   // coming into sight: its matrices are current before any pick (three skips an object whose matrixWorldAutoUpdate is off, even when forced)   // 1.6.0 (play test 2 #4 「表示されないものは利用しない」): an unseen body's bones are not updated
+        if (L.sheet) sheetTick(L, dt); if (!on) continue; if (lying) bodies++; else shown++;
         const z = L.z;
         if (busy) { z.update(0, null); continue; }   // a talk or a mini game: everything holds still
         if (!L.alive) { z.update(dt, null); continue; }

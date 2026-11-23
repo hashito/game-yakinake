@@ -50,6 +50,11 @@ export default function (ext, env = {}) {
     return solid;
   };
   ext.on('game:ready', (ctx) => { G.ctx = ctx; if (typeof window !== 'undefined') window.__yk = G; });
+  // 1.6.0 (play test 2 #1 「机が小さすぎる」): the view was 72° high - on a wide screen everything looked small and far. 62° on a wide
+  // screen (about 92° across at 16:9); a phone held upright keeps 72° (it is narrow already). The look-to of the first reveal zooms from this.
+  const FOV_WIDE = 62, FOV_TALL = 72;
+  const fitFov = () => { const c = G.ctx && G.ctx.camera; if (!c) return; const f = c.aspect < 1 ? FOV_TALL : FOV_WIDE; if (Math.abs((c.userData.ykFov || 0) - f) > 0.1) { c.fov = f; c.userData.ykFov = f; c.updateProjectionMatrix(); } };
+  ext.on('game:ready', () => { fitFov(); if (typeof window !== 'undefined') addEventListener('resize', () => setTimeout(fitFov, 0)); });
   ext.on('player:dead', () => { G.deaths = (G.deaths || 0) + 1; });
   ext.on('bus:error', ({ name, error }) => console.error('[yakinake]', name, error && error.stack ? error.stack.split('\n').slice(0, 3).join(' ') : String(error)));
 }

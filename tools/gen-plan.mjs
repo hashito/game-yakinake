@@ -320,7 +320,9 @@ const REASON = {
   stair: 'the fire stair: one flight per floor',
 };
 const round = (v) => Math.round(v * 1000) / 1000;
-const plan = { lampPool: true, dims: { doorH: 2.05 }, rooms: [], doors: [], stations: [], furniture: [], start: 'H_TOU', spawn: { x: 2.6, z: 2.3, yaw: Math.PI }, exits: ['O_ROOF'],
+// 1.6.0 (play test 2 #2 「扉は透過しているのでスライド式のドアにしたほうが良い」): the doors slide along the wall (kit doorLook 'slide'),
+// the glass ones stay glass sliding doors; the shutter keeps its own look
+const plan = { lampPool: true, doorLook: 'slide', dims: { doorH: 2.05 }, rooms: [], doors: [], stations: [], furniture: [], start: 'H_TOU', spawn: { x: 2.6, z: 2.3, yaw: 2.1 }, exits: ['O_ROOF'],
   checks: { ignore: ['no-loop', 'exits-few', 'direct-total', 'direct-per-room', 'no-corridor'], why: 'a one-way escape across a town: hospital ward -> streets -> police station -> an office tower climbed floor by floor. Each building is its own short level; the only way out is the roof helipad, and the tower floors are open-plan halls with side rooms off them. The enemies are slow zombies that wander and gather to noise, not a chaser that needs a loop.' } };
 for (const [id, name, x, z, w, d, o] of R) {
   const r = { id, name, x, z, w, d, kind: o.kind || 'room', ...(o.floor ? { floor: o.floor } : {}), type: o.type, ...(o.safe ? { safe: true } : {}), ...(o.inhabited ? { inhabited: true } : {}), ...(o.edgeReason ? { edgeReason: o.edgeReason } : {}), ...(o.edge ? { edge: o.edge } : {}), ...(o.roads ? { roads: o.roads } : {}), ...(o.roadLen ? { roadLen: o.roadLen } : {}), ...(o.lamp ? { lamp: o.lamp } : {}), ...(o.step ? { step: o.step } : {}) };
@@ -338,6 +340,13 @@ for (const [id, a, b, x, z, o] of D) {
   plan.doors.push(dd);
 }
 for (const [id, room, x, z, label, o = {}] of S) plan.stations.push({ id, room, x, z, label, ...o });
-for (const [id, room, x, z, w, d, kind, o = {}] of F) plan.furniture.push({ id, room, x, z, w, d, kind, ...o });
+// 1.6.0 (play test 2 #1 「机が小さすぎる」, D-2): a desk is a work desk for a grown-up - at least 1.5 m by 0.7 m (kit P48 1.39.6; the top at 0.74 m, js/dot
+// REAL); the small ones grow round their middle
+const DESK_MIN = { desk: [1.5, 0.7], steelDesk: [1.5, 0.7] }, DESK_KEEP = { F_NS_RADIO: [1.5, 0.55] };
+for (let [id, room, x, z, w, d, kind, o = {}] of F) {
+  const mn = DESK_KEEP[id] || DESK_MIN[kind];
+  if (mn) { if (w >= d) { w = Math.max(w, mn[0]); d = Math.max(d, mn[1]); } else { d = Math.max(d, mn[0]); w = Math.max(w, mn[1]); } }
+  plan.furniture.push({ id, room, x, z, w, d, kind, ...o });
+}
 fs.writeFileSync(path.join(ROOT, 'data/plan.json'), JSON.stringify(plan, null, 1) + '\n');
 console.log(`plan: ${plan.rooms.length} rooms, ${plan.doors.length} doors, ${plan.stations.length} stations, ${plan.furniture.length} furniture`);

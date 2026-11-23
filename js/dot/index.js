@@ -46,9 +46,9 @@ const STATION_MOUNT = { S_TOOL: { y: 0, back: 0.2 }, S_RADIO: { back: 0.22, seat
   S_RIFLE: { back: 0.05, seat: true, size: 1.2 }, S_SAFE: { back: 0.1 } };
 // 1.2.0 (play test #3 「自分の体のサイズに合わせて」): the real sizes for a body with eyes at 1.6 m. surf = the height of the working surface
 // (nat = where the part's own surface is, measured from its voxels: the desk's monitor stands above it), h = the whole height, len = a vehicle's length
-const REAL = { desk: { surf: 0.74, nat: 0.75 }, 'steel-desk': { surf: 0.74, nat: 0.75 }, counter: { surf: 0.92, nat: 0.73 }, table: { surf: 0.72, nat: 0.75 },
+const REAL = { desk: { surf: 0.74, nat: 0.75, minLen: 1.55 }, 'steel-desk': { surf: 0.74, nat: 0.75, minLen: 1.55 }, counter: { surf: 0.92, nat: 0.73 }, table: { surf: 0.72, nat: 0.75 },
   bed: { surf: 0.55, nat: 0.43 }, shelf: { h: 1.8 }, 'shop-shelf': { h: 1.55 }, locker: { h: 1.8 }, vending: { h: 1.8 }, fridge: { h: 1.75 }, server: { h: 1.9 },
-  crate: { h: 0.6 }, bench: { h: 0.8 }, 'street-lamp': { h: 4.2 }, 'body-cabinets': { h: 1.9 },
+  crate: { h: 0.6 }, bench: { h: 0.8 }, 'street-lamp': { h: 4.2 }, 'office-chair': { h: 0.95 }, 'pipe-chair': { h: 0.82 }, 'chair-toppled': { h: 0.55 }, barrel: { h: 0.9 }, 'tiger-fence': { h: 1.0 }, 'barrier-arm': { h: 1.0 }, 'body-cabinets': { h: 1.9 },
   'car-stalled': { h: 1.45, len: 4.4 }, 'car-stalled-red': { h: 1.45, len: 4.4 }, 'car-burnt': { h: 1.35, len: 4.4 }, 'car-doors-open': { h: 1.45, len: 4.4 },
   'police-car': { h: 1.5, len: 4.6 }, 'junk-pile': { h: 1.5 }, 'tire-pile': { h: 0.95 }, 'rope-fence': { h: 0.9 }, bins: { h: 1.05 }, ambulance: { h: 2.3, len: 5.0 }, 'bus-side': { h: 2.5, len: 9.6 },
   truck: { h: 2.6, len: 5.5 }, van: { h: 1.9, len: 4.5 }, kei: { h: 1.6, len: 3.3 }, rubble: { h: 0.5 }, 'crate-stack': { h: 1.3 }, 'pallet-stack': { h: 1.0 } };
@@ -104,6 +104,7 @@ export default async function dotLayer(ext, { manifest, data }) {
     if (Math.cos(face - yaw) < 0) yaw += Math.PI;
     const R = REAL[k] || {}, pl = Math.max(gs.x, gs.z), ps = Math.min(gs.x, gs.z), bl = Math.max(size.x, size.z), bs = Math.min(size.x, size.z);
     let sl = bl / pl, ss = bs / ps, sy;
+    if (R.minLen && bl < R.minLen) sl = R.minLen / pl;   // 1.6.0 (D-2, kit P48): the kit's desk box is 1.4 m at most; a grown-up's desk is longer
     if (o.vehicle) { sl = ss = (R.len || bl) / pl; sy = R.h ? R.h / gs.y : sl; }
     else sy = R.surf ? R.surf / R.nat : R.h ? R.h / gs.y : Math.max(0.6, Math.min(1.6, Math.min(sl, ss)));
     const m = new THREE.Mesh(g, mat); m.castShadow = true; m.receiveShadow = true;
@@ -112,7 +113,10 @@ export default async function dotLayer(ext, { manifest, data }) {
   }
   // a part at its real size: REAL (height) or a longest side in metres
   const sized = (m, k, size) => { const gs = cgeo(k).boundingBox.getSize(new THREE.Vector3()), R = REAL[k];
-    if (size) m.scale.setScalar(size / Math.max(gs.x, gs.y, gs.z)); else if (R && R.h) m.scale.y = R.h / gs.y; else if (R && R.surf) m.scale.y = R.surf / R.nat; return m; };
+    if (size) m.scale.setScalar(size / Math.max(gs.x, gs.y, gs.z)); else if (R && R.h) m.scale.y = R.h / gs.y; else if (R && R.surf) m.scale.y = R.surf / R.nat;
+    // 1.6.0 (D-2, kit P48): a desk at a station is a grown-up's work desk too, at least 1.55 m long
+    if (!size && R && R.minLen && Math.max(gs.x, gs.z) < R.minLen) m.scale.x = m.scale.z = R.minLen / Math.max(gs.x, gs.z);
+    return m; };
 
   // 1.3.0 (#10): the photos in dot are made with the first block (js/ext/blocks.js, the common pack), not behind the title
   ext.registerBoot('dot-title', async () => { D.bakedPhotos = await loadBakedPhotos(); await preparePhotos(['title.webp']); });   // 1.3.1: the baked pixel photos (no work), else the title art alone   // the title art alone behind the title
@@ -174,8 +178,38 @@ export default async function dotLayer(ext, { manifest, data }) {
       }
       if (ctx.pixelStyle) ctx.pixelStyle.sweep();
       D.timings.furniture = Math.round(performance.now() - t);
-      D.dressed = true; setTimeout(() => settle(), 0);
+      chairs();
+      D.dressed = true; setTimeout(() => { settle(); D.freeze(); }, 0);
     };
+    // ---- 1.6.0 (play test 2 #1 「机が小さすぎる」, D-2 / D-6): a desk is a place someone works - an office chair at its open side (a pipe
+    // chair at a table, two a side at a long one), the seat 0.45 m high, pushed in a little, at a slant. A chair is solid (a collider), and
+    // none stands in a doorway, at a station or out of its room.
+    const CHAIR_AT = { desk: 'office-chair', steelDesk: 'office-chair', table: 'pipe-chair' }, NO_CHAIR = new Set(['F_NS_RADIO', 'F_SHOTEN_STALL', 'F_O_KAICHO_SB', 'F_KDAI_C']);
+    function chairs() {
+      D.chairs = [];
+      for (const f of plan.furniture) {
+        const k = CHAIR_AT[f.kind], m = D.surf[f.id]; if (!k || !m || !index[k] || NO_CHAIR.has(f.id)) continue;
+        const R = roomOf(f.room); if (!R.w) continue;
+        m.updateWorldMatrix(true, false); const b = new THREE.Box3().setFromObject(m), sz = b.getSize(new THREE.Vector3()), c = b.getCenter(new THREE.Vector3());
+        const alongX = sz.x >= sz.z, long = alongX ? sz.x : sz.z, short = alongX ? sz.z : sz.x;
+        // the open sides: the long sides facing the room's middle (a table: both)
+        const toMid = alongX ? Math.sign(R.z + R.d / 2 - c.z) || 1 : Math.sign(R.x + R.w / 2 - c.x) || 1;
+        const sides = f.kind === 'table' ? [1, -1] : [toMid], per = f.kind === 'table' && long >= 2 ? 2 : 1;
+        for (const sd of sides) for (let i = 0; i < per; i++) {
+          const u = per === 1 ? 0 : (i ? 0.25 : -0.25) * long, v = sd * (short / 2 + 0.28);
+          const x = c.x + (alongX ? u : v), z = c.z + (alongX ? v : u);
+          if (x < R.x + 0.35 || x > R.x + R.w - 0.35 || z < R.z + 0.35 || z > R.z + R.d - 0.35) continue;
+          if ((plan.doors || []).some((d) => d.x != null && Math.hypot(d.x - x, d.z - z) < 1.3)) continue;
+          if ((plan.stations || []).some((st) => Math.hypot(st.x - x, st.z - z) < 0.9)) continue;
+          const ch = sized(part(k), k); const face = alongX ? (sd > 0 ? Math.PI : 0) : (sd > 0 ? -Math.PI / 2 : Math.PI / 2);
+          ch.rotation.y = face + ((f.id.length * 13 + i * 7) % 9 - 4) * 0.06;
+          ch.position.set(x, b.min.y, z); ch.name = `dot-chair:${f.id}`; W.group.add(ch);
+          const cb = new THREE.Box3().setFromObject(ch); cb.min.y = b.min.y; cb.max.y = b.min.y + 0.9; cb.expandByVector(new THREE.Vector3(-0.06, 0, -0.06));
+          W.colliders.push({ box: cb, off: false, name: `chair:${f.id}` });
+          D.chairs.push([f.id, +x.toFixed(2), +z.toFixed(2)]);
+        }
+      }
+    }
     dress();
     // ---- the stations' own things ----
     const swaps = [], seats = [];
@@ -280,6 +314,21 @@ export default async function dotLayer(ext, { manifest, data }) {
     // road (one on its side), crates and junk piled on them, sandbags, tyres and bricks in front. One group per street end (outside the
     // walk-able room: the room's own edge is the collider), so it is never a thing standing in the way of a route.
     D.wrecks = [];
+    // the police tape: yellow with black diagonal stripes, a dot texture
+    const tapeMat = (() => { const cv = document.createElement('canvas'); cv.width = 16; cv.height = 4; const q = cv.getContext('2d'); q.fillStyle = '#e8c020'; q.fillRect(0, 0, 16, 4); q.fillStyle = '#16140e'; for (let x = 0; x < 16; x += 8) for (let yy = 0; yy < 4; yy++) q.fillRect(x + yy, yy, 3, 1); const tx = nearestTex(cv); tx.wrapS = THREE.RepeatWrapping; tx.repeat.set(6, 1); const mm = new THREE.MeshBasicMaterial({ map: tx }); mm.userData.dot = 'flat'; return mm; })();
+    // 1.6.0 (D-7 「商店街西の封鎖が暗がりに沈む」): a fire smouldering in an oil drum before the wreckage - flames of dot blocks that
+    // flicker, and an orange light that flickers with them (the light on the wall of wreckage, seen from down the arcade)
+    D.fires = [];
+    const flameMats = ['#ffb020', '#ff5a10', '#b01808'].map((c) => { const mm = new THREE.MeshBasicMaterial({ color: c }); mm.userData.dot = 'flat'; return mm; });
+    function barrelFire(x, z, y0) {
+      const fg = new THREE.Group(); fg.name = 'dot-fire'; fg.position.set(x, y0, z);
+      if (index.barrel) { const b = sized(part('barrel'), 'barrel'); fg.add(b); }
+      const fl = []; for (let k = 0; k < 14; k++) { const sz = 0.1 + (k % 3) * 0.05, hi = k < 5 ? 2.6 : 1.7, f = new THREE.Mesh(new THREE.BoxGeometry(sz, sz * hi, sz), flameMats[(k + (k < 5 ? 0 : 1)) % 3]); f.position.set(Math.sin(k * 2.1) * (k < 5 ? 0.06 : 0.17), 0.95 + (k % 5) * 0.09 + (k < 5 ? 0.12 : 0), Math.cos(k * 2.1) * (k < 5 ? 0.06 : 0.17)); f.userData.y0 = f.position.y; fg.add(f); fl.push(f); }
+      const light = new THREE.PointLight(0xff7a30, 9, 11, 1.3); light.position.set(0, 1.4, 0); light.name = 'dot-fire-light'; fg.add(light);
+      W.group.add(fg); D.fires.push({ g: fg, fl, light, t: Math.random() * 10 });
+      W.colliders.push({ box: new THREE.Box3(new THREE.Vector3(x - 0.32, y0, z - 0.32), new THREE.Vector3(x + 0.32, y0 + 0.95, z + 0.32)), off: false, name: 'fire-drum' });
+      return fg;
+    }
     for (const r of plan.rooms) for (const side of r.roads || []) {
       const y = fy(r.id), g = new THREE.Group(); g.name = `dot-wreck:${r.id}:${side}`;
       const alongX = side === 'n' || side === 's', len = alongX ? r.w : r.d, O = { n: [0, -1], s: [0, 1], w: [-1, 0], e: [1, 0] }[side], A = alongX ? [1, 0] : [0, 1];
@@ -303,19 +352,29 @@ export default async function dotLayer(ext, { manifest, data }) {
         return m;
       };
       const topOf = (m) => (m ? new THREE.Box3().setFromObject((m.updateMatrixWorld(true), m)).max.y - y - 0.08 : 0);
-      // the back: a bus across a wide road, a truck and a van on a narrow one, and a jack-knifed truck behind
-      if (len >= 10) { const bus = put('bus-side', 0, VB, Math.min(9.6, len - 0.6), 0.05); put('car-burnt', -1.6, VB, 4.4, 0.22, 0.12, topOf(bus)); put('crate-stack', 2.6, VB - 0.2, 1.5, -0.2, 0, topOf(bus)); if (RL >= 11) put('truck', len * 0.22, VB + 3, 5.5, 1.1); }
-      else { const tr = put('truck', -len * 0.16, VB - 0.2, 5.5, 0.08); put('van', len * 0.3, Math.min(VB + 1, RL - 2.5), 4.5, -0.5); put('car-stalled', -len * 0.16, VB - 0.2, 4.4, -0.18, 0.1, topOf(tr)); }
-      // the middle: cars across the road, nose to tail, one on its side; crates and junk on their roofs
+      // 1.6.0 (D-7 「道の封鎖がまだ低く見える」): a wall of wreckage, not a heap - about 4 m high, so it closes the street from down the
+      // street. The back: a bus on its side across a wide road with a car thrown onto it (a narrow one: a truck with a car on its roof and a
+      // van); the middle: cars nose to tail, every other one with a second car or a stack of crates on its roof; the front: police barriers
+      // with their tape, sandbags, tyres and bricks at the foot
+      if (len >= 10) { const bus = put('bus-side', 0, VB, Math.min(9.6, len - 0.6), 0.05, Math.PI / 2); put('car-burnt', -1.8, VB - 0.1, 4.4, 0.25, 0.18, topOf(bus)); put('crate-stack', 2.4, VB, 1.5, -0.2, 0, topOf(bus)); put('junk-pile', 3.6, VB - 0.3, 1.8, 0.4, 0, topOf(bus)); if (RL >= 11) put('truck', len * 0.22, VB + 3, 5.5, 1.1); }
+      else { const tr = put('truck', -len * 0.16, VB - 0.2, 5.5, 0.08); const vn = put('van', len * 0.3, Math.min(VB + 1, RL - 2.5), 4.5, -0.5); put('car-stalled', -len * 0.16, VB - 0.2, 4.4, -0.18, 0.1, topOf(tr)); put('crate-stack', len * 0.28, Math.min(VB + 1, RL - 2.5), 1.5, 0.3, 0, topOf(vn)); }
       const cars = ['car-burnt', 'car-stalled', 'car-doors-open', 'car-stalled-red', 'van', 'kei'], n = Math.max(2, Math.round(len / 4.0));
       for (let i = 0; i < n; i++) {
         const u = -len / 2 + ((i + 0.5) * len) / n, k = cars[(i + Math.round(C[0] + C[1])) % cars.length], onSide = i === Math.floor(n / 2);
         const c = put(k, u, 2.5 + rnd() * 0.5, k === 'van' ? 4.5 : k === 'kei' ? 3.3 : 4.4, (i % 2 ? 1 : -1) * (0.12 + rnd() * 0.2), onSide ? Math.PI / 2 : 0);
-        if (!onSide) put(i % 2 ? 'crate-stack' : 'junk-pile', u + (rnd() - 0.5), 2.5, i % 2 ? 1.5 : 1.8, rnd() * 3, 0, topOf(c));
+        if (onSide) { put('crate-stack', u + 0.4, 2.6, 1.3, rnd() * 3, 0, topOf(c)); continue; }
+        if (i % 2 === 0) { const c2 = put(cars[(i + 3) % cars.length] === 'van' ? 'car-burnt' : cars[(i + 3) % cars.length], u + (rnd() - 0.5) * 0.6, 2.6, 4.2, (rnd() - 0.5) * 0.7, (rnd() - 0.5) * 0.35, topOf(c)); put('junk-pile', u - 0.5, 2.6, 1.4, rnd() * 3, 0, topOf(c2)); }
+        else { const cs = put('crate-stack', u + (rnd() - 0.5), 2.5, 1.5, rnd() * 3, 0, topOf(c)); put(rnd() < 0.5 ? 'pallet-stack' : 'crate-stack', u + 0.3, 2.5, 1.2, rnd() * 3, 0, topOf(cs)); }
       }
-      // the front: sandbags, tyres, bricks, pallets and crates at the foot
+      // the front: sandbags, tyres, bricks, pallets and crates at the foot; police barriers across, the tape strung between them
       const front = ['sandbags', 'tire-pile', 'rubble', 'pallet-stack', 'junk-pile', 'crate-stack', 'sandbags', 'rubble'], L = { sandbags: 1.8, 'tire-pile': 1.5, rubble: 1.6, 'pallet-stack': 1.3, 'junk-pile': 1.7, 'crate-stack': 1.2 };
-      for (let u = -len / 2 + 0.8, j = 0; u < len / 2 - 0.5; u += 1.5 + rnd() * 0.6, j++) { const k = front[(j + seed) % front.length]; put(k, u, 0.75 + rnd() * 0.3, L[k], rnd() * 1.2 - 0.6); }
+      for (let u = -len / 2 + 0.8, j = 0; u < len / 2 - 0.5; u += 1.5 + rnd() * 0.6, j++) { const k = front[(j + seed) % front.length]; put(k, u, 1.15 + rnd() * 0.3, L[k], rnd() * 1.2 - 0.6); }
+      const posts = [];
+      for (let u = -len / 2 + 0.6; u < len / 2 - 0.4; u += 3.2) { const fb = put(index['tiger-fence'] ? 'tiger-fence' : 'sandbags', u + 1.1, 0.35, 2.2, (rnd() - 0.5) * 0.25); if (fb) posts.push(u); }
+      for (let q = 0; q + 1 < posts.length; q++) {
+        const a = posts[q] + 2.2, b2 = posts[q + 1], mid = (a + b2) / 2, span = Math.max(0.2, b2 - a);
+        const tp = new THREE.Mesh(new THREE.BoxGeometry(alongX ? span : 0.02, 0.07, alongX ? 0.02 : span), tapeMat); tp.position.set(C[0] + A[0] * mid + O[0] * 0.35, y + 0.86 - (q % 2) * 0.08, C[1] + A[1] * mid + O[1] * 0.35); tp.rotation.z = alongX ? (q % 2 ? 0.04 : -0.03) : 0; tp.name = 'dot-police-tape'; g.add(tp);
+      }
       W.group.add(g); D.wrecks.push([r.id, side, g.children.length]);
       // a street lamp at the kerb just inside the line still burns over it (the sodium lights follow the nearest lamps): the blockade is
       // seen from down the street, not a dark hole
@@ -324,6 +383,7 @@ export default async function dotLayer(ext, { manifest, data }) {
         const lm = sized(part('street-lamp'), 'street-lamp'); lm.rotation.y = lf; lm.position.set(lx, y, lz); W.group.add(lm);
         lamps.push(new THREE.Vector3(lx, y + 4.0, lz)); lampDress(lx, y, lz, lf);
       }
+      if (r.id === 'S_SHOTEN' && side === 'w') barrelFire(C[0] + A[0] * 1.4 - O[0] * 2.0, C[1] + A[1] * 1.4 - O[1] * 2.0, y);   // in front of the dark wall of wrecks (not the lit vending machine)
     }
     // the street lamps that still burn: three sodium lights follow the three lamps nearest the player (cheap on a phone)
     const lampLights = [0, 1, 2].map(() => { const l = new THREE.PointLight(0xffa850, 0, 16, 1.2); l.name = 'dot-street-lamp'; scene.add(l); return l; });
@@ -389,6 +449,38 @@ export default async function dotLayer(ext, { manifest, data }) {
       for (const m of seats) { const R = plan.rooms.find((r) => { const p = m.position; return p.x >= r.x && p.x <= r.x + r.w && p.z >= r.z && p.z <= r.z + r.d && Math.abs(W.floorY(r.floor || 0) - p.y) < 2.5; }); putDown(m, R ? W.floorY(R.floor || 0) : m.position.y, { from: m.position.y + 1.2 }); }
     }
     D.settle = settle;
+    // ---- 1.6.0 (play test 2 #4 「カクカクする…表示されないものは利用しない」): the still world - walls, floors, ceilings, lamps, furniture,
+    // wrecks, the stair flights, the kit's hidden prop boxes - has its matrices made once and is then left out of the per-frame matrix pass
+    // (three's updateMatrixWorld was 12 % of a phone frame over 5,400 objects); what is farther than CULL_M (the fog has swallowed it) is
+    // not drawn. Doors, pickups, people, zombies, the shutter and the fire stay live.
+    const STILL = /^(floor:|ceil:|wall:|lampshade|lampbulb|lampcord|lamppool|edge|stair-flight|dot-part|dot-road-paint|dot-lamp-head|dot-lamp-pool|dot-wreck|dot-helipad|dot-stack|dot-chair|prop:)/;
+    const CULL_M = 44, stillList = [];
+    D.freeze = () => {
+      let n = 0;
+      for (const o of W.group.children) {
+        if (!STILL.test(String(o.name || '')) || o.userData.ykStill) continue;
+        o.updateMatrixWorld(true); o.traverse((q) => { q.matrixAutoUpdate = false; }); o.matrixWorldAutoUpdate = false; o.userData.ykStill = true;
+        const b = new THREE.Box3().setFromObject(o, true); if (b.isEmpty()) continue;
+        const sp = b.getBoundingSphere(new THREE.Sphere()); stillList.push({ o, c: sp.center, r: sp.radius }); n++;
+      }
+      D.frozen = (D.frozen || 0) + n;
+      // the materials of the whole world are compiled now, in the background, not on first sight in play (a 0.3 s stall each, 7 % of a
+      // walk through the streets; memory pixel-load-first)
+      try { const r = ctx.renderer; if (r && r.compileAsync) r.compileAsync(scene, ctx.camera).catch(() => {}); } catch (e) { /* older three */ }
+      return n;
+    };
+    let cullT = 0;
+    D.cull = (dt, cam) => {
+      if ((cullT -= dt) > 0) return; cullT = 0.4;
+      let hid = 0;
+      for (const S of stillList) {
+        const far = S.c.distanceTo(cam) - S.r > CULL_M;
+        if (far && S.o.visible) { S.o.visible = false; S.o.userData.ykCulled = true; S.o.userData.culled = true; }
+        else if (!far && S.o.userData.ykCulled) { S.o.visible = true; S.o.userData.ykCulled = false; S.o.userData.culled = false; }
+        if (S.o.userData.ykCulled) hid++;
+      }
+      D.culled = hid;
+    };
 
     // 1.4.1: the iron bars of the cellar cell (kit railing 'bars') take a flat iron colour (no painted texture), graded like the rest
     const iron = new THREE.MeshLambertMaterial({ color: 0x3a3a36 }); iron.name = 'yk-cell-bars';
@@ -405,6 +497,15 @@ export default async function dotLayer(ext, { manifest, data }) {
     const tex = new THREE.CanvasTexture(cv); tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.colorSpace = THREE.SRGBColorSpace;
     const beacon = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: true, fog: false })); beacon.scale.setScalar(0.22); beacon.name = 'dot-goal-beacon'; beacon.visible = false; scene.add(beacon);
     const goalLight = new THREE.PointLight(0xffd890, 0, 3.2, 1.5); goalLight.name = 'dot-goal-light'; scene.add(goalLight);
+    // 1.6.0 (D-12 「最初の部屋の赤い救急カートが目を引くように」): the crash cart stands in a pool of warm light (the room's emergency lamp
+    // over it, the rest of the room dim) and its steel handle catches a glint now and then - the first thing the eyes go to, not the door.
+    // Both go once the cart is opened.
+    const cartM = W.interactables.find((o) => o.name === 'station:S_CART');
+    const cartAt = cartM ? cartM.getWorldPosition(new THREE.Vector3()) : null;
+    const cartLight = new THREE.SpotLight(0xffd8a0, cartAt ? 14 : 0, 4.2, 0.55, 0.6, 1.2); cartLight.name = 'dot-cart-light'; scene.add(cartLight); scene.add(cartLight.target);
+    const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: true, fog: false, opacity: 0 })); glint.scale.setScalar(0.09); glint.name = 'dot-cart-glint'; scene.add(glint);
+    if (cartAt) { const f0 = W.floorY(0); cartLight.position.set(cartAt.x + 0.5, f0 + 2.55, cartAt.z); cartLight.target.position.set(cartAt.x, f0 + 0.5, cartAt.z); glint.position.set(cartAt.x + 0.32, f0 + 1.02, cartAt.z - 0.18); }
+    D.cartLight = cartLight;
     let T = 0, goalT = 0, goal = null, blockT = 0, lightWant = null;
     let outside = false;
     const DAWN = new THREE.Color(0x6a4a52);
@@ -426,6 +527,7 @@ export default async function dotLayer(ext, { manifest, data }) {
     };
     worldUpdate = (dt) => {
         T += dt;
+        if (D.cull) D.cull(dt, ctx.camera.position);
         if (sky.visible) sky.position.copy(ctx.camera.position);
         const c = ctx.camera.position; near.position.set(c.x, c.y - 0.2, c.z); near.intensity = ctx.lightOn === false ? 1 : 3;
         // the floor of light by block: outside, the sodium lamps and the fires light the street; the roof is the coming dawn
@@ -444,6 +546,9 @@ export default async function dotLayer(ext, { manifest, data }) {
           const near3 = lamps.map((v) => [v, v.distanceToSquared(c)]).sort((a, b) => a[1] - b[1]).slice(0, 3);
           lampLights.forEach((l, i) => { const n = near3[i]; if (n && n[1] < 30 * 30 && (ctx.floor || 0) === 0) { l.position.copy(n[0]); l.intensity = 22; } else l.intensity = 0; });
         }
+        if (cartAt) { const open = ctx.state.tasks.includes('T_CART'); cartLight.intensity = open ? 0 : 14; const ph = (T % 2.6) / 2.6; glint.material.opacity = open ? 0 : ph < 0.12 ? Math.sin(ph / 0.12 * Math.PI) : 0; glint.scale.setScalar(0.06 + glint.material.opacity * 0.06); }
+        // (a light is switched by intensity, never by visible: a change in the number of lights recompiles every material - a stall)
+        for (const F of D.fires) { F.t += dt; const vis = (ctx.floor || 0) === 0 && F.g.position.distanceToSquared(c) < 40 * 40; if (!vis) { F.light.intensity = 0; continue; } F.light.intensity = 8 + Math.sin(F.t * 13) * 1.5 + Math.sin(F.t * 31) * 1.2; F.fl.forEach((f, k) => { const w = 0.75 + 0.35 * Math.abs(Math.sin(F.t * (5 + k) + k)); f.scale.set(1, w, 1); f.position.y = f.userData.y0 + 0.05 * Math.sin(F.t * (7 + k)); }); }
         if (lightWant) { amb.color.lerp(lightWant.c, Math.min(1, dt * 2)); amb.intensity += (lightWant.i - amb.intensity) * Math.min(1, dt * 2); }
         // 1.5.1 (play test 2026-11-23 「最初に経路が出るのをやめてほしい」): no glowing goal at the start - only once the first task is done
         goalT -= dt; if (goalT <= 0) { goalT = 0.5; goal = ctx.state.started && ctx.state.tasks.length ? goalPos() : null; }
