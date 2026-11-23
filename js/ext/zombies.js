@@ -326,17 +326,46 @@ export function installZombies(ext, G) {
   // nearby (7 m, 1.2 s), or a noise reaches it, or it is hit. First a twitch and a wet breath (0.9 s) - a fair warning - then up.
   // 1.6.0 (play test 2 #6): a body under a sheet - an off-white sheet of dot cloth over the lying body (its outline: the head, the chest,
   // the feet), stained at the head. When the body stirs the sheet slides off it to the floor and stays there.
-  const sheetMat = new THREE.MeshLambertMaterial({ color: 0xc8cec8 }); sheetMat.name = 'yk-sheet';
-  const sheetStain = new THREE.MeshLambertMaterial({ color: 0x6e1a16 }); sheetStain.name = 'yk-sheet-stain';
-  function makeSheet() {
+  // 1.6.1 (D-2 / D-4, "stepped white boxes, not people"): a body under a sheet - the head's bump, the shoulders wider than the chest, the
+  // cloth sagging between the legs, the feet tenting it, the edges hanging down onto the floor - in cool greys (lit top, shaded folds),
+  // and from one of them (Z_REI2) a hand and forearm out from under the edge
+  const sheetMat = new THREE.MeshLambertMaterial({ color: 0x9eaab4 }); sheetMat.name = 'yk-sheet';
+  const sheetFold = new THREE.MeshLambertMaterial({ color: 0x6a7682 }); sheetFold.name = 'yk-sheet-fold';
+  const sheetDeep = new THREE.MeshLambertMaterial({ color: 0x46505a }); sheetDeep.name = 'yk-sheet-deep';
+  const sheetStain = new THREE.MeshLambertMaterial({ color: 0x5e1814 }); sheetStain.name = 'yk-sheet-stain';
+  const deadSkin = new THREE.MeshLambertMaterial({ color: 0x9aa08e }); deadSkin.name = 'yk-dead-skin';
+  function makeSheet(def = {}) {
     const g = new THREE.Group(); g.name = 'yk-sheet';
-    const add = (w, h, d, x, y, z, m = sheetMat) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = true; o.receiveShadow = true; g.add(o); return o; };
-    add(1.9, 0.03, 0.78, 0, 0.02, 0);          // the cloth on the floor round the body
-    add(0.3, 0.2, 0.32, 0.72, 0.12, 0);        // over the head
-    add(0.62, 0.24, 0.5, 0.28, 0.13, 0);       // over the chest
-    add(0.8, 0.22, 0.46, -0.42, 0.12, 0);      // over the legs
-    add(0.2, 0.27, 0.36, -0.84, 0.14, 0);      // the toes
-    add(0.16, 0.025, 0.2, 0.7, 0.225, 0.02, sheetStain);
+    const add = (w, h, d, x, y, z, m = sheetMat, rx = 0, rz = 0) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.rotation.set(rx, 0, rz); o.castShadow = true; o.receiveShadow = true; g.add(o); return o; };
+    // the cloth lying out on the floor round the body, a little wider than it, and its hems falling from the body to the floor
+    add(1.95, 0.015, 0.78, -0.02, 0.008, 0, sheetDeep);
+    for (const sd of [-1, 1]) {
+      add(1.4, 0.03, 0.16, -0.05, 0.06, sd * 0.29, sheetFold, sd * 0.9, 0);          // the side hangs from the hip line down to the floor
+      add(0.42, 0.03, 0.2, 0.42, 0.1, sd * 0.31, sheetFold, sd * 0.95, 0);        // past the shoulders, steeper
+    }
+    add(0.18, 0.03, 0.5, 0.98, 0.05, 0, sheetFold, 0, -0.9);                       // over the top of the head, down to the floor
+    add(0.22, 0.03, 0.42, -1.0, 0.07, 0, sheetFold, 0, 1.0);                       // off the toes, down to the floor
+    // the body's shape: head, neck dip, shoulders, chest, belly, hips
+    add(0.2, 0.2, 0.22, 0.82, 0.1, 0); add(0.12, 0.06, 0.16, 0.82, 0.22, 0);       // the head, rounded on top
+    add(0.08, 0.1, 0.2, 0.64, 0.05, 0, sheetFold);                                  // the dip at the neck
+    add(0.2, 0.24, 0.54, 0.5, 0.12, 0);                                              // the shoulders
+    add(0.34, 0.28, 0.44, 0.24, 0.14, 0); add(0.22, 0.05, 0.3, 0.26, 0.3, 0);      // the chest, the ribcage's crest
+    add(0.26, 0.18, 0.4, -0.04, 0.09, 0, sheetFold);                               // the belly, sunk and in shadow
+    add(0.2, 0.21, 0.42, -0.24, 0.105, 0);                                          // the hips
+    // the legs, the cloth sagging between them, the feet tenting it
+    for (const sd of [-1, 1]) {
+      add(0.62, 0.16, 0.15, -0.62, 0.08, sd * 0.11);
+      add(0.1, 0.3, 0.12, -0.96, 0.15, sd * 0.1);                                  // the foot standing up under the cloth
+    }
+    add(0.6, 0.05, 0.08, -0.62, 0.025, 0, sheetDeep);                               // the sag between the legs
+    add(0.12, 0.2, 0.3, -0.96, 0.1, 0, sheetFold);                                  // the tent between the toes
+    add(0.08, 0.02, 0.1, 0.3, 0.335, 0.05, sheetStain); add(0.05, 0.02, 0.06, 0.22, 0.33, 0.1, sheetStain);
+    if (def.id === 'Z_REI2') {
+      // a hand out from under the edge: the forearm across the floor, the fingers curled
+      add(0.3, 0.06, 0.08, 0.12, 0.03, 0.5, deadSkin, 0, 0).rotation.y = -0.35;
+      add(0.1, 0.04, 0.1, -0.04, 0.02, 0.58, deadSkin);
+      for (let f = 0; f < 4; f++) add(0.06, 0.02, 0.018, -0.11, 0.012, 0.545 + f * 0.024, deadSkin);
+    }
     return g;
   }
   // laid over the body once its bones lie still: from the feet to the head
@@ -346,10 +375,10 @@ export function installZombies(ext, G) {
     const h = hd.getWorldPosition(new THREE.Vector3()), f = fl.getWorldPosition(new THREE.Vector3()), y0 = ctx.world.floorY(L.floor);
     const S = L.sheet.g; S.position.set((h.x + f.x) / 2 + (h.x - f.x) * 0.08, y0, (h.z + f.z) / 2 + (h.z - f.z) * 0.08); S.rotation.y = Math.atan2(-(h.z - f.z), h.x - f.x);
     // the cloth covers the whole body: as high as the body lies (the voxel bodies lie 0.35-0.5 m thick) and a little wider
-    S.scale.set(1.05, 1.6, 1.15);
+    S.scale.set(1.05, 1.25, 1.05);
     ctx.scene.add(S); L.sheet.placed = true; return true;
   }
-  function slideSheet(L) { const S = L.sheet; if (!S || S.off) return; S.off = 0.001; S.dir = S.g.rotation.y + Math.PI / 2; }
+  function slideSheet(L) { const S = L.sheet; if (!S || S.off) return; S.off = 0.001; S.g.children.forEach((c) => { if (c.material === deadSkin) c.visible = false; });   /* the hand belongs to the body, which shows now */ S.dir = S.g.rotation.y + Math.PI / 2; }
   function sheetTick(L, dt) {
     const S = L.sheet; if (!S) return;
     S.g.visible = L.z.root.visible || !!S.off;

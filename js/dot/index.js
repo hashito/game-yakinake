@@ -319,12 +319,22 @@ export default async function dotLayer(ext, { manifest, data }) {
     // 1.6.0 (D-7 「商店街西の封鎖が暗がりに沈む」): a fire smouldering in an oil drum before the wreckage - flames of dot blocks that
     // flicker, and an orange light that flickers with them (the light on the wall of wreckage, seen from down the arcade)
     D.fires = [];
-    const flameMats = ['#ffb020', '#ff5a10', '#b01808'].map((c) => { const mm = new THREE.MeshBasicMaterial({ color: c }); mm.userData.dot = 'flat'; return mm; });
+    // 1.6.1: the palette (no fire colours), the red fog and the frame's 70 % desaturation (fx.saturation) had turned orange flames pink: yellow
+    // flames (they stay warm yellow after the desaturation) - no fog on the fire, a white-yellow core, orange tongues, a red rim, and an
+    // additive glow round it so a still frame reads as fire
+    const flameMats = [[1.0, 0.55, 0.0], [0.9, 0.3, 0.0], [0.7, 0.12, 0.0], [0.45, 0.04, 0.0]].map((c) => { const mm = new THREE.MeshBasicMaterial({ fog: false }); mm.color.setRGB(c[0], c[1], c[2], THREE.LinearSRGBColorSpace); mm.userData.dot = 'ui'; return mm; });   // 'ui': kept off the palette (it has no fire colours), not tone-mapped
+    const glowTex = (() => { const cv = document.createElement('canvas'); cv.width = cv.height = 64; const q = cv.getContext('2d'); const gr = q.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,210,0,0.9)'); gr.addColorStop(0.4, 'rgba(255,150,0,0.5)'); gr.addColorStop(1, 'rgba(255,110,0,0)'); q.fillStyle = gr; q.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+    const emberMat = new THREE.MeshBasicMaterial({ color: 0x8a1800, fog: false, toneMapped: false }); emberMat.userData.dot = 'ui';
+    const smokeMat = new THREE.MeshLambertMaterial({ color: 0x1e1a18, transparent: true, opacity: 0.55, depthWrite: false });
+    const glowMat = new THREE.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }); glowMat.userData.dot = 'ui';
     function barrelFire(x, z, y0) {
       const fg = new THREE.Group(); fg.name = 'dot-fire'; fg.position.set(x, y0, z);
       if (index.barrel) { const b = sized(part('barrel'), 'barrel'); fg.add(b); }
-      const fl = []; for (let k = 0; k < 14; k++) { const sz = 0.1 + (k % 3) * 0.05, hi = k < 5 ? 2.6 : 1.7, f = new THREE.Mesh(new THREE.BoxGeometry(sz, sz * hi, sz), flameMats[(k + (k < 5 ? 0 : 1)) % 3]); f.position.set(Math.sin(k * 2.1) * (k < 5 ? 0.06 : 0.17), 0.95 + (k % 5) * 0.09 + (k < 5 ? 0.12 : 0), Math.cos(k * 2.1) * (k < 5 ? 0.06 : 0.17)); f.userData.y0 = f.position.y; fg.add(f); fl.push(f); }
-      const light = new THREE.PointLight(0xff7a30, 9, 11, 1.3); light.position.set(0, 1.4, 0); light.name = 'dot-fire-light'; fg.add(light);
+      const fl = []; for (let k = 0; k < 14; k++) { const sz = 0.07 + (k % 3) * 0.035, hi = k < 5 ? 4.2 : 2.6, f = new THREE.Mesh(new THREE.BoxGeometry(sz, sz * hi, sz), flameMats[k < 3 ? 0 : k < 7 ? 1 : k < 11 ? 2 : 3]); f.position.set(Math.sin(k * 2.1) * (k < 5 ? 0.06 : 0.17), 0.95 + (k % 5) * 0.09 + (k < 5 ? 0.12 : 0), Math.cos(k * 2.1) * (k < 5 ? 0.06 : 0.17)); f.userData.y0 = f.position.y; fg.add(f); fl.push(f); }
+      for (let k = 0; k < 6; k++) { const e = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.05, 0.12), emberMat); e.position.set(Math.sin(k * 1.05) * 0.2, 0.92, Math.cos(k * 1.05) * 0.2); fg.add(e); }   // dark glowing coals round the rim
+      for (let k = 0; k < 4; k++) { const sm = new THREE.Mesh(new THREE.BoxGeometry(0.22 + k * 0.08, 0.16, 0.22 + k * 0.08), smokeMat); sm.position.set(0.05 * k, 1.75 + k * 0.28, -0.04 * k); fg.add(sm); }   // smoke going up into the dark
+      const glow = new THREE.Sprite(glowMat); glow.scale.set(0.8, 0.95, 1); glow.position.set(0, 1.1, 0); glowMat.opacity = 0.5; glow.name = 'dot-fire-glow'; fg.add(glow);
+      const light = new THREE.PointLight(0xff8a30, 9, 11, 1.3); light.position.set(0, 1.4, 0); light.name = 'dot-fire-light'; fg.add(light);
       W.group.add(fg); D.fires.push({ g: fg, fl, light, t: Math.random() * 10 });
       W.colliders.push({ box: new THREE.Box3(new THREE.Vector3(x - 0.32, y0, z - 0.32), new THREE.Vector3(x + 0.32, y0 + 0.95, z + 0.32)), off: false, name: 'fire-drum' });
       return fg;
@@ -548,6 +558,9 @@ export default async function dotLayer(ext, { manifest, data }) {
         }
         if (cartAt) { const open = ctx.state.tasks.includes('T_CART'); cartLight.intensity = open ? 0 : 14; const ph = (T % 2.6) / 2.6; glint.material.opacity = open ? 0 : ph < 0.12 ? Math.sin(ph / 0.12 * Math.PI) : 0; glint.scale.setScalar(0.06 + glint.material.opacity * 0.06); }
         // (a light is switched by intensity, never by visible: a change in the number of lights recompiles every material - a stall)
+        // 1.6.1: the frame is greyed twice (the render preset's saturation 0.82 and the dot look's fx desaturation 0.3) and a flame came out
+        // tan-pink - near a fire the fx grey eases off (0 within 9 m, back by 16 m), so the fire reads as fire in a still frame
+        { const fm = ctx.fxModel && ctx.fxModel.cfg; if (fm) { if (D.satBase == null) D.satBase = fm.saturation; let near = 99; if ((ctx.floor || 0) === 0) for (const F of D.fires) near = Math.min(near, F.g.position.distanceTo(c)); const want = near < 9 ? 0 : near < 16 ? (near - 9) / 7 * D.satBase : D.satBase; fm.saturation += (want - fm.saturation) * Math.min(1, dt * 2); } }
         for (const F of D.fires) { F.t += dt; const vis = (ctx.floor || 0) === 0 && F.g.position.distanceToSquared(c) < 40 * 40; if (!vis) { F.light.intensity = 0; continue; } F.light.intensity = 8 + Math.sin(F.t * 13) * 1.5 + Math.sin(F.t * 31) * 1.2; F.fl.forEach((f, k) => { const w = 0.75 + 0.35 * Math.abs(Math.sin(F.t * (5 + k) + k)); f.scale.set(1, w, 1); f.position.y = f.userData.y0 + 0.05 * Math.sin(F.t * (7 + k)); }); }
         if (lightWant) { amb.color.lerp(lightWant.c, Math.min(1, dt * 2)); amb.intensity += (lightWant.i - amb.intensity) * Math.min(1, dt * 2); }
         // 1.5.1 (play test 2026-11-23 「最初に経路が出るのをやめてほしい」): no glowing goal at the start - only once the first task is done
