@@ -125,6 +125,9 @@
    "kind": "outdoor",
    "type": "street",
    "edge": "urban",
+   "roads": [
+    "n"
+   ],
    "lamp": "#f0a050"
   },
   {
@@ -137,6 +140,10 @@
    "kind": "outdoor",
    "type": "street",
    "edge": "urban",
+   "roads": [
+    "e"
+   ],
+   "roadLen": 8,
    "lamp": "#f0a050"
   },
   {
@@ -243,6 +250,9 @@
    "kind": "outdoor",
    "type": "street",
    "edge": "urban",
+   "roads": [
+    "w"
+   ],
    "lamp": "#e89a48"
   },
   {
@@ -385,6 +395,10 @@
    "kind": "outdoor",
    "type": "street",
    "edge": "urban",
+   "roads": [
+    "n",
+    "s"
+   ],
    "lamp": "#8fb0e8"
   },
   {
@@ -1945,16 +1959,6 @@
    "rot": 80
   },
   {
-   "id": "F_BUS",
-   "room": "S_ODORI",
-   "x": 70.4,
-   "z": -0.2,
-   "w": 2.6,
-   "d": 7.2,
-   "kind": "car",
-   "rot": 0
-  },
-  {
    "id": "F_MART_S1",
    "room": "S_MART",
    "x": 59.2,
@@ -2129,42 +2133,6 @@
    "kind": "vendingMachine"
   },
   {
-   "id": "F_URA_BAR1",
-   "room": "S_URA",
-   "x": 36.6,
-   "z": 8.6,
-   "w": 2,
-   "d": 0.8,
-   "kind": "crate"
-  },
-  {
-   "id": "F_URA_BAR2",
-   "room": "S_URA",
-   "x": 40.2,
-   "z": 0.9,
-   "w": 0.8,
-   "d": 1.6,
-   "kind": "crate"
-  },
-  {
-   "id": "F_OD_BAR1",
-   "room": "S_ODORI",
-   "x": 48.8,
-   "z": -3,
-   "w": 1.6,
-   "d": 0.8,
-   "kind": "crate"
-  },
-  {
-   "id": "F_OD_BAR2",
-   "room": "S_ODORI",
-   "x": 66,
-   "z": -3,
-   "w": 2,
-   "d": 0.8,
-   "kind": "crate"
-  },
-  {
    "id": "F_OD_CAR7",
    "room": "S_ODORI",
    "x": 58.6,
@@ -2173,33 +2141,6 @@
    "d": 1.8,
    "kind": "car",
    "rot": 90
-  },
-  {
-   "id": "F_SH_BAR1",
-   "room": "S_SHOTEN",
-   "x": 54.8,
-   "z": 16.8,
-   "w": 1.8,
-   "d": 0.8,
-   "kind": "crate"
-  },
-  {
-   "id": "F_SH_BAR2",
-   "room": "S_SHOTEN",
-   "x": 68,
-   "z": 21,
-   "w": 1.8,
-   "d": 0.8,
-   "kind": "crate"
-  },
-  {
-   "id": "F_HI_BAR",
-   "room": "S_HIROBA",
-   "x": 85.6,
-   "z": 7.2,
-   "w": 2,
-   "d": 0.8,
-   "kind": "crate"
   },
   {
    "id": "F_SHOTEN_CAR",

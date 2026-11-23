@@ -21,8 +21,8 @@ const R = [
   ['H_REI', '霊安室', 20, 8, 7, 5, { type: 'hospital', lamp: '#a8c4c8' }],
   ['H_HAN', '搬入口', 27, 0, 6, 13, { type: 'workshop', lamp: '#b8c2b0' }],
   // ---- 2 街 (夜の灯ヶ浦、ナトリウム灯) ----
-  ['S_URA', '病院裏の駐車場', 33, 0, 14, 13, { kind: 'outdoor', type: 'street', edge: 'urban', lamp: '#f0a050' }],
-  ['S_ODORI', '大通り', 47, -4, 25, 10, { kind: 'outdoor', type: 'street', edge: 'urban', lamp: '#f0a050' }],
+  ['S_URA', '病院裏の駐車場', 33, 0, 14, 13, { kind: 'outdoor', type: 'street', edge: 'urban', roads: ['n'], lamp: '#f0a050' }],
+  ['S_ODORI', '大通り', 47, -4, 25, 10, { kind: 'outdoor', type: 'street', edge: 'urban', roads: ['e'], roadLen: 8, lamp: '#f0a050' }],
   // 1.4.0 (#5 #14): 丸福マート is a small shopping centre now - the sales floor the mart people hold, their back corridor, the security
   // office with the stair to the roof, the staff room where 権藤's daughter sleeps (shut, never entered), the food court that fell first
   // (its glass front is smashed: the way in for a sneak), the storeroom and its back exit, and the cold room where they put their dead
@@ -34,7 +34,7 @@ const R = [
   ['S_MFOOD', 'フードコート', 70, 6, 7, 10, { type: 'kitchen', lamp: '#a89878' }],
   ['S_MCOLD', 'マートの冷蔵室', 77, 6, 6, 6, { type: 'storage', lamp: '#a8c8d8' }],
   ['S_MROOF', 'マートの屋上', 52, 6, 18, 10, { floor: 1, kind: 'outdoor', type: 'street', edge: 'stone', lamp: '#f0a050' }],
-  ['S_SHOTEN', '商店街', 47, 16, 36, 6, { kind: 'outdoor', type: 'street', edge: 'urban', lamp: '#e89a48' }],
+  ['S_SHOTEN', '商店街', 47, 16, 36, 6, { kind: 'outdoor', type: 'street', edge: 'urban', roads: ['w'], lamp: '#e89a48' }],
   ['S_YAMA', '山とキャンプの店', 47, 22, 8, 6, { type: 'shop', safe: true, lamp: '#f0d8a8' }],
   ['S_YAMAURA', '山の店の奥の物置', 47, 28, 8, 4, { type: 'storage', safe: true, lamp: '#d8c098' }],
   ['S_SHOBO', '消防団の倉庫', 55, 22, 5, 6, { type: 'storage', lamp: '#d8b890' }],
@@ -48,7 +48,7 @@ const R = [
   ['S_KHAN', '離れたい者の部屋', 70, 32, 3, 6, { type: 'office', lamp: '#c8a878', inhabited: true }],
   ['S_KLEAD', '白坂の部屋', 73, 32, 6, 6, { type: 'office', lamp: '#e0c090', inhabited: true }],
   ['S_KCHIKA', '公民館の地下室', 64, 32, 6, 6, { floor: -1, type: 'storage', lamp: '#8a7a60' }],
-  ['S_HIROBA', '署前の広場', 83, 6, 12, 16, { kind: 'outdoor', type: 'street', edge: 'urban', lamp: '#8fb0e8' }],
+  ['S_HIROBA', '署前の広場', 83, 6, 12, 16, { kind: 'outdoor', type: 'street', edge: 'urban', roads: ['n', 's'], lamp: '#8fb0e8' }],
   // ---- 3 警察署 (灯ヶ浦警察署) ----
   ['P_LOBBY', '署のロビー', 95, 6, 10, 8, { type: 'office', lamp: '#bcd0f0' }],
   ['P_KYU', '休憩室', 95, 0, 10, 6, { type: 'office', safe: true, lamp: '#e8d8b0' }],
@@ -213,7 +213,7 @@ const F = [
   ['F_CAR4', 'S_ODORI', 55.5, 3.6, 4.2, 1.8, 'car', { rot: 75 }],
   ['F_CAR5', 'S_ODORI', 60, -2.0, 4.2, 1.8, 'car', { rot: 100 }],
   ['F_CAR6', 'S_ODORI', 66.2, 2.5, 4.2, 1.8, 'car', { rot: 80 }],
-  ['F_BUS', 'S_ODORI', 70.4, -0.2, 2.6, 7.2, 'car', { rot: 0 }],
+  // 1.5.1: the bus that stood across the east end moved into the wall of wreckage past it (js/dot WRECKS), so the avenue's end is seen
   ['F_MART_S1', 'S_MART', 59.2, 9.6, 0.45, 4.0, 'shelf', { rot: 90 }],
   ['F_MART_S2', 'S_MART', 66.2, 10.6, 0.45, 3.2, 'shelf', { rot: 90 }],
   ['F_MART_CNT', 'S_MART', 66.8, 7.0, 2.4, 0.6, 'counter', { args: [2.4] }],
@@ -232,14 +232,8 @@ const F = [
   ['F_MROOF_T', 'S_MROOF', 61.0, 9.0, 1.6, 0.9, 'tank'],
   ['F_MROOF_C', 'S_MROOF', 66.4, 13.4, 0.8, 0.8, 'crate'],
   ['F_SHOTEN_V', 'S_SHOTEN', 48.0, 16.6, 0.7, 0.7, 'vendingMachine'],
-  ['F_URA_BAR1', 'S_URA', 36.6, 8.6, 2.0, 0.8, 'crate'],
-  ['F_URA_BAR2', 'S_URA', 40.2, 0.9, 0.8, 1.6, 'crate'],
-  ['F_OD_BAR1', 'S_ODORI', 48.8, -3.0, 1.6, 0.8, 'crate'],
-  ['F_OD_BAR2', 'S_ODORI', 66.0, -3.0, 2.0, 0.8, 'crate'],
+  // 1.5.1: the low heaps in the streets (F_*_BAR) gave way to the walls of wreckage where each street goes on (rooms[].roads, js/dot WRECKS)
   ['F_OD_CAR7', 'S_ODORI', 58.6, 4.6, 4.2, 1.8, 'car', { rot: 90 }],
-  ['F_SH_BAR1', 'S_SHOTEN', 54.8, 16.8, 1.8, 0.8, 'crate'],
-  ['F_SH_BAR2', 'S_SHOTEN', 68.0, 21.0, 1.8, 0.8, 'crate'],
-  ['F_HI_BAR', 'S_HIROBA', 85.6, 7.2, 2.0, 0.8, 'crate'],
   ['F_SHOTEN_CAR', 'S_SHOTEN', 75, 20.6, 4.2, 1.8, 'car', { rot: 90 }],
   ['F_YAMA_S1', 'S_YAMA', 47.5, 26, 0.45, 2.4, 'shelf', { rot: 90 }],
   ['F_YAMA_CNT', 'S_YAMA', 51.5, 23.0, 2.0, 0.6, 'counter', { args: [2] }],
@@ -329,7 +323,7 @@ const round = (v) => Math.round(v * 1000) / 1000;
 const plan = { lampPool: true, dims: { doorH: 2.05 }, rooms: [], doors: [], stations: [], furniture: [], start: 'H_TOU', spawn: { x: 2.6, z: 2.3, yaw: Math.PI }, exits: ['O_ROOF'],
   checks: { ignore: ['no-loop', 'exits-few', 'direct-total', 'direct-per-room', 'no-corridor'], why: 'a one-way escape across a town: hospital ward -> streets -> police station -> an office tower climbed floor by floor. Each building is its own short level; the only way out is the roof helipad, and the tower floors are open-plan halls with side rooms off them. The enemies are slow zombies that wander and gather to noise, not a chaser that needs a loop.' } };
 for (const [id, name, x, z, w, d, o] of R) {
-  const r = { id, name, x, z, w, d, kind: o.kind || 'room', ...(o.floor ? { floor: o.floor } : {}), type: o.type, ...(o.safe ? { safe: true } : {}), ...(o.inhabited ? { inhabited: true } : {}), ...(o.edgeReason ? { edgeReason: o.edgeReason } : {}), ...(o.edge ? { edge: o.edge } : {}), ...(o.lamp ? { lamp: o.lamp } : {}), ...(o.step ? { step: o.step } : {}) };
+  const r = { id, name, x, z, w, d, kind: o.kind || 'room', ...(o.floor ? { floor: o.floor } : {}), type: o.type, ...(o.safe ? { safe: true } : {}), ...(o.inhabited ? { inhabited: true } : {}), ...(o.edgeReason ? { edgeReason: o.edgeReason } : {}), ...(o.edge ? { edge: o.edge } : {}), ...(o.roads ? { roads: o.roads } : {}), ...(o.roadLen ? { roadLen: o.roadLen } : {}), ...(o.lamp ? { lamp: o.lamp } : {}), ...(o.step ? { step: o.step } : {}) };
   plan.rooms.push(r);
 }
 // 1.5.0 (play test 2026-11-23 「扉を締めたいのですが締められません」): every hinged door shuts again with [E] (not the openings, the

@@ -1,4 +1,4 @@
-/* game-kit 1948d108: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 2f52fcd4: js/world-from-plan.js — edit in game-kit and run tools/kit-sync.js */
 // The standard world builder (docs/standard-3d.md, layer "world"): plan.json (rooms, corridors, doors, stations) -> THREE objects,
 // colliders, doors that open and a room lookup. Boxes only: floors, ceilings, walls with door gaps and lintels, door panels, task
 // stations. The look is a flat palette per room kind + the preset lighting; richer looks (texture-library, props, env-props) are added
@@ -132,8 +132,11 @@ export function buildWorld(plan, o = {}) {
           const nb = neighbourAt(r, edge, mid, rooms);
           // rooms[].edge; between two rooms a hedge; outside: the room type's look, else trees. 1.35.0 'urban': building fronts on the
           // outer edge and a barricade (wrecks, barriers, a fence) between two outdoor rooms - no edge of a street is an invisible wall
-          const look = r.edge === 'urban' ? (nb ? 'barricade' : 'urban') : r.edge || (nb ? 'hedge' : roomLook(r).edge || 'trees');
-          edges.push({ room: r.id, edge, from: axis === 'x' ? [a, fixed] : [fixed, a], to: axis === 'x' ? [b, fixed] : [fixed, b], shared: !!nb, look, y: y0 });
+          // 1.37.11 (夜勤明けの街 1.5.1 「車やもので塞いでください」): rooms[].roads = the outer sides where the street goes on ('n'/'s'/'e'/'w'):
+          // there the road runs on past the edge between buildings (look 'road') - the game piles its wreckage on the line
+          const look = !nb && Array.isArray(r.roads) && r.roads.includes(edge) ? 'road' : r.edge === 'urban' ? (nb ? 'barricade' : 'urban') : r.edge || (nb ? 'hedge' : roomLook(r).edge || 'trees');
+          const road = look === 'road' ? roadRoom(r, edge, a, b, fixed, axis, rooms) : null;
+          edges.push({ room: r.id, edge, from: axis === 'x' ? [a, fixed] : [fixed, a], to: axis === 'x' ? [b, fixed] : [fixed, b], shared: !!nb, look, y: y0, ...(road || {}) });
         }
       }
       if (outdoor) continue;   // no lintels over outdoor openings
@@ -526,6 +529,17 @@ export function pickInteractableAt(camera, interactables, x, y, w, h, reach = 2.
   return sel ? { object: sel.cand.obj, ...sel.cand.obj.userData.interact, distance: sel.dist, via: sel.via } : null;
 }
 
+// 1.37.11: how far a 'road' edge's asphalt may run (rooms[].roadLen, else 16 m) without entering another room of the floor, and which
+// of its two rows of buildings (3 m deep) would stand in a room (those are left out: that room's own wall is the kerb there)
+export function roadRoom(r, edge, a, b, fixed, axis, rooms) {
+  const out = edge === 'n' || edge === 'w' ? -1 : 1, fl = r.floor || 0, others = rooms.filter((q) => q !== r && (q.floor || 0) === fl);
+  const hits = (x0, x1, z0, z1) => others.some((q) => q.x < Math.max(x0, x1) - 0.01 && q.x + q.w > Math.min(x0, x1) + 0.01 && q.z < Math.max(z0, z1) - 0.01 && q.z + q.d > Math.min(z0, z1) + 0.01);
+  const rect = (t0, t1, v0, v1) => (axis === 'x' ? [t0, t1, fixed + out * v0, fixed + out * v1] : [fixed + out * v0, fixed + out * v1, t0, t1]);
+  let len = r.roadLen || 16;
+  while (len > 2 && hits(...rect(a, b, 0, len))) len -= 1;
+  return { roadLen: len, sideLo: !hits(...rect(a - 3, a, 0, len)), sideHi: !hits(...rect(b, b + 3, 0, len)) };
+}
+
 // the standard look of outdoor edges (the colliders are the plan's walls; this only draws): trees = a row of cedars outside the edge,
 // hedge = a clipped hedge on the line, fence = posts and two rails, stone = a low stone wall, none = nothing (the game dresses world.edges)
 const EDGE_MATS = {};
@@ -536,7 +550,23 @@ export function dressEdges(group, edges, colliders = []) {
   // fronts is hundreds of boxes: one draw call each would be too many on a phone)
   const batches = new Map();
   const inst = (w, h, d, mt, px, py, pz) => { let B = batches.get(mt); if (!B) batches.set(mt, (B = [])); B.push([w, h, d, px, py, pz]); };
+  // 1.37.11: a 'road' edge: the asphalt goes on 16 m past the line, buildings along both sides of it and one across its far end
+  const roadMat = edgeMat('road', 0x1c1c1e), all = [];
   for (const e of edges) {
+    if (e.look !== 'road') { all.push(e); continue; }
+    const [x0, z0] = e.from, [x1, z1] = e.to, o = { n: [0, -1], s: [0, 1], w: [-1, 0], e: [1, 0] }[e.edge], y = e.y || 0, ROAD = e.roadLen || 16;
+    const alongX = Math.abs(x1 - x0) > Math.abs(z1 - z0), len = Math.hypot(x1 - x0, z1 - z0);
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(alongX ? len : ROAD, 0.1, alongX ? ROAD : len), roadMat);
+    slab.position.set((x0 + x1) / 2 + (o[0] * ROAD) / 2, y - 0.05, (z0 + z1) / 2 + (o[1] * ROAD) / 2); slab.receiveShadow = true; slab.name = `edge:${e.room}:${e.edge}:road`; group.add(slab);
+    const far = (p) => [p[0] + o[0] * ROAD, p[1] + o[1] * ROAD];
+    all.push({ ...e, look: 'urban', from: far(e.from), to: far(e.to) });
+    // the two sides: from the line outward, the buildings on the far side of each kerb ('from' is the lower end, 'to' the higher one)
+    const lo = alongX ? 'w' : 'n', hi = alongX ? 'e' : 's';
+    const side = (p, ed) => { const q = far(p), a = [Math.min(p[0], q[0]), Math.min(p[1], q[1])], b = [Math.max(p[0], q[0]), Math.max(p[1], q[1])]; all.push({ room: e.room, edge: ed, from: a, to: b, shared: false, look: 'urban', y }); };
+    if (e.sideLo !== false) side(e.from, lo);
+    if (e.sideHi !== false) side(e.to, hi);
+  }
+  for (const e of all) {
     const [x0, z0] = e.from, [x1, z1] = e.to, len = Math.hypot(x1 - x0, z1 - z0), alongX = Math.abs(x1 - x0) > Math.abs(z1 - z0);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, y = e.y || 0;
     const out = { n: [0, -1], s: [0, 1], w: [-1, 0], e: [1, 0] }[e.edge];

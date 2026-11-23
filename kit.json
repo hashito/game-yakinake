@@ -1,5 +1,5 @@
 {
-  "kit": "309c8e4c",
+  "kit": "2f52fcd4",
   "dest": "js/kit",
   "modules": [
     "game-core",
@@ -181,7 +181,7 @@
     "bake-prop-boxes.mjs"
   ],
   "hashes": {
-    "js\\kit\\game-core.js": "b9f5b243a982",
+    "js\\kit\\game-core.js": "8ccaebdebe15",
     "js\\kit\\item-kinds.js": "1df558ca9be9",
     "js\\kit\\item-models.js": "8c5988e07991",
     "js\\kit\\prop-geo.js": "6015f33a97f7",
@@ -212,7 +212,7 @@
     "js\\kit\\audio.js": "a073e3263600",
     "js\\kit\\audio-at.js": "7963d200be53",
     "js\\kit\\task-minigames.js": "3dc8e341ef20",
-    "js\\kit\\world-from-plan.js": "42b302b100fb",
+    "js\\kit\\world-from-plan.js": "ddbda2a84a20",
     "js\\kit\\interact-select.js": "5df8cf8adc1c",
     "js\\kit\\room-types.js": "e3dd75863c22",
     "js\\kit\\barrier-look.js": "13e40328718e",

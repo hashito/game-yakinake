@@ -360,7 +360,8 @@ export function installStory(ext, G) {
   let spotT = 0, looking = 0, roomT = 0, roomId = null;
   const headOf = (L) => { const q = L.z.root ? L.z.root.position : new THREE.Vector3(L.z.pos[0], L.z.pos[1] || 0, L.z.pos[2]); const low = (L.z.lying && L.z.lying()) || /crawl/.test((L.def && L.def.p) || ''); return new THREE.Vector3(q.x, q.y + (low ? 0.35 : 1.45), q.z); };
   // the first ones the story speaks of are caught from beside too, when close (passing the treatment room's glass door, the crawler in the corridor)
-  const WIDE = { Z_SHO_EAT: 1.75, Z_CRAWL: 1.75 };
+  // 1.5.1: the glass door is a 1.4 m gap seen while walking past it - 2.1 rad (the door already a little behind the shoulder) and a short dwell
+  const WIDE = { Z_SHO_EAT: 2.1, Z_CRAWL: 1.75 };
   const inSight = (L, max = 16) => {
     if (!L || !L.alive || L.floor !== (ctx.floor || 0) || !L.z) return false;
     const cam = ctx.camera, h = headOf(L); to.copy(h).sub(cam.position); const d = to.length(); if (d > max || d < 0.5) return false;
@@ -375,10 +376,12 @@ export function installStory(ext, G) {
     for (const L of G.liveZombies()) {
       const id = L.def && L.def.id; if (!id || spotted.has(id)) continue;
       if (!inSight(L)) { dwell.delete(id); continue; }
-      const t = (dwell.get(id) || 0) + 0.1; dwell.set(id, t); if (t < 0.25) continue;
+      const t = (dwell.get(id) || 0) + 0.1; dwell.set(id, t); if (t < (WIDE[id] ? 0.15 : 0.25)) continue;
       spotted.add(id); G.emit('zombie:spotted', { id });
       const d = headOf(L).distanceTo(ctx.camera.position);
-      if (d > 4 && !(L.alert > 0 && d < 9) && ctx.lookTo) { looking = 1.1; ctx.lookTo(headOf(L), { sec: 0.9, zoom: 1.35, speed: 4 }); }
+      // 1.5.1 (play test #3 again: the zoom showed a door, not the one behind it): the glass-door one is seen from 3.5-4 m across the corridor,
+      // so the first two (WIDE) turn the eyes from 2.5 m on
+      if (d > (WIDE[id] ? 2.5 : 4) && !(L.alert > 0 && d < 9) && ctx.lookTo) { looking = 1.1; ctx.lookTo(headOf(L), { sec: 0.9, zoom: 1.35, speed: 4 }); }
       return;
     }
   };

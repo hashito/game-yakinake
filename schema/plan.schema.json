@@ -91,6 +91,15 @@
             ],
             "description": "outdoor rooms: the look of the room's edges (the colliders stay); urban (1.35.0) = building fronts on the outer edges and a barricade of wrecks and a fence between two outdoor rooms; none = the game dresses world.edges itself and says so in edgeReason (plan-check edge-invisible)"
           },
+          "roads": {
+            "type": "array",
+            "items": { "enum": ["n", "s", "e", "w"] },
+            "description": "1.37.11: outdoor rooms: the outer sides where the street goes on - the asphalt runs 16 m past the edge between building fronts (look road; the collider stays) and the game piles its blockade (wrecked cars, crates) on the line"
+          },
+          "roadLen": {
+            "type": "number",
+            "description": "1.37.11: how far the roads (rooms[].roads) run past the edge, m (default 16; shortened where another room of the floor is in the way)"
+          },
           "edgeReason": {
             "type": "string",
             "description": "1.35.0: with edge none - what closes the edges instead (the game's own dressing); without it edge none is an invisible wall (plan-check edge-invisible)"

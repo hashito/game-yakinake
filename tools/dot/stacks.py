@@ -37,6 +37,9 @@ PARTS = {
     'street-lamp': 'env-props-street-lamp', 'pole': 'arakawa-utility-pole', 'iv-fallen': 'atmos-k2-iv-fallen',
     # 1.5.0 (play test 2026-11-23 「道を塞ぐボードみたいなもの…車やもので塞いでください」): heaps of real things instead of the board barricade
     'junk-pile': 'atmos-k3-furniture-pile', 'tire-pile': 'atmos-k3-tire-pile', 'rope-fence': 'atmos-k4-rope-fence', 'bins': 'env-props-wheelie-bin',
+    # 1.5.1 (the same item: 「車やもので塞いでください」): the wreckage walls where a street goes on (js/dot/index.js WRECKS)
+    'truck': 'miru-delivery-truck', 'van': 'env-props-car-van', 'kei': 'env-props-car-kei', 'rubble': 'atmos-k3-brick-rubble',
+    'crate-stack': 'tidegate-crate-stack', 'pallet-stack': 'turnback-pallet-stack',
     'wheelchair': 'atmos-k2-wheelchair-overturned', 'gurney': 'atmos-k2-gurney-slipped', 'collapsed-shelf': 'atmos-k3-collapsed-shelf',
     # the things lying in the world (loot)
     'pistol': 'game-arakawa-pistol', 'shotgun': 'game-arakawa-shotgun', 'medkit': 'game-arakawa-medkit', 'ammo-9mm': 'game-arakawa-ammo-9mm',

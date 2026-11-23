@@ -328,6 +328,48 @@
   "src": "env-props-wheelie-bin",
   "mpp": 0.025
  },
+ "truck": {
+  "w": 33,
+  "d": 91,
+  "n": 35,
+  "src": "miru-delivery-truck",
+  "mpp": 0.06
+ },
+ "van": {
+  "w": 33,
+  "d": 75,
+  "n": 31,
+  "src": "env-props-car-van",
+  "mpp": 0.06
+ },
+ "kei": {
+  "w": 27,
+  "d": 55,
+  "n": 24,
+  "src": "env-props-car-kei",
+  "mpp": 0.06
+ },
+ "rubble": {
+  "w": 62,
+  "d": 45,
+  "n": 15,
+  "src": "atmos-k3-brick-rubble",
+  "mpp": 0.025
+ },
+ "crate-stack": {
+  "w": 32,
+  "d": 17,
+  "n": 28,
+  "src": "tidegate-crate-stack",
+  "mpp": 0.025
+ },
+ "pallet-stack": {
+  "w": 29,
+  "d": 26,
+  "n": 19,
+  "src": "turnback-pallet-stack",
+  "mpp": 0.025
+ },
  "wheelchair": {
   "w": 25,
   "d": 33,

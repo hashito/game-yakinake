@@ -6,23 +6,7 @@
   "room": "H_TOU",
   "station": "S_CART",
   "meaning": "素手で廊下へ出ないため。救急カートには、**メス**と包帯がある。",
-  "hint": "当直室の**扉の左**、赤い救急カート。",
-  "steps": [
-   {
-    "text": "当直室へ",
-    "done": "room",
-    "room": "H_TOU"
-   },
-   {
-    "text": "赤い救急カートの前に立つ",
-    "done": "look",
-    "emphasis": "station:S_CART"
-   },
-   {
-    "text": "[E] でカートを開ける",
-    "done": "task"
-   }
-  ]
+  "hint": "当直室の**扉の左**、赤い救急カート。"
  },
  {
   "id": "T_TOOLBOX",
