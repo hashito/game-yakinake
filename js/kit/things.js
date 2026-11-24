@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/things.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 70be00ae: js/things.js — edit in game-kit and run tools/kit-sync.js */
 // "Things you can look at" (standard 1.5): data/things.json + the examine interaction. (届けるな has 107 of them; 未然調書 / 日陰 / 薬局 have the same.)
 //   things.json: [ { "id": "A_CLOCK", "room": "A", "position": [4, 17], "y": 1.25, "label": "勤怠端末", "photo": "assets/media/th_A_CLOCK.jpg",
 //                    "text": ["first look", "second look and later"], "feeling": "the protagonist's one line (journal + card)", "requires": { "stage": "L2", "flags": [..], "tasks": [..], "items": [..], "looked": [..] }, "size": 0.6 } ]
@@ -40,11 +40,11 @@ export function installThings(ctx) {
   place();
 
   let card = null, cardT = 0;
-  const showCard = (t) => {
+  const showCard = (t, text = '') => {   // 1.39.12 (水無瀬病院 第 5 回 #9 「具体的に何かを記載」): the words of this look are on the card, beside its picture
     if (ctx.lane) { try { const L = ctx.lane.model; for (const i of [...((L && L.items) || [])]) if (typeof i.key === 'string' && i.key.startsWith('look:') && i.key !== `look:${t.id}`) L.remove(i.id); ctx.lane.render && ctx.lane.render(); } catch { /* an older lane */ }   // 1.17.0: the card of what you look at now replaces the last one
-      ctx.lane.push({ kind: 'card', cls: t.photo ? 'tl-lookcard tl-photocard tl-read' : 'tl-lookcard tl-read', key: `look:${t.id}`, ttl: t.photo ? 8000 : 6000, html: viewItemHtml({ photo: t.photo, title: t.label, feeling: t.feeling }) }); return; }   // U27: the look-at card is an item of the toast lane (no box of its own that could sit on the clock)
+      ctx.lane.push({ kind: 'card', cls: t.photo ? 'tl-lookcard tl-photocard tl-read' : 'tl-lookcard tl-read', key: `look:${t.id}`, ttl: Math.max(t.photo ? 8000 : 6000, 4000 + 110 * String(text).length), html: viewItemHtml({ photo: t.photo, title: t.label, text, feeling: t.feeling }) }); return; }   // U27: the look-at card is an item of the toast lane (no box of its own that could sit on the clock)
     if (!card) { card = document.createElement('div'); card.id = 'look'; card.className = 'gf-look'; ctx.hud.appendChild(card); }
-    card.innerHTML = viewItemHtml({ photo: t.photo, title: t.label, feeling: t.feeling });
+    card.innerHTML = viewItemHtml({ photo: t.photo, title: t.label, text, feeling: t.feeling });
     card.classList.remove('show'); void card.offsetWidth; card.classList.add('show');
     clearTimeout(cardT); cardT = setTimeout(() => card && card.classList.remove('show'), 6000);
   };
@@ -56,8 +56,9 @@ export function installThings(ctx) {
     if (!ctx.state.looked.includes(id)) ctx.state.looked.push(id);
     ctx.sound && ctx.sound('paper');
     const line = textFor(t, n);
-    if (t.photo || t.feeling) showCard(t);
-    if (line) (ctx.monologue || (() => {}))(line, 4);
+    const carded = !!(t.photo || t.feeling);
+    if (carded) showCard(t, line || '');
+    if (line && !carded) (ctx.monologue || (() => {}))(line, 4);   // 1.39.12: on the card when there is one (not twice)
     bus.emit('item:view', { id }); bus.emit('thing:look', { id, n: n + 1 });
     gfEmit('things', 'look', { id, n: n + 1 });
     ctx.save && ctx.save();

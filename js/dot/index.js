@@ -322,18 +322,28 @@ export default async function dotLayer(ext, { manifest, data }) {
     // 1.6.1: the palette (no fire colours), the red fog and the frame's 70 % desaturation (fx.saturation) had turned orange flames pink: yellow
     // flames (they stay warm yellow after the desaturation) - no fog on the fire, a white-yellow core, orange tongues, a red rim, and an
     // additive glow round it so a still frame reads as fire
-    const flameMats = [[1.0, 0.55, 0.0], [0.9, 0.3, 0.0], [0.7, 0.12, 0.0], [0.45, 0.04, 0.0]].map((c) => { const mm = new THREE.MeshBasicMaterial({ fog: false }); mm.color.setRGB(c[0], c[1], c[2], THREE.LinearSRGBColorSpace); mm.userData.dot = 'ui'; return mm; });   // 'ui': kept off the palette (it has no fire colours), not tone-mapped
-    const glowTex = (() => { const cv = document.createElement('canvas'); cv.width = cv.height = 64; const q = cv.getContext('2d'); const gr = q.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,210,0,0.9)'); gr.addColorStop(0.4, 'rgba(255,150,0,0.5)'); gr.addColorStop(1, 'rgba(255,110,0,0)'); q.fillStyle = gr; q.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+    // 1.6.2 (re-check 2026-11-24: the still frame still read cream, not fire): the frame's final pass tone-maps (ACES) and blooms everything,
+    // so bright flames went white-cream; the flames are kept below 1 so the curve leaves their orange (core yellow-orange, tongues orange, red rim)
+    const flameMats = [[0.62, 0.3, 0.02], [0.55, 0.11, 0.0], [0.34, 0.03, 0.0], [0.17, 0.007, 0.0]].map((c) => { const mm = new THREE.MeshBasicMaterial({ fog: false }); mm.color.setRGB(c[0], c[1], c[2], THREE.LinearSRGBColorSpace); mm.userData.dot = 'ui'; return mm; });   // 'ui': kept off the palette (it has no fire colours), not tone-mapped
+    const glowTex = (() => { const cv = document.createElement('canvas'); cv.width = cv.height = 64; const q = cv.getContext('2d'); const gr = q.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,140,0,0.8)'); gr.addColorStop(0.4, 'rgba(230,80,0,0.4)'); gr.addColorStop(1, 'rgba(200,40,0,0)'); q.fillStyle = gr; q.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t; })();
     const emberMat = new THREE.MeshBasicMaterial({ color: 0x8a1800, fog: false, toneMapped: false }); emberMat.userData.dot = 'ui';
     const smokeMat = new THREE.MeshLambertMaterial({ color: 0x1e1a18, transparent: true, opacity: 0.55, depthWrite: false });
     const glowMat = new THREE.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }); glowMat.userData.dot = 'ui';
     function barrelFire(x, z, y0) {
       const fg = new THREE.Group(); fg.name = 'dot-fire'; fg.position.set(x, y0, z);
       if (index.barrel) { const b = sized(part('barrel'), 'barrel'); fg.add(b); }
-      const fl = []; for (let k = 0; k < 14; k++) { const sz = 0.07 + (k % 3) * 0.035, hi = k < 5 ? 4.2 : 2.6, f = new THREE.Mesh(new THREE.BoxGeometry(sz, sz * hi, sz), flameMats[k < 3 ? 0 : k < 7 ? 1 : k < 11 ? 2 : 3]); f.position.set(Math.sin(k * 2.1) * (k < 5 ? 0.06 : 0.17), 0.95 + (k % 5) * 0.09 + (k < 5 ? 0.12 : 0), Math.cos(k * 2.1) * (k < 5 ? 0.06 : 0.17)); f.userData.y0 = f.position.y; fg.add(f); fl.push(f); }
+      // 1.6.2: tongues, not planks - nine flames of small dot cubes round the drum's mouth, each a column that narrows as it rises and goes
+      // from a yellow core through orange to a red tip, the middle ones tallest, leaning a little; a few sparks above (each tongue flickers)
+      const fl = []; const cube = (sz) => new THREE.BoxGeometry(sz, sz, sz);
+      for (let k = 0; k < 9; k++) {
+        const t = new THREE.Group(), mid = k < 3, a = k * 2.4, rr = mid ? 0.05 : 0.14, n = mid ? 9 : 6, lean = (k % 2 ? 1 : -1) * 0.012;
+        for (let j = 0; j < n; j++) { const sz = (mid ? 0.11 : 0.085) * (1 - j / (n + 3)), m = new THREE.Mesh(cube(sz), flameMats[Math.min(3, Math.floor(j * 4 / n + (mid ? 0 : 0.6)))]); m.position.set(lean * j, j * sz * 0.95, 0); t.add(m); }
+        t.position.set(Math.sin(a) * rr, 0.97, Math.cos(a) * rr); t.userData.y0 = t.position.y; fg.add(t); fl.push(t);
+      }
+      for (let k = 0; k < 4; k++) { const sp = new THREE.Mesh(cube(0.022), flameMats[k % 2]); sp.position.set(Math.sin(k * 1.7) * 0.12, 1.55 + k * 0.12, Math.cos(k * 1.7) * 0.1); sp.userData.y0 = sp.position.y; fg.add(sp); fl.push(sp); }
       for (let k = 0; k < 6; k++) { const e = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.05, 0.12), emberMat); e.position.set(Math.sin(k * 1.05) * 0.2, 0.92, Math.cos(k * 1.05) * 0.2); fg.add(e); }   // dark glowing coals round the rim
       for (let k = 0; k < 4; k++) { const sm = new THREE.Mesh(new THREE.BoxGeometry(0.22 + k * 0.08, 0.16, 0.22 + k * 0.08), smokeMat); sm.position.set(0.05 * k, 1.75 + k * 0.28, -0.04 * k); fg.add(sm); }   // smoke going up into the dark
-      const glow = new THREE.Sprite(glowMat); glow.scale.set(0.8, 0.95, 1); glow.position.set(0, 1.1, 0); glowMat.opacity = 0.5; glow.name = 'dot-fire-glow'; fg.add(glow);
+      const glow = new THREE.Sprite(glowMat); glow.scale.set(0.8, 0.95, 1); glow.position.set(0, 1.1, 0); glowMat.opacity = 0.22; glow.name = 'dot-fire-glow'; fg.add(glow);
       const light = new THREE.PointLight(0xff8a30, 9, 11, 1.3); light.position.set(0, 1.4, 0); light.name = 'dot-fire-light'; fg.add(light);
       W.group.add(fg); D.fires.push({ g: fg, fl, light, t: Math.random() * 10 });
       W.colliders.push({ box: new THREE.Box3(new THREE.Vector3(x - 0.32, y0, z - 0.32), new THREE.Vector3(x + 0.32, y0 + 0.95, z + 0.32)), off: false, name: 'fire-drum' });

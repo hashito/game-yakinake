@@ -1,4 +1,4 @@
-/* game-kit d9e67113: js/fp-voxel-parts.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 70be00ae: js/fp-voxel-parts.js — edit in game-kit and run tools/kit-sync.js */
 // The shared first-person parts for js/fp-voxel.js (1.35.0, 夜勤明けの街 #1): a hand with its sleeve that closes round a grip or
 // a shaft or makes a fist, and the common weapons - the bare fist, a scalpel, a steel pipe, a fire axe, a nail gun, a pistol, a
 // pump shotgun, a hunting rifle - and the off hand with a pen light. fpParts({ sleeve, cuff, skin }) colours the sleeve (a white
@@ -33,15 +33,23 @@ function gripHand(o, { x = 0, f = 0.04, u0 = -0.05, u1 = 0.03, w = 0.03, trigger
   out.push({ ell: [x - s * (w / 2 + 0.006), u1 - 0.006, f + 0.026], r: [0.008, 0.007, 0.008], c: o.nail });
   return out;
 }
-/** a fist, knuckles forward */
+/** a fist, knuckles forward. 1.39.15 (夜勤明けの街 re-check 2026-11-24: "the bare hand is a beige box"): seen from behind and above, the
+ *  back of the hand is rounded, the four knuckles stand up in a row with shade between them, the curled fingers fold down the front in
+ *  four rows, tendons run from the wrist to the knuckles and the thumb crosses under the fingers */
 function fist(o, { x = 0, u = 0, f = 0, side = 1 } = {}) {
-  const s = side, sk = o.skin;
-  const out = [
-    { box: [x - 0.03, u - 0.03, f - 0.012, x + 0.03, u + 0.024, f + 0.048], c: sk, n: 0.2 },
-    { box: [x - 0.03, u - 0.032, f + 0.042, x + 0.028, u + 0.008, f + 0.07], c: o.knuckle, n: 0.25 },
-    { cap: [[x - s * 0.034, u - 0.006, f - 0.004], [x - s * 0.012, u - 0.012, f + 0.068]], r: 0.0115, c: sk, n: 0.22 },
+  const s = side, sk = o.skin, out = [
+    { ell: [x, u - 0.004, f + 0.016], r: [0.031, 0.022, 0.034], c: sk, n: 0.18 },                        // the back of the hand
+    { box: [x - 0.028, u - 0.03, f + 0.0, x + 0.028, u - 0.006, f + 0.044], c: sk, n: 0.2 },               // the palm side, under it
   ];
-  for (let i = 0; i < 4; i++) out.push({ ell: [x - 0.022 + i * 0.016, u + 0.012, f + 0.05], r: [0.0085, 0.009, 0.01], c: sk, n: 0.2 });
+  for (let i = 0; i < 4; i++) {
+    const fx = x + s * (0.0225 - i * 0.015);
+    out.push({ ell: [fx, u + 0.012, f + 0.046], r: [0.0078, 0.0085, 0.0085], c: o.knuckle, n: 0.22 });   // the knuckle
+    out.push({ cap: [[fx, u + 0.006, f + 0.058], [fx, u - 0.022, f + 0.062]], r: 0.0072, c: sk, n: 0.22 }); // the curled finger down the front
+    out.push({ ell: [fx, u - 0.024, f + 0.056], r: [0.006, 0.004, 0.005], c: o.knuckle, n: 0.15 });      // the fingertip tucked in
+    if (i < 3) out.push({ cap: [[x + s * (0.012 - i * 0.012), u + 0.016, f - 0.012], [fx - s * 0.002, u + 0.014, f + 0.038]], r: 0.0032, c: o.knuckle, n: 0.1 }); // a tendon
+  }
+  out.push({ cap: [[x - s * 0.034, u - 0.008, f - 0.002], [x - s * 0.006, u - 0.02, f + 0.068]], r: 0.0105, c: sk, n: 0.22 });   // the thumb across the fingers
+  out.push({ ell: [x - s * 0.004, u - 0.02, f + 0.07], r: [0.008, 0.006, 0.006], c: o.nail });
   return out;
 }
 const flip = (shapes) => shapes.map((s) => {
@@ -61,8 +69,8 @@ export function fpParts(c = {}) {
   // 1.37.7 (夜勤明けの街 1.4.3): in portrait (the narrow end of fit) the weapons stand higher so the hand and the grip sit above the phone's
   // two rows of buttons; the long guns also turn (ry) so their stocks leave by the right edge, not down behind 操作 / 撃つ
   const models = {
-    hands: { vox: V, pose: { x: 0.13, y: -0.135, z: -0.33 }, blood: [-0.03, -0.03, 0.04, 0.03, 0.02, 0.075],
-      shapes: [...arm([0.0, -0.01, -0.01]), ...fist(o, { x: 0, u: 0, f: 0 })] },
+    hands: { vox: V, pose: { x: 0.12, y: -0.112, z: -0.32 }, blood: [-0.03, -0.03, 0.04, 0.03, 0.02, 0.075],
+      shapes: [...arm([0.0, -0.01, -0.01]), { group: fist(o, { x: 0, u: 0, f: 0 }), at: [0, 0, 0.02], rz: -0.95, rx: 0.45 }] },   // 1.39.15: turned (a boxer's guard) so the curled fingers and the thumb face the eye, not the flat back
     // 1.37.7 (夜勤明けの街 1.4.3: in portrait the scalpel read as a lump of hand - its blade pointed straight away from the eye): the
     // scalpel stands up out of the top of the fist, leaning forward and a little left, its blade's flat towards the eye, bright steel
     // with a lit edge and a dark spine, the handle long enough to read past the knuckles

@@ -1,4 +1,4 @@
-/* game-kit 6e40a033: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 70be00ae: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -78,7 +78,7 @@ import { installTimedShot } from './timed-shot.js';
 import { VoiceQueue } from './voice-queue.js';
 import { installNpcAudit } from './npc-audit.js';
 
-export const CORE_VERSION = '1.39.11';
+export const CORE_VERSION = '1.39.15';
 // the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
 export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board', 'darkroom-develop', 'tape-splice', 'switchboard', 'steam-letter', 'puzzle-box', 'rubbing', 'knot-untangle', 'torn-paper', 'safe-listen', 'footprint-track'];
 const $ = (id) => document.getElementById(id);
@@ -331,7 +331,7 @@ export function createGame(cfg) {
     if (bb.isEmpty()) return;
     const n = r.normal, plane = r.point.x * n.x + r.point.y * n.y + r.point.z * n.z;
     let back = Infinity; for (const x of [bb.min.x, bb.max.x]) for (const y of [bb.min.y, bb.max.y]) for (const z of [bb.min.z, bb.max.z]) back = Math.min(back, x * n.x + y * n.y + z * n.z);
-    const d = plane + 0.006 - back; if (Math.abs(d) > 0.003 && Math.abs(d) < 0.4) { mesh.position.x += n.x * d; mesh.position.y += n.y * d; mesh.position.z += n.z * d; mesh.userData.flushed = +d.toFixed(3); }
+    const d = plane - back;   // 1.39.13: r.point is already the paste gap (6 mm) off the wall; adding 6 mm more left every pasted board 1.2 cm off (水無瀬病院 掲示・案内図) if (Math.abs(d) > 0.003 && Math.abs(d) < 0.4) { mesh.position.x += n.x * d; mesh.position.y += n.y * d; mesh.position.z += n.z * d; mesh.userData.flushed = +d.toFixed(3); }
   };
   ctx.flushPasted = () => { for (const mesh of pickups.values()) { const P = mesh.userData.pasted; if (!P || !P.at) continue; flushBack(mesh, { point: P.at, normal: P.normal }); } };
   ctx.seatPickups = () => {

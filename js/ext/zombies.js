@@ -255,7 +255,9 @@ export function installZombies(ext, G) {
   function addArmorLook(L) {
     const b = L.z.bones, kinds = L.def.armor || [];
     const put = (bone, w, h, d, y, mat, dz = 0) => { if (!b[bone]) return; const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(0, y, dz); m.name = 'zombie-armor'; b[bone].add(m); };
-    if (kinds.includes('helmet')) { const riot = L.def.helmet === 'riot'; put('head', 0.25, riot ? 0.15 : 0.11, 0.27, riot ? 0.12 : 0.15, riot ? armorMat : helmetMat); if (!riot) put('head', 0.3, 0.025, 0.32, 0.1, helmetMat); }
+    // 1.6.2 (re-check 2026-11-24): the helmet sat inside the dot head (its top 1.65 m, the head's 1.72 m) and only grey hair showed (the brim ran across
+    // the eyes) - 8 cm higher, a shell over the crown and its brim at the brow, so the armoured one is seen before it is hit
+    if (kinds.includes('helmet')) { const riot = L.def.helmet === 'riot'; put('head', 0.25, riot ? 0.15 : 0.11, 0.27, riot ? 0.2 : 0.23, riot ? armorMat : helmetMat); if (!riot) put('head', 0.3, 0.025, 0.32, 0.18, helmetMat); }
     if (kinds.includes('vest')) put('chest', 0.38, 0.4, 0.26, 0.14, armorMat);
     if (kinds.includes('pads')) { for (const s of ['shinL', 'shinR']) put(s, 0.13, 0.22, 0.13, -0.12, armorMat, 0.02); }
   }
@@ -330,36 +332,66 @@ export function installZombies(ext, G) {
   // cloth sagging between the legs, the feet tenting it, the edges hanging down onto the floor - in cool greys (lit top, shaded folds),
   // and from one of them (Z_REI2) a hand and forearm out from under the edge
   const sheetMat = new THREE.MeshLambertMaterial({ color: 0x9eaab4 }); sheetMat.name = 'yk-sheet';
-  const sheetFold = new THREE.MeshLambertMaterial({ color: 0x6a7682 }); sheetFold.name = 'yk-sheet-fold';
   const sheetDeep = new THREE.MeshLambertMaterial({ color: 0x46505a }); sheetDeep.name = 'yk-sheet-deep';
-  const sheetStain = new THREE.MeshLambertMaterial({ color: 0x5e1814 }); sheetStain.name = 'yk-sheet-stain';
   const deadSkin = new THREE.MeshLambertMaterial({ color: 0x9aa08e }); deadSkin.name = 'yk-dead-skin';
+  // 1.6.2 (re-check 2026-11-24, "the sheet's shape is still boxes up close"): the cloth is one draped surface of fine dot columns (2.5 cm),
+  // not a few big boxes - a height field: the body under it (head, neck, shoulders, chest, belly, hips, the two legs, the feet standing up)
+  // and the cloth falling from it to the floor at a cloth's slope, bridging the gap between the legs and tenting off the toes; the shade
+  // goes darker where the cloth hangs and in the hollows, with a stain at the head. Built once and shared by every sheet.
+  let sheetGeo = null;
+  function sheetGeometry() {
+    if (sheetGeo) return sheetGeo;
+    const C = 0.025, NX = 88, NZ = 36, X0 = -1.1, Z0 = -0.45;   // x along the body (head +x, feet -x), z across
+    const sm = (e0, e1, v) => { const t = Math.min(1, Math.max(0, (v - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
+    const blob = (x, z, cx, cz, rx, rz, h) => { const d = ((x - cx) / rx) ** 2 + ((z - cz) / rz) ** 2; return d < 1 ? h * Math.sqrt(1 - d) : 0; };
+    const body = (x, z) => Math.max(
+      blob(x, z, 0.84, 0, 0.13, 0.11, 0.21),          // the head
+      blob(x, z, 0.69, 0, 0.06, 0.06, 0.12),          // the neck
+      blob(x, z, 0.5, 0, 0.13, 0.25, 0.2),            // the shoulders
+      blob(x, z, 0.27, 0, 0.2, 0.21, 0.25),           // the chest
+      blob(x, z, 0.04, 0, 0.14, 0.18, 0.16),          // the belly, lower
+      blob(x, z, -0.2, 0, 0.16, 0.2, 0.18),           // the hips
+      blob(x, z, -0.55, 0.1, 0.3, 0.08, 0.14), blob(x, z, -0.55, -0.1, 0.3, 0.08, 0.14),   // the thighs and shins
+      blob(x, z, -0.93, 0.1, 0.05, 0.05, 0.24), blob(x, z, -0.93, -0.1, 0.05, 0.05, 0.24)); // the feet standing up
+    const B = [], H = [];
+    for (let i = 0; i < NX; i++) { B.push([]); for (let k = 0; k < NZ; k++) B[i].push(body(X0 + (i + 0.5) * C, Z0 + (k + 0.5) * C)); }
+    const R = 7, SL = 0.85 * C;   // the cloth falls 0.85 per unit across (steep, as a sheet hangs) over up to 7 cells
+    for (let i = 0; i < NX; i++) { H.push([]); for (let k = 0; k < NZ; k++) {
+      let h = B[i][k];
+      for (let di = -R; di <= R; di++) for (let dk = -R; dk <= R; dk++) { const ii = i + di, kk = k + dk; if (ii < 0 || kk < 0 || ii >= NX || kk >= NZ) continue; const v = B[ii][kk] - Math.hypot(di, dk) * SL; if (v > h) h = v; }
+      const x = X0 + (i + 0.5) * C, z = Z0 + (k + 0.5) * C;
+      const edge = Math.min(sm(-1.1, -1.04, x), 1 - sm(1.04, 1.1, x), sm(-0.45, -0.4, z), 1 - sm(0.4, 0.45, z));
+      h = Math.max(0.008, h) * (0.35 + 0.65 * edge);
+      H[i].push(Math.round(h / 0.0125) * 0.0125 || 0.006);
+    } }
+    const pos = [], nor = [], col = [];
+    const base = new THREE.Color(0x9eaab4), fold = new THREE.Color(0x6a7682), stain = new THREE.Color(0x5e1814);
+    const shade = (i, k) => { const x = X0 + (i + 0.5) * C, z = Z0 + (k + 0.5) * C, h = H[i][k], b = B[i][k];
+      if (Math.hypot((x - 0.3) / 0.07, (z - 0.06) / 0.05) < 1 || Math.hypot((x - 0.22) / 0.04, (z - 0.11) / 0.035) < 1) return stain;
+      const hang = h - b; const c = base.clone(); if (b < 0.02) c.lerp(fold, Math.min(0.6, 0.2 + (0.12 - h) * 3)); else if (hang > 0.03) c.lerp(fold, 0.4);   // the hanging cloth and the hem on the floor are a little darker, still a white sheet
+      return c; };
+    const quad = (a, b2, c, d, n, cl) => { for (const v of [a, b2, c, a, c, d]) { pos.push(...v); nor.push(...n); col.push(cl.r, cl.g, cl.b); } };
+    for (let i = 0; i < NX; i++) for (let k = 0; k < NZ; k++) {
+      const x0 = X0 + i * C, x1 = x0 + C, z0 = Z0 + k * C, z1 = z0 + C, h = H[i][k], cl = shade(i, k);
+      quad([x0, h, z0], [x0, h, z1], [x1, h, z1], [x1, h, z0], [0, 1, 0], cl);
+      const side = cl.clone().multiplyScalar(0.8);
+      const nb = (ii, kk) => (ii < 0 || kk < 0 || ii >= NX || kk >= NZ ? 0 : H[ii][kk]);
+      let n = nb(i + 1, k); if (n < h) quad([x1, h, z0], [x1, h, z1], [x1, n, z1], [x1, n, z0], [1, 0, 0], side);
+      n = nb(i - 1, k); if (n < h) quad([x0, h, z1], [x0, h, z0], [x0, n, z0], [x0, n, z1], [-1, 0, 0], side);
+      n = nb(i, k + 1); if (n < h) quad([x1, h, z1], [x0, h, z1], [x0, n, z1], [x1, n, z1], [0, 0, 1], side);
+      n = nb(i, k - 1); if (n < h) quad([x0, h, z0], [x1, h, z0], [x1, n, z0], [x0, n, z0], [0, 0, -1], side);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    geo.computeBoundingSphere(); geo.computeBoundingBox();
+    return (sheetGeo = geo);
+  }
+  const clothMat = new THREE.MeshLambertMaterial({ vertexColors: true }); clothMat.name = 'yk-sheet-cloth';
   function makeSheet(def = {}) {
     const g = new THREE.Group(); g.name = 'yk-sheet';
     const add = (w, h, d, x, y, z, m = sheetMat, rx = 0, rz = 0) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.rotation.set(rx, 0, rz); o.castShadow = true; o.receiveShadow = true; g.add(o); return o; };
-    // the cloth lying out on the floor round the body, a little wider than it, and its hems falling from the body to the floor
-    add(1.95, 0.015, 0.78, -0.02, 0.008, 0, sheetDeep);
-    for (const sd of [-1, 1]) {
-      add(1.4, 0.03, 0.16, -0.05, 0.06, sd * 0.29, sheetFold, sd * 0.9, 0);          // the side hangs from the hip line down to the floor
-      add(0.42, 0.03, 0.2, 0.42, 0.1, sd * 0.31, sheetFold, sd * 0.95, 0);        // past the shoulders, steeper
-    }
-    add(0.18, 0.03, 0.5, 0.98, 0.05, 0, sheetFold, 0, -0.9);                       // over the top of the head, down to the floor
-    add(0.22, 0.03, 0.42, -1.0, 0.07, 0, sheetFold, 0, 1.0);                       // off the toes, down to the floor
-    // the body's shape: head, neck dip, shoulders, chest, belly, hips
-    add(0.2, 0.2, 0.22, 0.82, 0.1, 0); add(0.12, 0.06, 0.16, 0.82, 0.22, 0);       // the head, rounded on top
-    add(0.08, 0.1, 0.2, 0.64, 0.05, 0, sheetFold);                                  // the dip at the neck
-    add(0.2, 0.24, 0.54, 0.5, 0.12, 0);                                              // the shoulders
-    add(0.34, 0.28, 0.44, 0.24, 0.14, 0); add(0.22, 0.05, 0.3, 0.26, 0.3, 0);      // the chest, the ribcage's crest
-    add(0.26, 0.18, 0.4, -0.04, 0.09, 0, sheetFold);                               // the belly, sunk and in shadow
-    add(0.2, 0.21, 0.42, -0.24, 0.105, 0);                                          // the hips
-    // the legs, the cloth sagging between them, the feet tenting it
-    for (const sd of [-1, 1]) {
-      add(0.62, 0.16, 0.15, -0.62, 0.08, sd * 0.11);
-      add(0.1, 0.3, 0.12, -0.96, 0.15, sd * 0.1);                                  // the foot standing up under the cloth
-    }
-    add(0.6, 0.05, 0.08, -0.62, 0.025, 0, sheetDeep);                               // the sag between the legs
-    add(0.12, 0.2, 0.3, -0.96, 0.1, 0, sheetFold);                                  // the tent between the toes
-    add(0.08, 0.02, 0.1, 0.3, 0.335, 0.05, sheetStain); add(0.05, 0.02, 0.06, 0.22, 0.33, 0.1, sheetStain);
+    add(2.0, 0.003, 0.8, 0, 0.0015, 0, sheetDeep);   // the hem's shadow on the floor (first: it stays when the cloth slides off)
+    const cloth = new THREE.Mesh(sheetGeometry(), clothMat); cloth.name = 'yk-sheet-cloth'; cloth.castShadow = true; cloth.receiveShadow = true; g.add(cloth);
     if (def.id === 'Z_REI2') {
       // a hand out from under the edge: the forearm across the floor, the fingers curled
       add(0.3, 0.06, 0.08, 0.12, 0.03, 0.5, deadSkin, 0, 0).rotation.y = -0.35;
@@ -375,7 +407,7 @@ export function installZombies(ext, G) {
     const h = hd.getWorldPosition(new THREE.Vector3()), f = fl.getWorldPosition(new THREE.Vector3()), y0 = ctx.world.floorY(L.floor);
     const S = L.sheet.g; S.position.set((h.x + f.x) / 2 + (h.x - f.x) * 0.08, y0, (h.z + f.z) / 2 + (h.z - f.z) * 0.08); S.rotation.y = Math.atan2(-(h.z - f.z), h.x - f.x);
     // the cloth covers the whole body: as high as the body lies (the voxel bodies lie 0.35-0.5 m thick) and a little wider
-    S.scale.set(1.05, 1.25, 1.05);
+    S.scale.set(1.05, 1.15, 1.05);
     ctx.scene.add(S); L.sheet.placed = true; return true;
   }
   function slideSheet(L) { const S = L.sheet; if (!S || S.off) return; S.off = 0.001; S.g.children.forEach((c) => { if (c.material === deadSkin) c.visible = false; });   /* the hand belongs to the body, which shows now */ S.dir = S.g.rotation.y + Math.PI / 2; }
