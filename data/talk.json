@@ -868,5 +868,63 @@
    "id": "heli_mixed-2",
    "voice": "assets/voice/heli_mixed-2.mp3"
   }
+ ],
+ "satake": [
+  {
+   "who": "佐竹",
+   "text": "……誰だ。ああ、病院の先生か。白衣で分かった。",
+   "id": "satake-1",
+   "voice": "assets/voice/satake-1.mp3"
+  },
+  {
+   "who": "私",
+   "text": "施設課の工具ケースが、空でした。釘打ち機を持っていったのは、佐竹さんですね。",
+   "id": "satake-2",
+   "voice": "assets/voice/satake-2.mp3"
+  },
+  {
+   "who": "佐竹",
+   "text": "ああ。病院の窓をふさぐ仕事で、昨日から出入りしてた。家の戸もふさごうと思ってな、借りてきた。",
+   "id": "satake-3",
+   "voice": "assets/voice/satake-3.mp3"
+  },
+  {
+   "who": "私",
+   "text": "その腕……タオルの下、どうしたんですか。",
+   "id": "satake-4",
+   "voice": "assets/voice/satake-4.mp3"
+  },
+  {
+   "who": "佐竹",
+   "text": "これか。釘で切っただけだ。見せるほどのもんじゃない。",
+   "id": "satake-5",
+   "voice": "assets/voice/satake-5.mp3"
+  },
+  {
+   "who": "佐竹",
+   "text": "釘打ち機は、持っていけ。わしは、もう打てん。……手が、言うことをきかなくてな。",
+   "id": "satake-6",
+   "voice": "assets/voice/satake-6.mp3"
+  },
+  {
+   "who": "佐竹",
+   "text": "奥の作業場に、釘の箱がある。それも持っていけ。……早く、行け。",
+   "id": "satake-7",
+   "voice": "assets/voice/satake-7.mp3"
+  }
+ ],
+ "satake_far": [
+  {
+   "who": "佐竹",
+   "text": "先生……。やっぱり、噛まれてたんだ。……黙ってて、すまん。",
+   "id": "satake-8",
+   "voice": "assets/voice/satake-8.mp3"
+  },
+  {
+   "who": "佐竹",
+   "text": "わしが、わしでなくなったら……そいつで、頼む。",
+   "id": "satake-9",
+   "voice": "assets/voice/satake-9.mp3"
+  }
  ]
 }

@@ -17,6 +17,7 @@ import { installMarks } from './marks.js';
 import { installImpacts } from './impacts.js';
 import { installMoves } from './moves.js';
 import { installBestiary } from './bestiary.js';
+import { installPlaces } from './places.js';
 import { LOOT } from './loot.js';
 
 export default function (ext, env = {}) {
@@ -40,6 +41,7 @@ export default function (ext, env = {}) {
   installImpacts(ext, G);
   installMoves(ext, G);
   installBestiary(ext, G);
+  installPlaces(ext, G);
   G.targets = () => [...(G.zombieTargets ? G.zombieTargets() : []), ...(G.peopleTargets ? G.peopleTargets() : [])];
   // what stops a bullet: the walls, doors, floors and furniture of the world (not the pickups, the people or the marks)
   let solid = [], solidAt = -1e9;

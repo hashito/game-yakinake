@@ -692,6 +692,137 @@
    "floor": 4,
    "type": "corridor",
    "lamp": "#d0d8c8"
+  },
+  {
+   "id": "H_KAIDAN",
+   "name": "階段室",
+   "x": -4,
+   "z": 4,
+   "w": 4,
+   "d": 5,
+   "kind": "room",
+   "type": "hospital",
+   "lamp": "#a8b8b0",
+   "wallTex": "concrete_stained",
+   "floorTex": "concrete_floor_worn"
+  },
+  {
+   "id": "H_WATARI",
+   "name": "東病棟への渡り廊下",
+   "x": 8.2,
+   "z": -9,
+   "w": 2.4,
+   "d": 9,
+   "kind": "room",
+   "type": "corridor",
+   "lamp": "#9fc6bc"
+  },
+  {
+   "id": "H_GAIRAI",
+   "name": "外来棟の廊下",
+   "x": 30.6,
+   "z": -9,
+   "w": 2.4,
+   "d": 9,
+   "kind": "room",
+   "type": "corridor",
+   "lamp": "#6f7f78"
+  },
+  {
+   "id": "S_SDOMA",
+   "name": "佐竹工務店の土間",
+   "x": 200,
+   "z": -20,
+   "w": 2.6,
+   "d": 6,
+   "kind": "room",
+   "type": "doma",
+   "furnish": false,
+   "floorTex": "concrete_floor_worn",
+   "wallTex": "clay_wall",
+   "lamp": "#e8c890"
+  },
+  {
+   "id": "S_SMISE",
+   "name": "店の間（道具置き場）",
+   "x": 202.6,
+   "z": -20,
+   "w": 5.4,
+   "d": 6,
+   "kind": "room",
+   "type": "workshop",
+   "furnish": false,
+   "floorTex": "planks_worn",
+   "wallTex": "clay_wall",
+   "lamp": "#e8c890"
+  },
+  {
+   "id": "S_SNAKA",
+   "name": "中の間",
+   "x": 202.6,
+   "z": -27,
+   "w": 5.4,
+   "d": 7,
+   "kind": "room",
+   "type": "washitsu",
+   "furnish": false,
+   "wallTex": "clay_wall",
+   "lamp": "#f0d0a0"
+  },
+  {
+   "id": "S_SDAI",
+   "name": "走り庭（台所）",
+   "x": 200,
+   "z": -32,
+   "w": 2.6,
+   "d": 12,
+   "kind": "room",
+   "type": "doma",
+   "furnish": false,
+   "floorTex": "concrete_floor_worn",
+   "wallTex": "plaster_yellowed",
+   "lamp": "#d8c098"
+  },
+  {
+   "id": "S_SOKU",
+   "name": "奥の間",
+   "x": 202.6,
+   "z": -33.5,
+   "w": 5.4,
+   "d": 6.5,
+   "kind": "room",
+   "type": "washitsu",
+   "furnish": false,
+   "wallTex": "clay_wall",
+   "lamp": "#e0c090"
+  },
+  {
+   "id": "S_SROKA",
+   "name": "渡り廊下",
+   "x": 202.6,
+   "z": -35,
+   "w": 5.4,
+   "d": 1.5,
+   "kind": "corridor",
+   "type": "corridor",
+   "furnish": false,
+   "floorTex": "planks_dark",
+   "wallTex": "clay_wall",
+   "lamp": "#d8c098"
+  },
+  {
+   "id": "S_SSAGYO",
+   "name": "作業場",
+   "x": 200,
+   "z": -41,
+   "w": 8,
+   "d": 6,
+   "kind": "room",
+   "type": "workshop",
+   "furnish": false,
+   "floorTex": "planks_grey_old",
+   "wallTex": "clay_wall",
+   "lamp": "#e0d0b0"
   }
  ],
  "doors": [
@@ -1424,6 +1555,135 @@
    },
    "width": 1.4,
    "reason": "the fire stair: one flight per floor"
+  },
+  {
+   "id": "D_KAIDAN",
+   "a": "H_ROKA",
+   "b": "H_KAIDAN",
+   "x": 0,
+   "z": 6.5,
+   "width": 1.4,
+   "look": "none",
+   "open": true,
+   "reason": "the stair hall opens off the end of the ward corridor"
+  },
+  {
+   "id": "D_WATARI",
+   "a": "H_NS",
+   "b": "H_WATARI",
+   "x": 9.4,
+   "z": 0,
+   "width": 1.4,
+   "closable": true,
+   "reason": "the link corridor to the east ward, from the back of the nurses' station"
+  },
+  {
+   "id": "D_GAIRAI",
+   "a": "H_HAN",
+   "b": "H_GAIRAI",
+   "x": 32,
+   "z": 0,
+   "width": 1.4,
+   "look": "glass",
+   "unlock": "street",
+   "hint": "外来棟へのガラス戸。向こうは天井が落ちて、廊下が瓦礫で埋まっている。開けても通れない。",
+   "reason": "the outpatient wing, seen through the glass: caved in"
+  },
+  {
+   "id": "D_SATAKE",
+   "a": "S_ODORI",
+   "b": "S_SDOMA",
+   "kind": "lift",
+   "label": "佐竹工務店に入る",
+   "ends": {
+    "a": {
+     "x": 48.6,
+     "z": -3.55,
+     "arrive": [
+      48.6,
+      -2.3
+     ],
+     "yaw": 3.142,
+     "label": "佐竹工務店に入る"
+    },
+    "b": {
+     "x": 201.3,
+     "z": -14.399999999999999,
+     "arrive": [
+      201.3,
+      -15.600000000000001
+     ],
+     "yaw": 0,
+     "label": "表の通りへ出る"
+    }
+   },
+   "width": 1.2,
+   "reason": "a shop off the street, loaded as its own place (#11: a load between places is fine)"
+  },
+  {
+   "id": "D_SMISE",
+   "a": "S_SDOMA",
+   "b": "S_SMISE",
+   "x": 202.6,
+   "z": -16.6,
+   "width": 3,
+   "look": "none",
+   "open": true,
+   "reason": "土間から店の間へ上がる框（戸のない段差）"
+  },
+  {
+   "id": "D_SNAKA",
+   "a": "S_SMISE",
+   "b": "S_SNAKA",
+   "x": 203.9,
+   "z": -20,
+   "width": 1.1,
+   "look": "fusuma",
+   "closable": true,
+   "reason": "町家は廊下がなく、表から奥へ部屋が一列に続く"
+  },
+  {
+   "id": "D_SDAI",
+   "a": "S_SDOMA",
+   "b": "S_SDAI",
+   "x": 201.3,
+   "z": -20,
+   "width": 1.2,
+   "look": "slide",
+   "closable": true,
+   "reason": "表の土間は、中戸の先で台所の走り庭へ土間のまま続く"
+  },
+  {
+   "id": "D_SOKU",
+   "a": "S_SNAKA",
+   "b": "S_SOKU",
+   "x": 205.3,
+   "z": -27,
+   "width": 1.1,
+   "look": "fusuma",
+   "closable": true,
+   "reason": "中の間の奥が奥の間（町家は部屋が一列に続く）"
+  },
+  {
+   "id": "D_SROKA",
+   "a": "S_SOKU",
+   "b": "S_SROKA",
+   "x": 205.3,
+   "z": -33.5,
+   "width": 1.1,
+   "look": "slide",
+   "closable": true,
+   "reason": "奥の間から作業場へは、庭に面した渡り廊下"
+  },
+  {
+   "id": "D_SSAGYO",
+   "a": "S_SROKA",
+   "b": "S_SSAGYO",
+   "x": 205.3,
+   "z": -35,
+   "width": 1.1,
+   "look": "slide",
+   "closable": true
   }
  ],
  "stations": [
@@ -1695,6 +1955,21 @@
    "x": 135,
    "z": 6,
    "label": "ヘリポート"
+  },
+  {
+   "id": "S_SATAKE",
+   "room": "S_SNAKA",
+   "x": 205.6,
+   "z": -24.6,
+   "label": "佐竹さん",
+   "talk": true
+  },
+  {
+   "id": "S_SBOX",
+   "room": "S_SSAGYO",
+   "x": 206.4,
+   "z": -39.4,
+   "label": "釘の箱"
   }
  ],
  "furniture": [
@@ -2764,6 +3039,140 @@
    "w": 1.6,
    "d": 0.8,
    "kind": "desk"
+  },
+  {
+   "id": "F_SMISE_SH1",
+   "room": "S_SMISE",
+   "x": 207.7,
+   "z": -17,
+   "w": 0.45,
+   "d": 2.4,
+   "kind": "shelf",
+   "rot": 90
+  },
+  {
+   "id": "F_SMISE_BENCH",
+   "room": "S_SMISE",
+   "x": 205.2,
+   "z": -18.8,
+   "w": 2.0,
+   "d": 0.6,
+   "kind": "bench"
+  },
+  {
+   "id": "F_SMISE_CR1",
+   "room": "S_SMISE",
+   "x": 205.0,
+   "z": -14.7,
+   "w": 0.8,
+   "d": 0.8,
+   "kind": "crate"
+  },
+  {
+   "id": "F_SNAKA_T",
+   "room": "S_SNAKA",
+   "x": 204.4,
+   "z": -23.8,
+   "w": 1.2,
+   "d": 0.8,
+   "kind": "table"
+  },
+  {
+   "id": "F_SNAKA_CAB",
+   "room": "S_SNAKA",
+   "x": 207.7,
+   "z": -25.0,
+   "w": 0.45,
+   "d": 1.4,
+   "kind": "cabinet",
+   "rot": 90
+  },
+  {
+   "id": "F_SDAI_CNT",
+   "room": "S_SDAI",
+   "x": 200.35,
+   "z": -27.5,
+   "w": 2.2,
+   "d": 0.6,
+   "kind": "counter",
+   "rot": 90,
+   "args": [
+    2.2
+   ]
+  },
+  {
+   "id": "F_SDAI_FR",
+   "room": "S_SDAI",
+   "x": 200.4,
+   "z": -31.0,
+   "w": 0.7,
+   "d": 0.7,
+   "kind": "fridge"
+  },
+  {
+   "id": "F_SOKU_BUTSU",
+   "room": "S_SOKU",
+   "x": 207.7,
+   "z": -30.0,
+   "w": 0.45,
+   "d": 1.0,
+   "kind": "cabinet",
+   "rot": 90
+  },
+  {
+   "id": "F_SOKU_T",
+   "room": "S_SOKU",
+   "x": 204.6,
+   "z": -30.8,
+   "w": 1.0,
+   "d": 0.8,
+   "kind": "table"
+  },
+  {
+   "id": "F_SSAGYO_B1",
+   "room": "S_SSAGYO",
+   "x": 202.0,
+   "z": -36.4,
+   "w": 2.4,
+   "d": 0.8,
+   "kind": "bench"
+  },
+  {
+   "id": "F_SSAGYO_B2",
+   "room": "S_SSAGYO",
+   "x": 206.4,
+   "z": -39.4,
+   "w": 2.2,
+   "d": 0.8,
+   "kind": "bench"
+  },
+  {
+   "id": "F_SSAGYO_SH",
+   "room": "S_SSAGYO",
+   "x": 200.3,
+   "z": -38.8,
+   "w": 0.45,
+   "d": 2.0,
+   "kind": "shelf",
+   "rot": 90
+  },
+  {
+   "id": "F_SSAGYO_CR1",
+   "room": "S_SSAGYO",
+   "x": 207.4,
+   "z": -36.2,
+   "w": 0.8,
+   "d": 0.8,
+   "kind": "crate"
+  },
+  {
+   "id": "F_SSAGYO_PAL",
+   "room": "S_SSAGYO",
+   "x": 203.6,
+   "z": -39.4,
+   "w": 1.2,
+   "d": 1.0,
+   "kind": "pallet"
   }
  ],
  "start": "H_TOU",

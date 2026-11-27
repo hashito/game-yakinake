@@ -8,5 +8,6 @@
  {"id": "katagiri", "family": "character", "variant": "explorer-woman", "params": {"res": 2, "top": "#2c3a5c", "bottom": "#26304a", "shoes": "#141414", "hair": "#1a1410", "hairstyle": "ponytail", "backpack": false}, "motions": ["idle", "walk", "reach", "turn", "fear"]},
  {"id": "mori", "family": "character", "variant": "police", "params": {"res": 2}, "motions": ["idle", "walk", "fear", "turn"]},
  {"id": "noguchi", "family": "character", "variant": "elderly", "params": {"res": 2, "top": "#4a5468", "bottom": "#2e3444", "cane": false}, "motions": ["idle", "sit", "fear", "turn", "walk"]},
- {"id": "hayase", "family": "character", "variant": "office", "params": {"res": 2, "top": "#3a3a40", "bottom": "#2a2a30"}, "motions": ["idle", "walk", "fear", "turn"]}
+ {"id": "hayase", "family": "character", "variant": "office", "params": {"res": 2, "top": "#3a3a40", "bottom": "#2a2a30"}, "motions": ["idle", "walk", "fear", "turn"]},
+ {"id": "satake", "family": "character", "variant": "worker", "params": {"res": 2, "top": "#3c4a5a", "bottom": "#34363a", "cap": false, "hair": "#8c8a84", "hairstyle": "short"}, "motions": ["idle", "walk", "fear", "turn", "sit"]}
 ]

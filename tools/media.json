@@ -361,6 +361,26 @@
    "key": "th-mcold",
    "size": "1024x768",
    "prompt": "a handwritten cardboard sign hanging on the steel door of a walk-in cold room in a dark mall kitchen, illegible marker writing, frost on the door handle, dim light"
+  },
+  {
+   "key": "th-kaidan",
+   "size": "1344x768",
+   "prompt": "a collapsed concrete stairwell inside a dark hospital, the ceiling fell onto the stairs, a heap of broken concrete slabs, tiles and bent rebar fills the stairs, hanging cables, a small red emergency light glowing above the gap, dust in a flashlight beam"
+  },
+  {
+   "key": "th-watari",
+   "size": "1344x768",
+   "prompt": "a long hospital link corridor blocked by a chest-high pile of collapsed ceiling, broken concrete and ceiling panels, over the top of the rubble the dim corridor continues and a pale silhouette of a patient in a hospital gown stands far away, night, flashlight"
+  },
+  {
+   "key": "th-butsu",
+   "size": "1344x768",
+   "prompt": "a small Japanese household buddhist altar butsudan in a dim tatami room of an old wooden townhouse, its doors open, a framed photograph of an elderly woman, an old teacup and an unlit incense holder, night, faint lamp light"
+  },
+  {
+   "key": "th-board",
+   "size": "1344x768",
+   "prompt": "wooden planks cut to the same length and stacked neatly on a workbench in a dim carpenter workshop at night, a hand saw left on top, one plank cut only halfway, sawdust, a single bare bulb"
   }
  ],
  "seeds": {
@@ -370,6 +390,7 @@
   "th-track": 7,
   "end-e6": 7,
   "item-MARTKEY": 13,
-  "item-CELLARKEY": 7
+  "item-CELLARKEY": 7,
+   "th-board": 11
  }
 }

@@ -349,5 +349,65 @@
   ],
   "feeling": "人を閉じ込めるために、作った場所だ。",
   "photo": "assets/photos/th-kchika.webp"
+ },
+ {
+  "id": "TH_KAIDAN",
+  "room": "H_KAIDAN",
+  "position": [
+   -2,
+   5.4
+  ],
+  "y": 1.2,
+  "label": "崩れた階段",
+  "text": [
+   "上の階への階段は、天井ごと崩れ落ちている。瓦礫の隙間の上で、非常灯が赤く点いている。"
+  ],
+  "feeling": "上の病棟には、もう行けない。",
+  "photo": "assets/photos/th-kaidan.webp"
+ },
+ {
+  "id": "TH_WATARI",
+  "room": "H_WATARI",
+  "position": [
+   9.4,
+   -5.6
+  ],
+  "y": 1.2,
+  "label": "瓦礫の山",
+  "text": [
+   "東病棟への渡り廊下は、天井が落ちて瓦礫でふさがっている。上の隙間から、向こうの廊下が見える。誰かが、立っている。"
+  ],
+  "feeling": "向こうへは、越えられない。",
+  "photo": "assets/photos/th-watari.webp"
+ },
+ {
+  "id": "TH_SOKU_BUTSU",
+  "room": "S_SOKU",
+  "position": [
+   207.4,
+   -30.0
+  ],
+  "y": 1.0,
+  "label": "仏壇",
+  "text": [
+   "仏壇に、奥さんらしい人の写真。線香の箱が開いたまま。湯のみが二つ、伏せてある。"
+  ],
+  "feeling": "一人で暮らしていたらしい。",
+  "photo": "assets/photos/th-butsu.webp"
+ },
+ {
+  "id": "TH_SSAGYO_BOARD",
+  "room": "S_SSAGYO",
+  "position": [
+   202.0,
+   -36.4
+  ],
+  "y": 1.0,
+  "label": "切りそろえた板",
+  "text": [
+   "窓をふさぐための板が、何枚も同じ長さに切りそろえてある。半分だけ、釘が打ってある。"
+  ],
+  "feeling": "途中で、手が止まったみたいだ。",
+  "photo": "assets/photos/th-board.webp"
  }
 ]

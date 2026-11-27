@@ -1,0 +1,101 @@
+{
+ "id": "satake",
+ "w": 68,
+ "d": 94,
+ "n": 168,
+ "pivot": [
+  33,
+  42
+ ],
+ "mpp": 0.0125,
+ "res": 2,
+ "frames": [
+  "idle.1",
+  "idle.2",
+  "idle.3",
+  "idle.4",
+  "walk.1",
+  "walk.2",
+  "walk.3",
+  "walk.4",
+  "walk.5",
+  "walk.6",
+  "walk.7",
+  "walk.8",
+  "fear.1",
+  "fear.2",
+  "turn.1",
+  "turn.2",
+  "turn.3",
+  "turn.4",
+  "sit.1"
+ ],
+ "motions": {
+  "idle": {
+   "frames": [
+    "idle.1",
+    "idle.2",
+    "idle.3",
+    "idle.4"
+   ],
+   "fps": 2,
+   "loop": true,
+   "fallback": null
+  },
+  "walk": {
+   "frames": [
+    "walk.1",
+    "walk.2",
+    "walk.3",
+    "walk.4",
+    "walk.5",
+    "walk.6",
+    "walk.7",
+    "walk.8"
+   ],
+   "fps": 8,
+   "stride": 1.4,
+   "loop": true,
+   "fallback": "idle"
+  },
+  "fear": {
+   "frames": [
+    "fear.1",
+    "fear.2"
+   ],
+   "fps": 2,
+   "loop": true,
+   "fallback": "crouch"
+  },
+  "turn": {
+   "frames": [
+    "turn.1",
+    "turn.2",
+    "turn.3",
+    "turn.4"
+   ],
+   "fps": 6,
+   "loop": true,
+   "fallback": "walk"
+  },
+  "sit": {
+   "frames": [
+    "sit.1"
+   ],
+   "loop": true,
+   "fallback": "crouch"
+  }
+ },
+ "src": {
+  "family": "character",
+  "variant": "worker",
+  "params": {
+   "res": 2,
+   "top": "#3c4a5a",
+   "bottom": "#34363a",
+   "cap": false,
+   "hair": "#8c8a84",
+   "hairstyle": "short"
+  }
+ }
+}

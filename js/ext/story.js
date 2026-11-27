@@ -96,7 +96,38 @@ export function installStory(ext, G) {
   const after = (id, fn) => ext.registerTask(id, { onDone: (c) => { try { fn(c); } catch (e) { console.error(e); } } });
   ext.registerTask('T_CART', { run: async () => { G.case.give(BOXES.T_CART); const s = G.case.items.find((i) => i.id === 'scalpel'); if (s) G.equipUid(s.uid, { quiet: true }); G.weaponHint('scalpel', 'メスを手に取った。軽くて速いが、届かない。', 5); await ctx.mapTip(); return true; } });
   ext.registerTask('T_TOOLBOX', { run: async () => { G.case.give(BOXES.T_TOOLBOX); const p = G.case.items.find((i) => i.id === 'pipe'); if (p) G.equipUid(p.uid, { quiet: true }); return true; } });
-  ext.registerTask('T_CASE', { canStart: () => (has('KEYRING') ? true : '鍵がかかっている。霊安室の机に、鍵束があるはず。'), run: async () => { G.case.give(BOXES.T_CASE); const n = G.case.items.find((i) => i.id === 'nailgun'); if (n) G.equipUid(n.uid, { quiet: true }); G.weaponHint('nailgun', '釘打ち機。音が小さい。', 4); return true; } });
+  // 1.9.0 (2026-11-27 #6 「武器がすぐに手に入りすぎている」): the case is empty but for the nails - the carpenter who boarded the windows took the
+  // nail gun home (a note with a bloody thumb mark: the first sign of #9). The hospital is the pipe and the scalpel, and getting away; the
+  // first gun is the street's, from his hands.
+  ext.registerTask('T_CASE', { canStart: () => (has('KEYRING') ? true : '鍵がかかっている。霊安室の机に、鍵束があるはず。'), run: async () => {
+    G.case.give(BOXES.T_CASE);
+    ctx.answer('ケースの中に、釘打ち機はない。釘の箱と、メモが一枚。「釘打ち機、借ります。佐竹工務店　佐竹」……メモの端に、血の指の跡がある。');
+    ctx.monologue('工務店の大工さんが、持っていったんだ。店は、大通りの北の角。', 5);
+    return true;
+  } });
+  // 1.9.0 #9 「話していたキャラクターがゾンビになるイベント」: 佐竹, the carpenter. He hands over the nail gun, says the arm under the towel is a cut from
+  // a nail, and sends the player to the back for the nails. From the workshop his voice comes from the front room - he was bitten, he is sorry,
+  // use that on me - and a body falls. In the front room he lies where he sat, and gets up as the player comes near (the risers' rule).
+  ext.registerTask('T_SATAKE', { run: async () => {
+    await talk('satake');
+    G.case.give(BOXES.T_SATAKE); const n = G.case.items.find((i) => i.id === 'nailgun'); if (n) G.equipUid(n.uid, { quiet: true });
+    G.weaponHint('nailgun', '釘打ち機。音が小さい。釘で撃つ。', 4);
+    return true;
+  } });
+  ext.registerTask('T_SATAKE_BOX', { run: async () => {
+    G.case.give(BOXES.T_SATAKE_BOX);
+    setTimeout(async () => {
+      if (G.flags['satake:turned']) return;
+      await talk('satake_far');
+      G.flags['satake:turned'] = true;
+      const p = G.person && G.person('satake'); if (p) { G.sfx3d && G.sfx3d('fall', p.f.root.position); p.hidden = true; p.f.root.visible = false; }
+      G.hideStation && G.hideStation('S_SATAKE');
+      G.syncZombies && G.syncZombies();
+      ctx.ui.say('……今の音。佐竹さん？', 4.5);
+      G.emit('satake:turned', {});
+    }, 1600);
+    return true;
+  } });
   ext.registerTask('T_AXE', { canStart: () => (has('FIREKEY') ? true : '南京錠がかかっている。鍵は、消防団の人が持っているはず。'), run: async () => { G.case.give(BOXES.T_AXE); return true; } });
   after('T_FUEL', () => G.case.give(BOXES.T_FUEL));
   after('T_SHOKO', () => { ctx.ui.say('写真の奥、ロッカーの前に、誰か立っている。……写っている札は、二十三番。', 6); G.case.give(BOXES.T_SHOKO); });

@@ -58,7 +58,9 @@ export const LOOT = [
 export const BOXES = {
   T_CART: [['scalpel', 1], ['bandage', 1]],
   T_TOOLBOX: [['pipe', 1]],
-  T_CASE: [['nailgun', 1, { loaded: 12 }], ['nails', 30]],
+  T_CASE: [['nails', 30]],   // 1.9.0 #6: the nail gun is the carpenter's (T_SATAKE), in the street
+  T_SATAKE: [['nailgun', 1, { loaded: 12 }], ['nails', 12]],
+  T_SATAKE_BOX: [['nails', 24], ['bandage', 1]],
   T_AXE: [['axe', 1]],
   T_FUEL: [['powder', 1], ['casing', 4]],
   T_SHOKO: [['shotgun', 1, { loaded: 4 }], ['shell', 8]],

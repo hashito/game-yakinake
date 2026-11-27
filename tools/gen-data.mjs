@@ -395,7 +395,8 @@ out('items.json', items);
 // the pictures of the papers and of the things to look at (tools/media.json doc-* / th-*), once they are made
 const PIC = { N_HANDOVER: 'doc-handover', N_TODAY: 'doc-today', N_CULT: 'doc-cult', N_GENMANUAL: 'doc-genmanual', N_POLICELOG: 'doc-policelog', N_ROSTER: 'doc-roster',
   TH_SHO_GLASS: 'th-glass', TH_TOU_CLOCK: 'th-clock', TH_DEN_SIGN: 'th-sign', TH_BYO_BED: 'th-bed', TH_HAN_TRACK: 'th-track', TH_URA_AMBU: 'th-ambu', TH_ODORI_BUS: 'th-bus',
-  TH_ODORI_CAR: 'th-car', TH_SHOTEN_CHAIN: 'th-chain', TH_KOMIN_ALTAR: 'th-altar', TH_P_BARS: 'th-bars', TH_FIREDOOR: 'th-firedoor', TH_O_WINDOW: 'th-window', TH_ROOF_H: 'th-roofh' };
+  TH_ODORI_CAR: 'th-car', TH_SHOTEN_CHAIN: 'th-chain', TH_KOMIN_ALTAR: 'th-altar', TH_P_BARS: 'th-bars', TH_FIREDOOR: 'th-firedoor', TH_O_WINDOW: 'th-window', TH_ROOF_H: 'th-roofh',
+  TH_KAIDAN: 'th-kaidan', TH_WATARI: 'th-watari', TH_SOKU_BUTSU: 'th-butsu', TH_SSAGYO_BOARD: 'th-board' };
 for (const x of [...docs, ...things]) { const k = PIC[x.id]; if (k && !x.photo && fs.existsSync(path.join(ROOT, `assets/photos/${k}.webp`))) x.photo = `assets/photos/${k}.webp`; }
 out('docs.json', docs);
 out('things.json', things);

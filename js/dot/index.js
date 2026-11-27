@@ -37,9 +37,9 @@ const FURN_ID = { F_CAR1: 'car-doors-open', F_CAR2: 'car-stalled-red', F_AMBU: '
 const STATION_PART = { S_CART: 'crash-cart', S_TOOL: 'toolbox', S_SAFE: 'safe', S_RADIO: 'radio', S_BREAKER: 'breaker', S_BOARD: 'switchboard', S_TAPE: 'tape-deck',
   S_RACK: { k: 'gun-rack-full', after: [['T_RACK', () => (window.__yk && window.__yk.flags.rack === 'all' ? 'gun-rack-empty' : 'gun-rack-half')]] }, S_RIFLE: 'rifle-case',
   S_NOTE: 'desk', S_MDESK: 'steel-desk', S_DRUGS: 'shelf', S_FCASE: 'toolbox', S_CAGE: 'locker', S_PACK: 'shop-shelf', S_AXE: 'locker', S_ROPE: 'rope-fence',
-  S_GEN: 'generator', S_RECORD: 'desk', S_EVID: 'locker', S_SERVER: 'server' };
+  S_GEN: 'generator', S_RECORD: 'desk', S_EVID: 'locker', S_SERVER: 'server', S_SBOX: 'toolbox' };
 // stations whose thing is already there without a part: a person (their figure), a door or a lock (the door), the helipad (its Ｈ)
-const STATION_BARE = ['S_CHISATO', 'S_GENZO', 'S_GONDO', 'S_NISHINA', 'S_TAEKO', 'S_MIYAKE', 'S_SHIRA', 'S_KATA', 'S_NOGUCHI', 'S_HAYASE', 'S_HELI', 'S_ODOOR', 'S_FORCE', 'S_ARMORY', 'S_MARTLOCK', 'S_SHUTTER'];
+const STATION_BARE = ['S_CHISATO', 'S_GENZO', 'S_GONDO', 'S_NISHINA', 'S_TAEKO', 'S_MIYAKE', 'S_SHIRA', 'S_KATA', 'S_NOGUCHI', 'S_HAYASE', 'S_HELI', 'S_ODOOR', 'S_FORCE', 'S_ARMORY', 'S_MARTLOCK', 'S_SHUTTER', 'S_SATAKE'];
 // how a station's thing stands: y (above the floor), back (toward the wall), seat (put down on the furniture under it, 1.2.0 #1: the radio,
 // the tape deck and the rifle case floated at a fixed height), size (its longest side in metres, 1.2.0 #3)
 const STATION_MOUNT = { S_TOOL: { y: 0, back: 0.2 }, S_RADIO: { back: 0.22, seat: true, size: 0.36 }, S_BREAKER: { y: 0, back: 0.02 }, S_TAPE: { back: 0.5, seat: true, size: 0.3 },

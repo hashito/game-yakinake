@@ -211,9 +211,17 @@
   "file": "th-bed.png",
   "src": "6d3a98f63b90bf93"
  },
+ "th-board.webp": {
+  "file": "th-board.png",
+  "src": "d86abc36f2764367"
+ },
  "th-bus.webp": {
   "file": "th-bus.png",
   "src": "8793faeba44bff4e"
+ },
+ "th-butsu.webp": {
+  "file": "th-butsu.png",
+  "src": "cdd84bb8d37595ee"
  },
  "th-car.webp": {
   "file": "th-car.png",
@@ -234,6 +242,10 @@
  "th-glass.webp": {
   "file": "th-glass.png",
   "src": "d40957fa9fa75a0e"
+ },
+ "th-kaidan.webp": {
+  "file": "th-kaidan.png",
+  "src": "7674f7748a3aaed7"
  },
  "th-kcell.webp": {
   "file": "th-kcell.png",
@@ -282,6 +294,10 @@
  "th-track.webp": {
   "file": "th-track.png",
   "src": "ad1856f08e1345b3"
+ },
+ "th-watari.webp": {
+  "file": "th-watari.png",
+  "src": "33ef15653650e37e"
  },
  "th-window.webp": {
   "file": "th-window.png",

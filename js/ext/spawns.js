@@ -12,6 +12,8 @@ export const SPAWNS = [
   { id: 'Z_YAKU', room: 'H_YAKU', x: 14, z: 10.6, p: 'patient', yaw: 0, stage: 'L2' },
   // 1.6.0 (play test 2 #6 「死体は最初からあって動き出した感じに」): a body that gets up later lies there from the start (sleepUntil: it does not
   // stir before that task is done, however close the player comes; a hit still wakes it). The morgue's three lie under sheets (sheet).
+  // 1.9.0 #10: beyond the rubble of the link corridor to the east ward (it cannot get over; it is seen over the top)
+  { id: 'Z_WATARI', room: 'H_WATARI', x: 9.4, z: -8.0, p: 'patient', yaw: Math.PI, stage: 'L1' },
   { id: 'Z_ROKA2', room: 'H_ROKA', x: 5, z: 6.6, p: 'cleaner', yaw: W, stage: 'L2', riser: true, sleepUntil: 'T_SAFE' },
   { id: 'Z_REI1', room: 'H_REI', x: 21.6, z: 10.2, p: 'old-man', yaw: 0, stage: 'L3', riser: true, sheet: true, sleepUntil: 'T_REI' },
   { id: 'Z_REI2', room: 'H_REI', x: 23.6, z: 9.6, p: 'old-woman', yaw: 0, stage: 'L3', riser: true, sheet: true, sleepUntil: 'T_REI' },
@@ -33,6 +35,8 @@ export const SPAWNS = [
   { id: 'Z_OD_C1', room: 'S_ODORI', x: 61.2, z: -0.4, p: 'salaryman', state: 'corpse', yaw: 1.2 },
   { id: 'Z_OD_R1', room: 'S_ODORI', x: 67.2, z: 4.6, p: 'housewife', yaw: W, stage: 'L4', riser: true },
   // the mart (1.4.0 #5 #14): the food court that fell first (a big one among them: the sneak way's danger), the cold room of the dead
+  // 1.9.0 #9: 佐竹, once he has turned: on the floor of the front room where he sat; up when the player comes near
+  { id: 'Z_SATAKE', room: 'S_SNAKA', x: 205.2, z: -24.2, p: 'worker', yaw: 0, stage: 'L4', flag: 'satake:turned', riser: true },
   { id: 'Z_MF1', room: 'S_MFOOD', x: 73.2, z: 11.2, p: 'salaryman', yaw: Math.PI, stage: 'L4', brute: true },
   { id: 'Z_MF2', room: 'S_MFOOD', x: 75.4, z: 9.0, p: 'office-woman', yaw: -W, stage: 'L4' },
   { id: 'Z_MF3', room: 'S_MFOOD', x: 71.6, z: 13.6, p: 'clerk', yaw: W, stage: 'L4', riser: true },

@@ -44,6 +44,11 @@
   "src": "e47a33a13283a0c6",
   "gz": true
  },
+ "satake": {
+  "bin": "satake.quads.bin",
+  "src": "c52992e00dccc279",
+  "gz": true
+ },
  "shirasaka": {
   "bin": "shirasaka.quads.bin",
   "src": "62332f016fb24afa",

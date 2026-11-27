@@ -40,9 +40,10 @@ export function installMarks(ext, G) {
     G.on('loot:placed', () => { markAll(); });
     let markT = 0, t = 0;
     const wp = new THREE.Vector3();
+    let tickAt = 0;
     tick = (dt) => {
       {
-        t += dt; markT -= dt; if (markT <= 0) { markT = 1; markAll(); sight.refresh(); }
+        tickAt = performance.now(); t += dt; markT -= dt; if (markT <= 0) { markT = 1; markAll(); sight.refresh(); }
         const k = 0.5 + 0.5 * Math.sin(t * 3.1);
         for (const [o, M] of marks) {
           if (!o.parent) { M.m.removeFromParent(); marks.delete(o); continue; }
@@ -66,6 +67,8 @@ export function installMarks(ext, G) {
       if (prevBR) prevBR.apply(this, a);
       const c = ctx.camera.position;
       if (lastCam && lastCam.distanceToSquared(c) < 0.04) return; lastCam = (lastCam || c.clone()).copy(c);
+      // 1.9.0: the walls the sight rays test were collected while far rooms were hidden; with the tick held nothing refreshes them
+      if (performance.now() - tickAt > 250) sight.refresh();
       for (const M of marks.values()) if (M.m.visible && M.ic.visible && !sight.clear(M.ic)) M.ic.visible = false;
     };
   });

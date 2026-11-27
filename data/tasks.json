@@ -375,7 +375,7 @@
   "stage": "L3",
   "room": "H_REI",
   "station": "S_FCASE",
-  "meaning": "霊安室の扉の修理に来た施設課の人が、ケースを置いていった。中に**釘打ち機**がある。",
+  "meaning": "施設課の工具ケース。窓をふさぐ工事の道具が入っているはず。**釘打ち機**があれば、身を守れる。",
   "hint": "霊安室の**西の奥**の黒いケース。",
   "steps": [
    {
@@ -439,6 +439,59 @@
   }
  },
  {
+  "id": "T_SATAKE",
+  "title": "佐竹工務店で、大工の佐竹さんに会う",
+  "stage": "L4",
+  "room": "S_SNAKA",
+  "station": "S_SATAKE",
+  "meaning": "病院の工具ケースの**釘打ち機**は、大工の**佐竹さん**が持っていった。メモの店は、大通りの北側。",
+  "hint": "大通りの**北の端**、病院側の角の**佐竹工務店**。**中の間**にいる。",
+  "steps": [
+   {
+    "text": "大通りの北の角の佐竹工務店へ",
+    "done": "room",
+    "room": "S_SDOMA"
+   },
+   {
+    "text": "中の間の佐竹さんを見る",
+    "done": "look",
+    "emphasis": "station:S_SATAKE"
+   },
+   {
+    "text": "[E] で話す",
+    "done": "task"
+   }
+  ]
+ },
+ {
+  "id": "T_SATAKE_BOX",
+  "title": "奥の作業場で、釘の箱を取る",
+  "stage": "L4",
+  "room": "S_SSAGYO",
+  "station": "S_SBOX",
+  "meaning": "佐竹さんが「奥の作業場に釘の箱がある」と言った。釘打ち機の**釘**。",
+  "hint": "奥の間の先、渡り廊下を抜けた**作業場**の台の上。",
+  "steps": [
+   {
+    "text": "奥の作業場へ",
+    "done": "room",
+    "room": "S_SSAGYO"
+   },
+   {
+    "text": "台の上の箱を見る",
+    "done": "look",
+    "emphasis": "station:S_SBOX"
+   },
+   {
+    "text": "[E] で取る",
+    "done": "task"
+   }
+  ],
+  "needs": [
+   "T_SATAKE"
+  ]
+ },
+ {
   "id": "T_GONDO",
   "title": "丸福マートの権藤と、話をつける",
   "stage": "L4",
@@ -461,6 +514,9 @@
     "text": "[E] で話す",
     "done": "task"
    }
+  ],
+  "needs": [
+   "T_SATAKE_BOX"
   ]
  },
  {

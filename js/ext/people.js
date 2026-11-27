@@ -19,6 +19,8 @@ export const PEOPLE = [
   { id: 'noguchi', name: '野口', station: 'S_NOGUCHI', h: 1.66 },
   { id: 'hayase', name: '早瀬', at: ['O_CHU', 148, 3.6], h: 1.74 },
   // 1.4.1: the man in the cult's cellar, behind iron bars (he talks through them; the bars keep him out of every fight)
+  // 1.9.0 #9: the carpenter in his house off the street (hidden once he has turned: G.flags['satake:turned'])
+  { id: 'satake', name: '佐竹', station: 'S_SATAKE', h: 1.68, goneFlag: 'satake:turned' },
   { id: 'miyake', name: '三宅', station: 'S_MIYAKE', pos: [68.4, 35.9], h: 1.7, caged: true },
 ];
 
@@ -215,6 +217,7 @@ export function installPeople(ext, G) {
       if (!ctx || !ctx.state.started) return;
       const cam = ctx.camera.position, busy = ctx.blocked && ctx.blocked();
       for (const p of figs.values()) {
+        if (!p.hidden && p.P.goneFlag && G.flags && G.flags[p.P.goneFlag]) { p.hidden = true; p.f.root.visible = false; if (G.hideStation) G.hideStation(p.P.station); }
         if (p.hidden) continue;
         const o = p.f.root.position, onFloor = (ctx.floor || 0) === p.floor;
         const d = Math.hypot(cam.x - o.x, cam.z - o.z);
