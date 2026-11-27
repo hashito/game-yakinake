@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/schema-check.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 33762870: js/schema-check.js — edit in game-kit and run tools/kit-sync.js */
 // A small JSON Schema checker (no dependencies, no DOM; Node and browser) + the cross-file checks of a game's data.
 // Supported keywords: $ref ("#/$defs/x"), type (string | array), enum, const, required, properties, additionalProperties
 // (bool | schema), items, minItems, maxItems, minLength, maxLength, pattern, minimum, maximum, oneOf, anyOf, uniqueBy (own).
@@ -105,6 +105,13 @@ export function checkGameData(d, opts = {}) {
     if (!t.station && !t.timer) W(`task "${t.id}": no station (the world puts it in the middle of room "${t.room}")`);
     for (const n of t.needs || []) if (!taskIds.has(n)) E(`task "${t.id}": needs unknown task "${n}"`);
     if (t.minigame && types.size && !types.has(t.minigame.type)) E(`task "${t.id}": mini game type "${t.minigame.type}" is not a kit type nor listed in game.json "minigames"`);
+    // 1.39.16 (札の家 2026-11-26 #1 「桶をずらすときのミニゲームに「貼る」と書いてあるのがおかしい」): the timing game's button said 貼る (the
+    // library default from ことりばこ's seal) on a task that shifts a millstone. The button names this task's own action
+    if (t.minigame && t.minigame.type === 'timing') {
+      const c = t.minigame.cfg || {}, b = String(c.button || '').trim(), said = `${c.title || ''}${c.help || ''}${t.title || ''}`;
+      if (!b) W(`task "${t.id}": the timing mini game has no cfg.button - its button says 押す; name the action of this task (貼る / ずらす / 打つ ...)`);
+      else if (!said.includes(b.replace(/[るすくぐつぬぶむうける]$/u, '').slice(0, 2) || b)) W(`task "${t.id}": the timing button "${b}" is not the action its title / help speak of ("${c.title || t.title}") - a copied label?`);
+    }
   }
   // standard 1.7: item / doc kinds, items given by a task, room types
   const ownKinds = new Set([...((game && game.itemKinds) || []), ...(opts.itemKinds || [])]);   // a game's own kinds (ext.registerItemKind + game.json itemKinds)

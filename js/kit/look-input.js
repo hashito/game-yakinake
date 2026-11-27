@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/look-input.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 33762870: js/look-input.js — edit in game-kit and run tools/kit-sync.js */
 // Mouse and touch look for first-person games that keeps working on every kind of PC.
 //
 // Why this exists (2026-10, 『未然調書』「マウスが効きません」): first-person games decided "touch or mouse" once,
@@ -178,6 +178,7 @@ export class LookInput {
     this.lockOn = o.lock !== false; // false: drag-look only (e.g. a page in an iframe without allow-pointer-lock)
     this.keys = new Set();
     this.lastExit = -1e9;
+    this.lastExitOurs = true; // the last unlock was our own release() (a window opened), not the player's Esc
     this.lastError = null;
     this.fallback = false; // the browser refused the lock: drag-look until a click locks
     this.releasing = false;
@@ -264,11 +265,14 @@ export class LookInput {
     return !!(this.mode && this.mode.mode === "touch");
   }
 
-  // from a user gesture (a click, a key handler); does nothing while a window is open
-  lock() {
+  // from a user gesture (a click, a key handler); does nothing while a window is open.
+  // o.quiet (resume() after a window): a refusal only shows the prompt, no drag-look fallback and no note
+  lock(o = {}) {
     if (!this.lockOn || this.blocked() || this.locked || this.pending) return false;
     if (!this.el.requestPointerLock) return this._failed("unsupported"), false;
-    if (this.now() - this.lastExit < this.cooldown) {
+    // the browser's wait after an exit is for the player's own Esc; after our own release() (a window opened) it takes the lock back at once
+    if (!this.lastExitOurs && this.now() - this.lastExit < this.cooldown) {
+      if (o.quiet) return this._sync(), false;
       // the browser refuses for about a second after an exit: say "click again" instead of failing silently
       this.note(this.text.cooldown, 2.5);
       this._sync();
@@ -276,20 +280,25 @@ export class LookInput {
     }
     this.pending = true;
     let p;
+    this.quietTry = !!o.quiet;
+    const fail = (e) => {
+      this.pending = false;
+      if (this.quietTry) {
+        this.lastError = String((e && e.name) || e);
+        return this._sync();
+      }
+      this._failed(String((e && e.name) || e));
+    };
     try {
       p = this.el.requestPointerLock();
     } catch (e) {
-      this.pending = false;
-      this._failed(String((e && e.name) || e));
+      fail(e);
       return false;
     }
     if (p && p.then)
       p.then(
         () => (this.pending = false),
-        (e) => {
-          this.pending = false;
-          this._failed(String((e && e.name) || e));
-        },
+        fail,
       );
     else this.pending = false; // old API: pointerlockchange / pointerlockerror tell the result
     return true;
@@ -306,13 +315,17 @@ export class LookInput {
     this._sync();
   }
 
-  // a window closed: lock again only while this is a user gesture and the browser will accept it,
-  // otherwise show the prompt (the player clicks it, or the view)
+  // a window closed: lock again. 1.39.16 (札の家 2026-11-26 #3 「アイテムを見た後にマウス操作に一瞬戻る。その後クリックしないとゲーム操作に
+  // 戻れない」): the lock was asked back only with a live user gesture and more than `cooldown` after the exit - but the exit was our own
+  // release() when the item card opened, so an item read and closed within ~1 s (or a window that closed by itself, or the next card
+  // closing after the first) left the cursor out and 「クリックで視点操作に戻る」 up. Chrome takes the lock back without a gesture when the
+  // page itself released it; the cooldown is for the player's Esc. Now: after our own release, always ask (quietly: a refusal only shows
+  // the prompt); after the player's Esc, as before (a gesture and the cooldown)
   resume() {
     if (this.blocked() || this.touchMode) return this._sync();
     const ua = this.win.navigator && this.win.navigator.userActivation;
     const gesture = ua ? ua.isActive : true;
-    if (gesture && this.now() - this.lastExit >= this.cooldown && !this.fallback) this.lock();
+    if (!this.fallback && (this.lastExitOurs || (gesture && this.now() - this.lastExit >= this.cooldown))) this.lock({ quiet: true });
     this._sync();
   }
 
@@ -327,6 +340,11 @@ export class LookInput {
 
   // each frame: keyboard look and the note timer
   update(dt) {
+    // 1.39.16: whatever closed the window (a key, a button, a card that went by itself, a path that never calls resume()), once nothing
+    // blocks any more and the last exit was our own release, the lock is asked back here (quietly) - not left to a click on the prompt
+    const b = !!this.blocked();
+    if (this._wasBlocked && !b && this.lockOn && !this.locked && !this.pending && this.lastExitOurs && !this.fallback && !this.touchMode) this.lock({ quiet: true });
+    this._wasBlocked = b;
     if (!!this.promptEl && this._wantPrompt() !== this.promptOn) this._sync(); // a window opened / closed without release() / resume()
     if (this._noteT > 0 && (this._noteT -= dt) <= 0) this.note("", 0);
     if (this.keysOn && this.keys.size && !this.blocked()) {
@@ -377,6 +395,12 @@ export class LookInput {
   }
 
   _failed(reason) {
+    if (this.quietTry) {
+      // the pointerlockerror of a quiet resume: the prompt, no fallback (quietTry stays until the next lock() or a lock)
+      this.lastError = reason;
+      this.pending = false;
+      return this._sync();
+    }
     this.lastError = reason;
     this.pending = false;
     if (!this.blocked()) {
@@ -390,8 +414,18 @@ export class LookInput {
   _change() {
     const locked = this.locked;
     this.pending = false;
+    if (locked && this.blocked() && this.doc.exitPointerLock) {
+      // a lock asked for as a window closed landed after the next window opened: give it back (no cursor hidden over a window)
+      this.pending = false;
+      this.quietTry = false;
+      this.releasing = true;
+      this._was = true;
+      this.doc.exitPointerLock();
+      return this._sync();
+    }
     if (locked) {
       this.fallback = false;
+      this.quietTry = false;
       this.drag = null;
       this.note("", 0);
       if (this.onLock) this.onLock();
@@ -399,6 +433,7 @@ export class LookInput {
       this.lastExit = this.now();
       this.keys.clear();
       const ours = this.releasing;
+      this.lastExitOurs = !!ours;
       this.releasing = false;
       if (!ours && this.onExit) this.onExit();
     }

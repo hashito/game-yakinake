@@ -77,6 +77,9 @@
 //       two panels overlap (errors), the portrait notice is missing (tools/phone-layout.mjs: 「メッセージや通知で領域を使いすぎている」)
 //   1.36.0 (札の家 play test 2026-11-22): P53 a loud guide mark (over 30 px at 3 m, or nearly opaque: a warning); P54 a closed door or a story
 //   gate a body walks through (an error); P55 an [E] spot with nothing visible within 0.45 m of its centre (a warning)
+//   P67 (1.39.16, 札の家 2026-11-26 #8 「日記が空中に浮いている場合があります」) a pickup (an item, a document: a diary, a letter) that does
+//       not rest on anything - P47 for the things you pick up, an error whatever checks.rest says (a dot version swaps the furniture under a
+//       paper placed at an explicit "y" for a lower dot part: the letter on 奥の間's chest hung 33 cm in the air on /dot and /dot-fps only)
 //   P66 (1.39.6, 夜勤明けの街 1.6.0) a ladder / flight end picked in under half of the poses around it (under a quarter: an error) (tools/ladder-aim.mjs)
 //   P65 (1.39.6, 夜勤明けの街 D-15) a task with needs and no tasks.json "notYet" (the thing's own reason while a need is open) (a warning)
 //   P64 (1.39.0, 札の家 2.5.0 #7) an ending's kamishibai cards (endings.json pages): picture and voice files exist, words fit a phone card (js/kamishibai.js)
@@ -87,7 +90,7 @@
 //   1.38.0 (水無瀬病院 4th play test 2026-11-23; tools/water-edge.mjs): P60 a water surface whose side stands open over a lower or dry floor
 //   (a cut face: 「水の断面が見える」) (an error); P61 a figure reaching through a shut door (「モンスターが扉を少し貫通」) (an error); P62 a
 //   hiding place's look standing in a wall of its room (「ロッカーが壁に埋まっています」) (an error)
-// Exit 1 on an error (P54, P4, P7, P9, P19, P24, P25 overlap, P26, P30, P31, P32, P33, P34, P35, P36, P37, P38, P39, P40, P41, P42, P43, P44, P46, P49, P56, P57, P58, P59, P60, P61, P62, P63 (over half), P64, P66 (under a quarter), P47 / P48 with checks.rest = "error", P52 over 600 MB) or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
+// Exit 1 on an error (P54, P4, P7, P9, P19, P24, P25 overlap, P26, P30, P31, P32, P33, P34, P35, P36, P37, P38, P39, P40, P41, P42, P43, P44, P46, P49, P56, P57, P58, P59, P60, P61, P62, P63 (over half), P64, P66 (under a quarter), P67, P47 / P48 with checks.rest = "error", P52 over 600 MB) or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -692,7 +695,12 @@ try {
   // P47 / P48 (1.28.0, 夜勤明けの街): every placed thing rests on something; known kinds have a body-sized size (tools/rest-check.mjs).
   // Warnings in 1.28.0 (errors with --strict) until the fleet is cleared; game.json "checks": { "rest": "error" } makes them errors.
   { let ck = {}; try { ck = JSON.parse(fs.readFileSync(path.join(dir, 'game.json'), 'utf8')).checks || {}; } catch {} const R = ck.rest === 'error' ? E : Wn;
-    const F = await G(restSource()); if (F && F.error) Wn('P47', F.error); else for (const x of (Array.isArray(F) ? F : []).slice(0, 20)) R('P47', `"${x.name}" floats: its bottom is ${x.above == null ? 'over nothing' : x.above + ' m over what is under it'} at ${JSON.stringify(x.at)} (size ${JSON.stringify(x.size)})`);
+    const F = await G(restSource()); if (F && F.error) Wn('P47', F.error); else {
+      const all = Array.isArray(F) ? F : [], pick = all.filter((x) => /^(item|doc):/.test(x.name || ''));
+      for (const x of all.filter((y) => !pick.includes(y)).slice(0, 20)) R('P47', `"${x.name}" floats: its bottom is ${x.above == null ? 'over nothing' : x.above + ' m over what is under it'} at ${JSON.stringify(x.at)} (size ${JSON.stringify(x.size)})`);
+      // P67 (1.39.16): a pickup floating is an error (a diary / a letter in the air)
+      for (const x of pick.slice(0, 20)) E('P67', `pickup "${x.name}" floats: its bottom is ${x.above == null ? 'over nothing' : x.above + ' m over what is under it'} at ${JSON.stringify(x.at)} - seat it on what is drawn under it (a dot version's lower furniture too)`);
+    }
     const S = await G(sizeSource({ extraRules: ck.sizeRules || [] })); if (S && S.error) Wn('P48', S.error); else for (const x of (Array.isArray(S) ? S : []).slice(0, 20)) R('P48', `"${x.name}" (${x.kind}) ${x.measure} ${x.value} m, not ${x.min}-${x.max} m, at ${JSON.stringify(x.at)}`); }
   // P39 (1.21.4, 鏡屋): the picture of a card / document as large as the room its text leaves, on a PC and on a phone
   for (const [w, h, mob] of [[1366, 768], [1920, 1080], [390, 844, 1], [844, 390, 1], [844, 340, 1]]) {

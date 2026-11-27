@@ -190,7 +190,7 @@ export function installZombies(ext, G) {
       G.hurt(e.damage, { grab: e.grab, reason: 'bitten', by: L });
     });
     z.on('spit', (e) => { const p = ctx.camera.position; if (Math.hypot(p.x - z.pos[0], p.z - z.pos[2]) < 9 && ctx.floor === L.floor) setTimeout(() => G.hurt(e.damage * 0.6, { reason: 'spit' }), 450); });
-    z.on('explode', () => { const p = ctx.camera.position; G.sfx3d('z-burst', z.root.position); if (Math.hypot(p.x - z.pos[0], p.z - z.pos[2]) < 2.6) G.hurt(40, { reason: 'burst' }); });
+    z.on('explode', () => { const p = ctx.camera.position; G.sfx3d('z-burst', z.root.position); G.emit('zombie:burst', { point: z.root.position.clone().setY(y + 1.0), floorY: y }); if (Math.hypot(p.x - z.pos[0], p.z - z.pos[2]) < 2.6) G.hurt(40, { reason: 'burst' }); });
     z.on('scream', (e) => { G.sfx3d('z-scream', z.root.position); G.noise(new THREE.Vector3(z.pos[0], y, z.pos[2]), e.radius || 14, { floor }); });
     z.on('sound', (e) => {
       const k = e.kind;
@@ -202,7 +202,8 @@ export function installZombies(ext, G) {
       else if (k === 'fall' || k === 'gib-land') G.sfx3d('fall', z.root.position);
       else if (k === 'spit') G.sfx3d('z-spit', z.root.position);
     });
-    z.on('sever', (e) => { G.emit('zombie:sever', { id: def.id, parts: e.parts }); });
+    // 1.7.0 #4: the cubes of the part that came off fly from where it broke (js/ext/impacts.js)
+    z.on('sever', (e) => { G.emit('zombie:sever', { id: def.id, parts: e.parts, part: e.part, point: e.point || (z.bones[e.part] ? z.bones[e.part].getWorldPosition(new THREE.Vector3()) : null), dir: e.dir, floorY: y }); });
     z.on('died', () => { L.alive = false; G.killed.add(def.id); G.emit('zombie:died', { id: def.id, p: def.p, brute: !!def.brute }); setTimeout(() => { G.killedAt[def.id] = [Math.round(z.pos[0] * 100) / 100, Math.round(z.pos[2] * 100) / 100, Math.round(z.yaw * 100) / 100]; layBody(L); }, 1600); });
     live.set(def.id, L);
     return L;
@@ -417,6 +418,13 @@ export function installZombies(ext, G) {
     if (!S.placed) { S.t += dt; if (S.t > 0.25) placeSheet(L); return; }
     if (!S.off) L.z.root.visible = false;   // under the cloth only its shape shows (the voxel legs stood through it)
     if (S.off && S.off < 1) { S.off = Math.min(1, S.off + dt * 1.4); S.g.position.x += Math.cos(S.dir) * dt * 0.8; S.g.position.z -= Math.sin(S.dir) * dt * 0.8; S.g.children.forEach((c, i) => { if (i) c.scale.y = Math.max(0.15, 1 - S.off); }); S.g.rotation.z = 0; }
+    // 1.7.0 (2026-11-27 #1 「起き上がった後にもシーツが残っている…立ち上がった後は消していい」): once it has slid off and the body stands, the
+    // cloth on the floor goes - it settles flat for a moment, then sinks away (0.9 s) and is removed with its hem shadow
+    else if (S.off >= 1) {
+      S.gone = (S.gone || 0) + dt;
+      if (S.gone > 0.7) { const k = Math.max(0, 1 - (S.gone - 0.7) / 0.9); S.g.scale.y = 1.15 * k; S.g.visible = k > 0.02; }
+      if (S.gone > 1.6) { S.g.removeFromParent(); L.sheet = null; }
+    }
   }
   function riseNow(L, now = false) {
     if (L.rising || !L.z.lying || !L.z.lying()) return;

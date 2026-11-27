@@ -1,10 +1,13 @@
-/* game-kit 1d2a49bf: js/approach-fx.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 33762870: js/approach-fx.js — edit in game-kit and run tools/kit-sync.js */
 // The approach of a monster, on the screen and in the ears (standard 1.11, from 五人分の朝 2026-11-05: 「敵が近づいた時の演出を強く」
 // 「捕まったらアップにする」). game.json:
 //   "approach": true | { "vignette": true, "heartbeat": true, "shake": true, "catchImage": "assets/photos/x.jpg", "catchOn": ["monster"], "catchFocus": "50% 10%" }
 // Reads ctx.fxState = { danger 0..1, chasing } (written by js/monster-std.js or the game's own monster) every frame:
 //   vignette   a dark-red edge that closes in with the danger
-//   heartbeat  from about one beat a second at the edge of hearing to three when it is on you (monster-std's own chase beat steps aside)
+//   heartbeat  from about one beat a second at the edge of hearing to three when it is on you (monster-std's own chase beat steps aside).
+//              1.39.16 (札の家 2026-11-26 #7 「ドキドキする効果について前から少しずつ発生する感じにして、違和感がないように」): it starts well before
+//              the danger is felt (a faint, slow beat from danger ~0.03), its loudness and tempo follow their own slow level (about 2.5 s to
+//              rise, 1.5 s to fall) and grow on a smooth curve, so a jump in the danger (a door pushed, a scene) never switches it on at once
 //   shake      a small tremble of the view when it is very near (never in calm mode)
 //   pulse(k)   the warning when it turns toward you: a red flash at the edges, a low hit, the fx surge (monster-std calls it on "notice")
 //   catchClose the moment of the catch: the picture (catchImage) rushes in full screen, then dark; ctx.die waits for it (reasons in catchOn)
@@ -46,22 +49,29 @@ export function createApproach(ctx, cfg0) {
   const vig = document.createElement('div'); vig.className = 'ax-vig'; document.body.appendChild(vig);
   const pul = document.createElement('div'); pul.className = 'ax-pulse'; document.body.appendChild(pul);
   const canvas = () => (ctx.renderer && ctx.renderer.domElement) || null;
-  let shown = 0, beatT = 0, catching = false, dz = 0, t = 0, ringT = 0, presT = 1.5;
+  let shown = 0, beatT = 0, catching = false, dz = 0, t = 0, ringT = 0, presT = 1.5, hb = 0;
   const A = {
     cfg,
     /** true when this module beats the heart (monster-std then skips its own chase beat) */
     get heartbeat() { return !!cfg.heartbeat; },
     get level() { return shown; },
+    /** 0..1 the heart's own level (what the beat's loudness and tempo follow) */
+    get heart() { return hb; },
     /** 0..1 how dizzy (the legs are slowed by slowBy times this) */
     get dizzy() { return dz; },
     update(dt, active) {
       const s = ctx.fxState || {}, calm = still();
       const target = active ? Math.min(1, (s.danger || 0) * (s.chasing ? 1.15 : 0.8)) : 0;
-      shown += (target - shown) * Math.min(1, dt * 3);
+      shown += (target - shown) * Math.min(1, dt * (target > shown ? 2 : 3));
       if (cfg.vignette) vig.style.opacity = (calm ? shown * 0.6 : shown).toFixed(3);
-      if (cfg.heartbeat && active && shown > 0.12 && !ctx.qa) {
+      // the heart's own level: slow to rise, a little quicker to settle (a window or a scene lets it settle, never cut)
+      const hTarget = active ? Math.min(1, (s.danger || 0) * (s.chasing ? 1.15 : 0.8)) : 0;
+      hb += (hTarget - hb) * Math.min(1, dt * (hTarget > hb ? 0.4 : 0.65));
+      if (!hTarget && hb < 0.003) hb = 0;
+      if (cfg.heartbeat && hb > 0.02 && !ctx.qa) {
         if ((beatT -= dt) <= 0) {
-          beatT = 1 / (0.95 + shown * 2.1); const g = 0.12 + shown * 0.4, a = ctx.audio;
+          const k = Math.min(1, (hb - 0.02) / 0.6), e = k * k * (3 - 2 * k);   // smoothstep: from nothing, no step at the start
+          beatT = 1 / (0.8 + hb * 2.2); const g = 0.015 + e * 0.5, a = ctx.audio;
           quiet(() => { a.heartbeat ? a.heartbeat(g) : a.tone({ dur: 0.15, freq: 55, gain: g, wet: 0 }); a.tone({ at: 0.18, dur: 0.12, freq: 48, type: 'sine', gain: g * 0.7, wet: 0 }); });
         }
       } else beatT = 0;

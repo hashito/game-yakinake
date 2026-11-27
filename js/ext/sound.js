@@ -73,6 +73,10 @@ export function installSound(ext, G) {
     knock: (o) => { for (let i = 0; i < 3; i++) setTimeout(() => { thump(240, 160, 0.06, 0.5 * o.g); click(1100, 0.02, 0.12); }, i * 170); },
     // 1.5.0: the loading bay's shutter rolling up - steel slats clattering over the drum
     rattle: (o) => { for (let i = 0; i < 6; i++) setTimeout(() => { click(900 + Math.random() * 500, 0.03, 0.22 * o.g); burst({ dur: 0.06, f: 1800, type: 'bandpass', q: 3, gain: 0.2 * o.g, pan: o.pan }); }, i * 85); thump(90, 50, 0.2, 0.35 * o.g); },
+    // 1.7.0 #5: a round into a wall (a dry chip and a little grit) and into glass (a sharp crack and a tinkle); #4: wet bits striking a wall
+    chip: (o) => { click(1500 + Math.random() * 600, 0.025, 0.28 * o.g); burst({ dur: 0.09, f: 2600, type: 'bandpass', q: 1.5, gain: 0.22 * o.g, pan: o.pan }); },
+    crack: (o) => { burst({ dur: 0.05, f: 5200, type: 'bandpass', q: 4, gain: 0.5 * o.g, pan: o.pan }); for (let i = 0; i < 3; i++) setTimeout(() => click(3800 + Math.random() * 1800, 0.015, 0.14 * o.g), 40 + i * 55); },
+    splat: (o) => { burst({ dur: 0.12, f: 500, type: 'bandpass', q: 0.8, gain: 0.32 * o.g, pan: o.pan }); thump(140, 70, 0.06, 0.25 * o.g); },
     gasp: (o) => burst({ dur: 0.35, f: 1400, type: 'bandpass', q: 1.2, gain: 0.3 * o.g, attack: 0.03, sweep: 0.6 }),
   };
   G.sfx = (name, o = {}) => {

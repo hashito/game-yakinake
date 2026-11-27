@@ -1,4 +1,4 @@
-/* game-kit 910568bb: css/kit.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 33762870: css/kit.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: shared styles for first-person browser games (windows, HUD, buttons, touch controls,
    status chips, steppers, kanban, app-like software screens, tabs, stamps, share buttons; at the end
    progression pg-*, sim UI nt-/tb-/dl-/ch-*, journal jr-* / stream veil st-* / hiding hd-*, chat cx-*).
@@ -3561,6 +3561,11 @@ body.gf-warming .wm-layer, body.gf-warming .rn-wrap, body.gf-warming #mg, body.g
 .mgx-sf-slot small { font-size: 0.78em; white-space: nowrap; }
 .mgx-sf-slot b { font-size: 1.15em; font-variant-numeric: tabular-nums; letter-spacing: 0.05em; }
 .mgx-sf-slot.now { border-color: var(--gf-accent, #3a7a5a); box-shadow: 0 0 0 2px var(--gf-accent, #3a7a5a); }  /* pair-ok */
+/* 1.39.17 (夜勤明けの街 #8): the 開ける button is quiet until the third number clicks, then it lights up and pulses (no auto-open) */
+.mgx-sf-open.mgx-quiet { opacity: 0.55; filter: saturate(0.4); }
+.mgx-sf-open.mgx-ready { /* pair-ok */ opacity: 1; filter: none; background: #ffc850; color: #1a1206; border-color: #fff0c0; font-weight: 800; box-shadow: 0 0 0 3px rgba(255, 200, 80, 0.55), 0 0 18px rgba(255, 190, 60, 0.85); animation: mgx-sf-ready 0.9s ease-in-out infinite; }
+@keyframes mgx-sf-ready { 50% { transform: scale(1.06); box-shadow: 0 0 0 5px rgba(255, 200, 80, 0.35), 0 0 28px rgba(255, 190, 60, 1); } }
+html[data-gf-no-flash] .mgx-sf-open.mgx-ready, html[data-gf-calm] .mgx-sf-open.mgx-ready { animation: none; }
 .mgx-sf-slot.heard { border-color: #d8a020; box-shadow: 0 0 0 2px #d8a020; }  /* pair-ok */
 .mgx-sf-slot.done { border-color: var(--gf-accent, #3a7a5a); }
 @media (max-width: 599px) { .mgx-st.mgx-sf { --st-h: clamp(150px, calc(100dvh - 480px), 320px); } }

@@ -1,4 +1,4 @@
-/* game-kit 1948d108: js/mg-safe-listen.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 33762870: js/mg-safe-listen.js — edit in game-kit and run tools/kit-sync.js */
 // Library mini game "safe-listen" (金庫の聞き取り, standard 1.24.0: the director's safe, a pawnshop's strongbox, a temple's offering safe).
 // Turn the dial with a stethoscope on the door. At the right number a faint click comes and the dial trembles; then turn the other way for
 // the next number: right, left, right. Some numbers give a weaker false click. Sound is optional: the stethoscope's trace shows every click
@@ -105,6 +105,9 @@ export default {
         else t = `${k + 1}つ目：${side(dirs[k])}へ回して、カチッと鳴る数を探す。`;
         if (!armed && !st.open && tries() >= 3) t += '（縁の光る所の近く）';
         line.textContent = t;
+        // 1.39.17 (夜勤明けの街 2026-11-27 #8 「開けられるようになったら開けるボタンが強調されるように」): the moment the third number clicks the
+        // 開ける button lights up and pulses (and reads 開ける！); before that it is quiet. Nothing opens by itself - the player presses it.
+        { const ready = armed && k === 2, ob = s.q('.mgx-sf-open'); if (ob) { ob.classList.toggle('mgx-ready', ready); ob.classList.toggle('mgx-quiet', !ready && !st.open); ob.textContent = ready ? '開ける！' : '開ける'; } }
         slots.forEach((el, i) => {
           el.classList.toggle('now', i === k && !st.open); el.classList.toggle('done', st.set[i] != null); el.classList.toggle('heard', i === k && armed);
           el.querySelector('b').textContent = st.set[i] != null ? two(st.set[i]) : i === k && armed ? two(S.value) : '--';

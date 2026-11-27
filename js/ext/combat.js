@@ -47,7 +47,7 @@ export function installCombat(ext, G) {
     const c = CATALOG[it.id]; if (!c.heal) return false;
     if (G.hp >= 100) { ctx.ui.say('今は、手当ての必要はない。', 3); return false; }
     G.hp = Math.min(100, G.hp + c.heal); it.n -= 1; if (it.n <= 0) G.case.items.splice(G.case.items.indexOf(it), 1);
-    ctx.sound && ctx.sound('pickup'); ctx.ui.toast(`${c.name}を使った（体力 ${Math.round(G.hp)}）`); G.emit('case:change'); hud(); return true;
+    ctx.sound && ctx.sound('pickup'); ctx.ui.toast(`${c.name}を使った（体力 ${Math.round(G.hp)}）`); G.emit('case:change'); G.emit('healed', { id: it.id }); hud(); return true;
   };
   const quickHeal = () => {
     const meds = G.case.items.filter((i) => CATALOG[i.id].heal).sort((a, b) => CATALOG[a.id].heal - CATALOG[b.id].heal);
@@ -146,6 +146,7 @@ export function installCombat(ext, G) {
       const tap = (sel, f) => el.querySelector(sel).addEventListener('click', (e) => { e.stopPropagation(); if (!ctx.blocked || !ctx.blocked()) f(); });
       tap('.yk-hpbox', () => quickHeal()); tap('.yk-wn', () => cycle(1)); tap('.yk-wa', () => reload()); tap('.yk-wnext', () => cycle(1));
     }
+    el.append(lesson);
     place();
     hud();
   });
@@ -225,11 +226,12 @@ export function installCombat(ext, G) {
     return ray.ray;
   }
   // walls first: what the shot can reach
-  let wallNormal = null;
+  let wallNormal = null, wallObj = null, wallPoint = null;
   const wallHit = (r, far) => {
     ray.ray.copy(r); ray.far = far;
     const hits = ray.intersectObjects(G.solidMeshes(), false);
     wallNormal = hits.length && hits[0].face ? hits[0].face.normal.clone().transformDirection(hits[0].object.matrixWorld) : null;
+    wallObj = hits.length ? hits[0].object : null; wallPoint = hits.length ? hits[0].point.clone() : null;
     return hits.length ? hits[0].distance : far;
   };
   // 1.4.0 #13: the person under the sights (the first thing the centre ray meets before a wall), if any
@@ -273,6 +275,9 @@ export function installCombat(ext, G) {
       for (const t of G.targets()) { if (!t.alive && !t.corpse) continue; const q = t.raycast(r); if (q && q.dist < wall) hits.push({ t, q }); }
       hits.sort((a, b) => a.q.dist - b.q.dist);
       const pierce = g.pierce || 1;
+      // 1.7.0 #5: the round's path for js/ext/impacts.js - the panes it passes crack, the wall it stops in keeps a hole
+      const stopAt = hits.length >= pierce ? hits[pierce - 1].q.dist : wall;
+      G.emit('shot:ray', { ray: r.clone(), stop: stopAt, toWall: hits.length < pierce && wall < 40, wallObj, wallNormal, wallPoint, weapon: h.it.id });
       for (const { t, q } of hits.slice(0, pierce)) {
         const res = t.hit(r, g.dmg, { force: n > 1 ? 0.5 : 1, dir: [r.direction.x, r.direction.y, r.direction.z], weapon: h.it.id });
         if (res && res.part) {
@@ -323,10 +328,35 @@ export function installCombat(ext, G) {
     if (!ctx || ctx.state.ended || G.dead) return;
     G.hp -= dmg; hurtFlash = 1; regen = 0; G.sfx('hurt');
     if (dmg > 0) { G.shake(Math.min(1, 0.25 + dmg / 30)); if (dmg >= 15) G.sfx('gasp'); }
+    if (dmg > 0) G.emit('hurt', { dmg, reason: o.reason });
     if (o.grab && !grab) { const t0 = Math.max(1.7, o.grab + 1.1); grab = { t: t0, t0, by: o.by, n: 0 }; paintGrab(); grabTag.classList.add('on'); G.sfx('gasp'); G.emit('grab:start', {}); }
     hud();
     if (G.hp <= 0) { G.dead = true; G.hp = 0; grab = null; grabTag.classList.remove('on'); ctx.die(o.reason || 'bitten'); }
   };
+  // 1.7.0 (2026-11-27 #7 「ダメージを食らったら回復方法のチュートリアルを入れるべき」): the first time the body is hurt, a small card opens under
+  // the body bar (the bar itself glows): how to mend - [H] on a computer, a tap on the body bar on a phone - what it uses (bandages, the aid set,
+  // the medkit, smallest first) and that the body barely mends by itself. It stays until the player mends once (then a word of what it did),
+  // and comes back once more on the next hurt if it was never used. It does not stop play (a fight goes on) and is not on a timer while needed.
+  const lesson = document.createElement('div'); lesson.id = 'yk-heal-lesson'; lesson.className = 'yk-heal-lesson'; lesson.hidden = true;
+  let lessonN = 0, lessonOpen = false;
+  const paintLesson = () => {
+    const meds = G.case ? G.case.items.filter((i) => CATALOG[i.id].heal) : [];
+    const how = ctx && ctx.isTouch ? '<b class="yk-hl-key">体力の帯を押す</b>' : '<b class="yk-hl-key">[H]</b> キー';
+    const have = meds.length ? `今は<em>${CATALOG[meds[0].id].name}</em>を持っている。` : '<em>手当ての物を持っていない。</em>包帯や救急箱を拾っておく。';
+    lesson.innerHTML = `<p class="yk-hl-t">手当てのしかた</p><p>${how}で手当てする（包帯・手当てセット・救急箱の、足りる物から使う）。</p><p>${have}</p><p class="yk-hl-s">体力は、ほとんど自然には戻らない（30 まで）。</p>`;
+  };
+  const openLesson = () => {
+    if (lessonOpen || lessonN >= 2 || (G.flags && G.flags['lesson:heal'])) return;
+    lessonOpen = true; lessonN++; paintLesson(); lesson.hidden = false; el.classList.add('yk-teach'); G.emit('lesson:heal', { n: lessonN });
+  };
+  const closeLesson = (used) => {
+    if (!lessonOpen) return; lessonOpen = false; lesson.hidden = true; el.classList.remove('yk-teach');
+    if (used) { if (G.flags) G.flags['lesson:heal'] = true; }
+  };
+  G.healLesson = () => ({ open: lessonOpen, n: lessonN, done: !!(G.flags && G.flags['lesson:heal']) });
+  G.on('hurt', () => { if (G.hp > 0 && !G.dead) setTimeout(() => { if (!grab && !G.dead) openLesson(); else { const w = setInterval(() => { if (!grab || G.dead) { clearInterval(w); if (!G.dead) openLesson(); } }, 200); } }, 500); });
+  G.on('healed', () => closeLesson(true));
+  G.on('case:change', () => { if (lessonOpen) paintLesson(); });
   ext.on('player:respawn', () => { G.dead = false; G.hp = Math.max(G.hp, 100); grab = null; grabTag.classList.remove('on'); lagHp = 100; hud(); });
   G.grabbed = () => (grab ? { n: grab.n, need: NEED, t: grab.t } : null);
 

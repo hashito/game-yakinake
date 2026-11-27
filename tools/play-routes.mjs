@@ -291,7 +291,7 @@ async function run(route) {
     // the struck zombie is still up and close: lay it down first, so its own lunge / bite cannot start or end the grab under test
     await G('(y.liveZombies().forEach((L) => L.alive && L.z.kill()), 1)'); await key('KeyV', 'keyup'); await sleep(900);
     // a long hold (7 s) so a slow headless frame rate cannot run the clock out before three presses land
-    await G('(y.hurt(5, { grab: 6, by: null }), 1)'); await sleep(200);
+    await G('(y.hp = 100, y.hurt(5, { grab: 6, by: null }), 1)'); await sleep(200);   // from a full body: on a slow headless frame the struck one may have bitten to the last
     expect(await G("document.getElementById('yk-grab').classList.contains('on')"), 'a grab shows the shove hint');
     await shot('grabbed');
     // a press is a key down and up (a key left down is not pressed again); the swing before may still be recovering
@@ -310,7 +310,7 @@ async function run(route) {
     expect(await G("y.case.items.some((i) => i.id === 'aidkit')"), 'bandage + disinfectant make a first-aid kit');
     await shot('case_combined');
     await dismiss();
-    await G('(y.hurt(50, {}), 1)'); const h0 = await G('y.hp'); await key('KeyH'); await sleep(300);
+    await G('(y.hp = 100, y.hurt(50, {}), 1)'); const h0 = await G('y.hp'); await key('KeyH'); await sleep(300);   // from a full body: the bites before (a slow headless frame lets the struck one bite) must not make this hurt the last
     expect((await G('y.hp')) > h0, `[H] heals (${h0} -> ${await G('Math.round(y.hp)')})`);
     // 1.4.0 #11: death -> the death card waits for 再開 (no auto-advance) -> back to the last 当直日誌, the case as it was written there
     const before = await G('y.case.items.map((i) => i.id).sort().join(",")');

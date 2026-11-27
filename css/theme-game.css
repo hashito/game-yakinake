@@ -189,7 +189,7 @@ body:not(.yk-playing) .yk-status.yk-float { display: none; }
 /* 1.4.0 #13: the groups in the pause menu */
 .yk-pm-fac { list-style: none; margin: 4px 0 10px; padding: 0; display: grid; gap: 4px; }
 .yk-pm-fac li { display: flex; justify-content: space-between; gap: 10px; padding: 5px 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--gf-text); font-size: 15px; }
-.yk-pm-fac li span { font-weight: 700; }
+.yk-pm-fac li span { /* pair-ok */ font-weight: 700; padding: 0 6px; border-radius: 4px; background: #1c2622; }
 .yk-pm-fac li.s-friendly span { color: #8fd08f; }
 .yk-pm-fac li.s-wary span { color: #e8c060; }
 .yk-pm-fac li.s-hostile span { color: #ff7a6a; }
@@ -197,3 +197,14 @@ body:not(.yk-playing) .yk-status.yk-float { display: none; }
 
 /* 1.6.0 (D-11 / D-18): while the eyes turn to the first one seen, nothing in the middle of the screen but it */
 body.yk-looking #prompt, body.yk-looking #crosshair, body.yk-looking #yk-aimtag, body.yk-looking #yk-hitmark { visibility: hidden !important; }
+/* 1.7.0 #7: the first hurt - how to mend, a card under the body bar, the bar glowing while it is open */
+.yk-heal-lesson { /* pair-ok */ display: grid; gap: 3px; max-width: 250px; margin-top: 4px; padding: 8px 10px; border-radius: 5px; border: 1px solid #ffd890; background: rgba(20, 16, 8, 0.94); color: #f4ead4; font-size: 13px; line-height: 1.5; }
+.yk-heal-lesson[hidden] { display: none; }
+.yk-heal-lesson p { margin: 0; }
+.yk-heal-lesson .yk-hl-t { font-weight: 800; color: #ffd890; font-size: 14px; }
+.yk-heal-lesson .yk-hl-key { /* pair-ok */ padding: 0 5px; border-radius: 3px; background: #ffd890; color: #1a1408; }
+.yk-heal-lesson em { font-style: normal; font-weight: 700; color: #ffffff; }
+.yk-heal-lesson .yk-hl-s { color: #c8bca4; font-size: 12px; }
+.yk-status.yk-teach .yk-hpbox { /* pair-ok */ border-radius: 4px; box-shadow: 0 0 0 2px #ffd890; animation: yk-teach-glow 1.2s ease-in-out infinite; }
+@keyframes yk-teach-glow { 50% { box-shadow: 0 0 0 2px #ffd890, 0 0 14px rgba(255, 216, 144, 0.8); } }
+html[data-gf-no-flash] .yk-status.yk-teach .yk-hpbox { animation: none; }
