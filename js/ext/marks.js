@@ -28,6 +28,7 @@ export function installMarks(ext, G) {
         if (!ia || !KINDS.has(ia.kind) || marks.has(o)) continue;
         const m = new THREE.Group(); m.name = 'yk-mark';
         const ic = new THREE.Sprite(iconM); ic.scale.set(0.12, 0.12, 1); ic.userData.guideMark = true; ic.renderOrder = 6; ic.name = 'yk-mark-icon'; m.add(ic);
+
         const gl = new THREE.Sprite(softM); gl.scale.set(0.42, 0.42, 1); gl.renderOrder = 5; gl.name = 'yk-mark-glow'; m.add(gl);
         ic.raycast = gl.raycast = () => {};   // the marks are never picked: [E] and the shots go to the thing itself (W18)
         layer.add(m); marks.set(o, { m, ic, gl });   // beside the thing, not in it: a child would grow the thing's box and the [E] pick with it (W18)
@@ -56,6 +57,16 @@ export function installMarks(ext, G) {
           M.ic.visible = sight.clear(M.ic);
         }
       }
+    };
+    // 1.8.0: the frame is drawn even while the tick is held (a window, a mini game, a check moving the camera): before each draw, a mark
+    // the camera has moved behind a wall is hidden (marks out of the view too: they are not drawn, so they cannot hide themselves)
+    let lastCam = null;
+    const prevBR = ctx.scene.onBeforeRender;
+    ctx.scene.onBeforeRender = function (...a) {
+      if (prevBR) prevBR.apply(this, a);
+      const c = ctx.camera.position;
+      if (lastCam && lastCam.distanceToSquared(c) < 0.04) return; lastCam = (lastCam || c.clone()).copy(c);
+      for (const M of marks.values()) if (M.m.visible && M.ic.visible && !sight.clear(M.ic)) M.ic.visible = false;
     };
   });
 }

@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/motion.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 8c79cf3c: js/motion.js — edit in game-kit and run tools/kit-sync.js */
 // Motion for people: poses, crossfades, a speed-matched walk / run, two-bone leg IK, head look-at.
 // Pure maths (no three.js import), so it runs in Node tests and is shared by the procedural
 // character (js/character.js) and the glTF animator (js/gltf-character.js).
@@ -14,7 +14,7 @@
 //   shoulder "abd"  = arm away from the body (the rig mirrors it for the right arm)
 //   head / neck / chest x = +nod down, y = +turn to the character's left
 
-export const STATES = ['idle', 'walk', 'run', 'sit', 'talk', 'lookAround', 'scared', 'crouch', 'lean'];
+export const STATES = ['idle', 'walk', 'run', 'sit', 'talk', 'lookAround', 'scared', 'crouch', 'lean', 'press'];
 export const TRANSITIONS = ['sitDown', 'standUp'];
 
 // default body (metres): thigh = hip joint to knee, shin = knee to ankle, ankleH = ankle above sole
@@ -391,6 +391,27 @@ const POSES = {
     p.headY = Math.sin(ctx.t * 0.4 + ctx.seed) * 0.25;
     return p;
   },
+  // 1.39.18 (水無瀬病院 2026-11-27 #6 「排水溝を押さえるひなたが、手が空中にある」): down on the knees, the body bent far over, both arms
+  // straight down in front with the palms flat on the floor (a drain, a lid, a wound), pushing in slow beats. The hands come to about
+  // 0.45 m in front of the root, at floor height: put the thing pressed there
+  press(ctx) {
+    const p = { ...REST };
+    const b = ctx.body, t = ctx.t, push = 0.5 + 0.5 * Math.sin(t * 2.2 + ctx.seed);
+    p.hipsY = b.hipH * 0.42 - push * 0.02;
+    p.hipsZ = -0.2;
+    p.footLz = -0.36; p.footRz = -0.32;
+    p.footLx = p.footRx = 0.09;
+    p.footLpitch = p.footRpitch = 0.9;   // knees on the floor, the toes behind
+    p.waistX = 0.95 + push * 0.05;
+    p.chestX = 0.3;
+    p.headX = -0.55; p.neckX = -0.2;   // looking at her hands
+    p.breath = Math.sin(t * 3.0) * 1.2;
+    p.shLx = p.shRx = -1.42 - push * 0.06;
+    p.shLabd = p.shRabd = 0.12;
+    p.elL = p.elR = -0.12;
+    p.wrL = p.wrR = 0.9;
+    return p;
+  },
 };
 
 // standing in front of the chair <-> seated. progress 0..1; the standing end is SIT_STAND_Z in front.
@@ -565,7 +586,7 @@ export function resolveClips(names, aliases = CLIP_ALIASES) {
   return out;
 }
 // fallbacks when a model has no clip for a state
-export const CLIP_FALLBACK = { lean: 'idle', lookAround: 'idle', talk: 'idle', scared: 'crouch', crouch: 'idle', sit: 'idle', sitDown: 'sit', standUp: 'idle', run: 'walk', walk: 'idle', wave: 'idle', jump: 'idle' };
+export const CLIP_FALLBACK = { press: 'crouch', lean: 'idle', lookAround: 'idle', talk: 'idle', scared: 'crouch', crouch: 'idle', sit: 'idle', sitDown: 'sit', standUp: 'idle', run: 'walk', walk: 'idle', wave: 'idle', jump: 'idle' };
 export function clipFor(state, map) {
   const seen = new Set();
   let s = state;

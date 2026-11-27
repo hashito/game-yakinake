@@ -348,7 +348,7 @@ export function installCase(ext, G) {
       ${guns || melee ? `<ul class="yk-pm-guns">${guns}${melee}</ul>` : ''}
       <h4>持ち物</h4>${things ? `<ul class="yk-pm-things">${things}</ul>` : '<p class="yk-pm-none">武器のほかには、何も持っていない。</p>'}${facHtml()}
       <div class="yk-pm-pic"><h4>${esc(B.name)}（${B.w}×${B.h}）</h4>${gridHtml(C.items, B.w, B.h, 'peek')}</div>
-      <button type="button" class="pm-item yk-pm-open" data-open-case>ケースを開く（並べ替え・構える）</button></div>`;
+      <button type="button" class="pm-item yk-pm-open" data-open-case>ケースを開く（並べ替え・構える）</button>${G.recordsButton ? G.recordsButton(pm) : ''}</div>`;
     cs = keep;
     el.querySelectorAll('.yk-it').forEach((b) => { b.tabIndex = -1; b.disabled = true; });
     el.querySelector('[data-open-case]').onclick = () => { pm.close(); setTimeout(() => C.open(), 0); };

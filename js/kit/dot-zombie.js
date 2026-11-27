@@ -1,4 +1,4 @@
-/* game-kit 31bfcd8f: js/dot-zombie.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 8c79cf3c: js/dot-zombie.js — edit in game-kit and run tools/kit-sync.js */
 // Dot zombies with parts that come off (docs/zombies.md). 50 patterns in assets/zombies/ (tools/sprite-stacks/zombie_export.py).
 // A zombie is 13 rigid sprite-stack pieces on the shared rig (11 parts: head, chest, pelvis, upper arms, forearms with
 // hands, thighs, shins with feet). A shot part comes off: a stump cap shows on the body, the piece falls as a gib and
@@ -273,7 +273,7 @@ export function createZombie(pattern, opts = {}) {
   for (const k of PARTS) parts[k] = { ...J.parts[k], max: J.parts[k].hp };
   const listeners = {};
   const z = {
-    id: J.id, name: J.name, role: J.role, pattern: pat, stats, parts,
+    id: J.id, name: J.name, role: opts.role || J.role, pattern: pat, stats, parts,   // 1.40.0: opts.role - one body of a walking pattern can run ('runner'), as a game's individual is built
     life: stats.life, maxLife: stats.life, missing: closure([...(J.missing || []), ...(opts.missing || [])]),
     state: 'idle', motion: null, mirror: false, phase: 0, time: 0, dead: false, gore: opts.gore || 'full',
     yaw: opts.yaw || 0, pos: [...(opts.position || [0, 0, 0])], halves: [], lower: !!opts.lower,
@@ -412,7 +412,7 @@ export function createZombie(pattern, opts = {}) {
     return z;
   };
   z.do = function act(kind, o = {}) {
-    const m = chooseMotion(kind, z.missing, { role: J.role, ...o });
+    const m = chooseMotion(kind, z.missing, { role: z.role, ...o });
     return z.play(m.name, { mirror: m.mirror, restart: o.restart });
   };
 
@@ -720,10 +720,10 @@ export function createZombie(pattern, opts = {}) {
           }
           if (dist <= reach && cooldown <= 0 && facing) {
             z.state = 'attack'; z._struck = false;
-            z.do('attack', { lunge: J.role === 'runner' && b.legs === 2, restart: true });
+            z.do('attack', { lunge: z.role === 'runner' && b.legs === 2, restart: true });
             z.emit('sound', { kind: 'attack' });
           } else if (dist > reach * 0.8) {
-            const run = J.role === 'runner' && stats.run && dist > 3 && b.legs === 2;
+            const run = z.role === 'runner' && stats.run && dist > 3 && b.legs === 2;
             z.do(run ? 'run' : 'move');
             const m = z.motion;
             speed = m === 'run' ? stats.run : m === 'walk' || m === 'headless' ? stats.walk

@@ -1,4 +1,4 @@
-/* game-kit 1d2a49bf: js/paper-doc.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 8c79cf3c: js/paper-doc.js — edit in game-kit and run tools/kit-sync.js */
 // Documents as paper (standard 1.17.0, from 水無瀬病院 #1: 「紙類について、みる風車を真似た雰囲気に」「書類系は書類の形状で見せる」).
 // The feel of みる風車's documents (its js/paper.js: aged, stained, creased paper drawn on a canvas, ink that wavers, a photo pinned on):
 // a docs.json entry opens as a sheet of the kind it is, not as a plain window of paragraphs.
@@ -98,7 +98,7 @@ const CSS = `
 .pd-log .pd-title,.pd-ledger .pd-title{font-size:1.1em;margin-bottom:22px}
 .pd-ledger .pd-body p{border-bottom:1px solid rgba(120,40,30,.25);padding-bottom:2px}
 .pd-note{transform:rotate(1.2deg)}
-.pd-photo{position:relative;margin:2px auto 14px;width:fit-content;max-width:86%;transform:rotate(-2deg);box-shadow:2px 3px 10px rgba(0,0,0,.45);background:#eee;padding:6px 6px 16px}
+.pd-photo{position:relative;margin:2px auto 14px;width:min(86%,calc(var(--pd-photo-h,70vh) * 1.6));max-width:86%;box-sizing:border-box;transform:rotate(-2deg);box-shadow:2px 3px 10px rgba(0,0,0,.45);background:#eee;padding:6px 6px 16px}
 .pd-photo img{display:block;width:100%;max-width:100%;max-height:var(--pd-photo-h,70vh);height:auto;object-fit:contain}
 .pd-photo::before,.pd-photo::after{content:"";position:absolute;top:-9px;width:62px;height:20px;background:rgba(236,230,200,.72);box-shadow:0 1px 2px rgba(0,0,0,.2)}
 .pd-photo::before{left:-12px;transform:rotate(-24deg)}.pd-photo::after{right:-12px;transform:rotate(22deg)}
@@ -112,7 +112,7 @@ html[data-gf-calm="1"] .pd-sheet,html[data-gf-calm="1"] .pd-photo{transform:none
 @media (orientation:landscape) and (max-height:820px) and (min-aspect-ratio:4/3){
 .pd-wrap{padding:2px 0}
 .pd-sheet:has(>.pd-photo){width:100%;box-sizing:border-box;display:grid;grid-template-columns:var(--pd-photo-w,34%) minmax(0,1fr);column-gap:20px;align-items:start;padding:16px 22px 14px}
-.pd-sheet:has(>.pd-photo)>.pd-photo{grid-column:1;grid-row:1 / span 8;margin:6px 0 0;max-width:100%;width:auto;justify-self:center}
+.pd-sheet:has(>.pd-photo)>.pd-photo{grid-column:1;grid-row:1 / span 8;margin:6px 0 0;max-width:100%;width:100%;justify-self:stretch}
 .pd-sheet:has(>.pd-photo)>.pd-photo img{width:100%;max-height:none}
 .pd-sheet:has(>.pd-photo)>:not(.pd-photo):not(.pd-stamp){grid-column:2}
 .pd-sheet:has(>.pd-photo) .pd-body{columns:auto}
@@ -142,7 +142,18 @@ html[data-gf-calm="1"] .pd-sheet,html[data-gf-calm="1"] .pd-photo{transform:none
 .pd-wrap{padding:0}
 }
 `;
-function injectCss() { if (typeof document === 'undefined' || document.getElementById('gf-paper-css')) return; const s = document.createElement('style'); s.id = 'gf-paper-css'; s.textContent = CSS; document.head.appendChild(s); }
+// 1.39.18: a picture smaller than its box (the dot versions redraw photos at ~128 px) filled only its own size inside a fit-content frame:
+// the frame now takes its share of the sheet and the picture fills it
+const ZOOM_CSS = `
+.gf-doc-zoomable{cursor:zoom-in;position:relative}
+.gf-doc-plain:has(>.gf-doc-img){position:relative}
+.gf-doc-zoom-btn{position:absolute;right:8px;bottom:22px;min-width:64px;min-height:40px;padding:4px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.55);background:rgba(10,14,16,.78);color:#f2efe6;font:inherit;font-size:15px;letter-spacing:.1em;cursor:zoom-in;transform:none}
+.gf-doc-plain>.gf-doc-zoom-btn{left:8px;right:auto;top:8px;bottom:auto}
+.gf-doc-zoom{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;box-sizing:border-box;background:rgba(6,8,9,.96);cursor:zoom-out}
+.gf-doc-zoom img{flex:1 1 auto;min-height:0;max-width:100%;max-height:calc(100% - 64px);object-fit:contain;image-rendering:auto}
+.gf-doc-zoom .gf-doc-zoom-back{flex:none;min-width:min(260px,80%);min-height:48px}
+`;
+function injectCss() { if (typeof document === 'undefined' || document.getElementById('gf-paper-css')) return; const s = document.createElement('style'); s.id = 'gf-paper-css'; s.textContent = CSS + ZOOM_CSS; document.head.appendChild(s); }
 
 /** the document drawn as paper, as HTML (the journal's reader uses it): d = docs.json entry { id, title, text, photo, feeling, paper?, stamp? } */
 export function paperDocHtml(d, o = {}) {
@@ -168,6 +179,27 @@ export function renderDocWindow(el, d, o = {}) {
   else main.innerHTML = `<div class="gf-doc-plain">${d.photo ? `<img class="gf-doc-img" src="${esc(d.photo)}" alt="">` : ''}<div class="gf-doc-text">${String(d.text || '').split(String.fromCharCode(10)).map((p) => `<p>${esc(p)}</p>`).join('')}</div></div>`;
   el.insertAdjacentHTML('beforeend', `<p class="gf-doc-done"><button type="button" class="btn primary gf-doc-read">${esc(o.label || '読んだ')}</button></p>`);
   el.querySelector('.gf-doc-read').addEventListener('click', () => { if (o.onDone) o.onDone(); });
+  // 1.39.18 (水無瀬病院 2026-11-27 /dot-fps #3 「地下通路に落ちているカルテの付随する写真が小さく見づらい」): the picture of a document can
+  // always be seen large - a tap on it (or its 拡大 button) fills the whole window with it; a tap anywhere or 戻る puts the document back
+  const pic = main.querySelector('.pd-photo, .gf-doc-img');
+  if (pic && d.photo) {
+    pic.classList.add('gf-doc-zoomable');
+    const zb = document.createElement('button'); zb.type = 'button'; zb.className = 'gf-doc-zoom-btn'; zb.textContent = '拡大';
+    (pic.tagName === 'IMG' ? main.querySelector('.gf-doc-plain') || main : pic).appendChild(zb);
+    const open = (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      const win = el.closest('.wm-win') || el;
+      if (win.querySelector(':scope > .gf-doc-zoom')) return;
+      const z = document.createElement('div'); z.className = 'gf-doc-zoom'; z.setAttribute('role', 'dialog'); z.setAttribute('aria-label', '写真');
+      z.innerHTML = `<img src="${esc(d.photo)}" alt=""><button type="button" class="btn primary gf-doc-zoom-back">戻る</button>`;
+      const close = (ev) => { if (ev) { ev.preventDefault(); ev.stopPropagation(); } z.remove(); };
+      z.addEventListener('click', close);
+      win.appendChild(z);
+      z.querySelector('.gf-doc-zoom-back').focus();
+    };
+    pic.addEventListener('click', open); zb.addEventListener('click', open);
+    el._gfZoom = open;
+  }
   const fit = () => fitDoc(main);
   el._gfFitStop = keepFitted(main, fit);
   return { kind: o.paper ? paperKind(d) : 'plain', fit };
@@ -180,7 +212,9 @@ export function fitDoc(main) {
   const split = !!pic && typeof getComputedStyle !== 'undefined' && getComputedStyle(sheet).display === 'grid';
   const h0 = Math.max(60, Math.round(main.clientHeight * 0.62));   // 1.21.4: the picture starts large (「十分に画面が大きい場合は大きな画像で」)
   const steps = [];
-  if (pic) steps.push(split ? { el: sheet, prop: '--pd-photo-w', from: 60, to: 16, step: -2, unit: '%', max: 75 } : { el: sheet, prop: '--pd-photo-h', from: h0, to: 56, step: -12, unit: 'px', max: Math.max(h0, main.clientHeight) });
+  // 1.39.18 (水無瀬病院 /dot-fps #3): the picture gives way to the words only down to a third of the sheet (34 %) or 40 % of the height -
+  // below that it was a stamp (16 %: a 125 px square in a 1280 x 720 window); the words shrink, then scroll, instead
+  if (pic) steps.push(split ? { el: sheet, prop: '--pd-photo-w', from: 60, to: 34, step: -2, unit: '%', max: 75 } : { el: sheet, prop: '--pd-photo-h', from: h0, to: Math.max(140, Math.round(main.clientHeight * 0.4)), step: -12, unit: 'px', max: Math.max(h0, main.clientHeight) });
   steps.push({ el: sheet, prop: '--pd-scale', from: 1, to: 0.8, step: -0.04, unit: '' });
   return fitPanel(main, steps);
 }

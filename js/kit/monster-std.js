@@ -1,4 +1,4 @@
-/* game-kit a4da8f61: js/monster-std.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 8c79cf3c: js/monster-std.js — edit in game-kit and run tools/kit-sync.js */
 // The default monster pack (standard 1.5; rules S12 / S20). Driven by DATA: manifest data.monsters = data/monsters.json (schema/monsters.schema.json).
 //   { "early": { "stages": 2 },
 //     "monsters": [ { "id": "windmill", "look": "windmill", "phases": [ { "preset": "early", "untilStage": "L3" }, { "preset": "normal" } ],
@@ -278,7 +278,7 @@ export function installMonsters(ctx) {
       looks.set(h.id, { ...L, k: L.rest ?? 0, target: L.rest ?? 0, swing: 0, fc, h });
     }
     ctx.hideLooks = looks;
-    const leave = () => { if (ctx.hidden) { const id = ctx.hideSpot && ctx.hideSpot.id; ctx.hidden = false; ctx.hideSpot = null; document.body.classList.remove('gf-hidden'); for (const l of looks.values()) { l.target = 0; if (l.rest === 1 && l.h.id === id) l.swing = 1.6; } bus.emit('player:unhide', {}); } };
+    const leave = () => { if (ctx.hidden) { const id = ctx.hideSpot && ctx.hideSpot.id; ctx.hidden = false; ctx.hideSpot = null; document.body.classList.remove('gf-hidden'); for (const l of looks.values()) { if (l.h.id !== id) continue; /* 1.39.18 (水無瀬病院 2026-11-27 #7 「地下通路のロッカーが開いている」): only the hide you left opens - every other locker kept target 0 and stood open for good (P69) */ l.target = 0; if (l.rest === 1) l.swing = 1.6; } bus.emit('player:unhide', {}); } };
     ctx.leaveHide = leave;
     ctx.systems.push({ id: 'hide', def: { update: (dt = 0.016) => { for (const l of looks.values()) { if (l.swing > 0) { l.swing -= dt; if (l.swing <= 0) l.target = ctx.hidden && ctx.hideSpot && ctx.hideSpot.id === l.h.id ? 1 : l.rest; } if (l.k !== l.target) { l.k += Math.sign(l.target - l.k) * Math.min(Math.abs(l.target - l.k), dt * 3.2); l.setShut(l.k); } if (l.fc) l.fc.off = l.k < 0.9 || l.swing > 0 || (ctx.hidden && ctx.hideSpot && ctx.hideSpot.id === l.h.id) || Math.hypot(camera.position.x - l.h.x, camera.position.z - l.h.z) < 0.5; } if (ctx.hidden && ctx.hideSpot && Math.hypot(camera.position.x - ctx.hideSpot.x, camera.position.z - ctx.hideSpot.z) > 1.1) leave(); } }, inst: null });
     ctx.ext.registerInteract('hide', {

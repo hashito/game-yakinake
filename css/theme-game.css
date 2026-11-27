@@ -208,3 +208,26 @@ body.yk-looking #prompt, body.yk-looking #crosshair, body.yk-looking #yk-aimtag,
 .yk-status.yk-teach .yk-hpbox { /* pair-ok */ border-radius: 4px; box-shadow: 0 0 0 2px #ffd890; animation: yk-teach-glow 1.2s ease-in-out infinite; }
 @keyframes yk-teach-glow { 50% { box-shadow: 0 0 0 2px #ffd890, 0 0 14px rgba(255, 216, 144, 0.8); } }
 html[data-gf-no-flash] .yk-status.yk-teach .yk-hpbox { animation: none; }
+
+/* 1.8.0 #3: the 記録 - everyone the night turned, place by place (js/ext/bestiary.js) */
+.yk-records { display: flex; flex-direction: column; gap: 12px; min-height: 0; height: 100%; }
+.yk-rec-lead { margin: 0; font-size: 15px; color: var(--gf-text); }
+.yk-rec-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.yk-rec-tabs .btn { min-height: 44px; padding: 0 14px; font-size: 14px; }
+.yk-rec-tabs .btn.on { background: #e8d9a8; color: #17140d; border-color: #e8d9a8; }
+.yk-rec-list { flex: 1; min-height: 0; max-height: calc(100dvh - 300px); overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; padding: 4px 6px 12px 0; align-content: start; }
+.yk-rec { background: #15191a; color: #ece6d4; border: 1px solid #39433f; border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.yk-rec.down { border-color: #5a3a34; }
+.yk-rec h4 { margin: 0; font-size: 18px; color: #f2ead2; display: flex; align-items: center; gap: 10px; }
+.yk-rec h4 em { font-style: normal; font-size: 12px; padding: 2px 8px; border-radius: 4px; background: #4a2420; color: #ffd9d0; }
+.yk-rec-who { margin: 0; font-size: 14px; color: #c9c2ad; }
+.yk-rec-kind { margin: 0; font-size: 14px; color: #e6e0cc; }
+.yk-rec-kind b { display: inline-block; margin-right: 8px; padding: 1px 8px; border-radius: 4px; background: #263a33; color: #d9f2e6; }
+.yk-rec-moves { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.yk-rec-moves li { display: flex; flex-direction: column; gap: 2px; padding: 6px 10px; border-left: 3px solid #d0a640; background: #1d2122; font-size: 14px; color: #e6e0cc; }
+.yk-rec-moves li b { color: #ffd77a; font-size: 15px; }
+.yk-rec-moves li span:first-of-type { color: #f0c9a0; }
+.yk-rec-none { margin: 0; font-size: 14px; color: #c9c2ad; }
+.yk-rec-how { margin: 0; font-size: 15px; line-height: 1.75; color: #ece6d4; }
+.yk-pm-rec { min-height: 44px; margin-top: 8px; }
+@media (max-width: 600px) { .yk-rec-list { grid-template-columns: 1fr; max-height: calc(100dvh - 330px); } .yk-rec-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; } .yk-rec-tabs .btn { flex: 0 0 auto; } .yk-rec-lead { font-size: 14px; } }

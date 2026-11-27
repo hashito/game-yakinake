@@ -77,6 +77,11 @@ export function installSound(ext, G) {
     chip: (o) => { click(1500 + Math.random() * 600, 0.025, 0.28 * o.g); burst({ dur: 0.09, f: 2600, type: 'bandpass', q: 1.5, gain: 0.22 * o.g, pan: o.pan }); },
     crack: (o) => { burst({ dur: 0.05, f: 5200, type: 'bandpass', q: 4, gain: 0.5 * o.g, pan: o.pan }); for (let i = 0; i < 3; i++) setTimeout(() => click(3800 + Math.random() * 1800, 0.015, 0.14 * o.g), 40 + i * 55); },
     splat: (o) => { burst({ dur: 0.12, f: 500, type: 'bandpass', q: 0.8, gain: 0.32 * o.g, pan: o.pan }); thump(140, 70, 0.06, 0.25 * o.g); },
+    // 1.8.0 #3: the tells of the ten attacks - a retch (vomit), the teeth clacking (frenzy), a foot scraping the floor (tackle), a wet breath behind cover (ambush)
+    retch: (o) => { burst({ dur: 0.35, f: 240, type: 'bandpass', q: 1.4, gain: 0.5 * o.g, pan: o.pan, sweep: 1.6 }); setTimeout(() => burst({ dur: 0.45, f: 200, type: 'bandpass', q: 1.2, gain: 0.55 * o.g, pan: o.pan, sweep: 1.8 }), 420); },
+    teeth: (o) => { for (let i = 0; i < 6; i++) setTimeout(() => { click(2600 + Math.random() * 900, 0.012, 0.22 * o.g); burst({ dur: 0.03, f: 3400, type: 'bandpass', q: 5, gain: 0.16 * o.g, pan: o.pan }); }, i * 75); },
+    scrape: (o) => { for (let i = 0; i < 2; i++) setTimeout(() => burst({ dur: 0.3, f: 700, type: 'bandpass', q: 0.9, gain: 0.32 * o.g, pan: o.pan, attack: 0.08, sweep: 0.5 }), i * 380); },
+    wetbreath: (o) => { burst({ dur: 0.8, f: 420, type: 'bandpass', q: 1.1, gain: 0.3 * o.g, pan: o.pan, attack: 0.3 }); setTimeout(() => burst({ dur: 0.9, f: 330, type: 'bandpass', q: 1.1, gain: 0.26 * o.g, pan: o.pan, attack: 0.25 }), 900); },
     gasp: (o) => burst({ dur: 0.35, f: 1400, type: 'bandpass', q: 1.2, gain: 0.3 * o.g, attack: 0.03, sweep: 0.6 }),
   };
   G.sfx = (name, o = {}) => {

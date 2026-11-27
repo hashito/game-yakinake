@@ -77,6 +77,10 @@
 //       two panels overlap (errors), the portrait notice is missing (tools/phone-layout.mjs: 「メッセージや通知で領域を使いすぎている」)
 //   1.36.0 (札の家 play test 2026-11-22): P53 a loud guide mark (over 30 px at 3 m, or nearly opaque: a warning); P54 a closed door or a story
 //   gate a body walks through (an error); P55 an [E] spot with nothing visible within 0.45 m of its centre (a warning)
+//   P69 (1.39.18, 水無瀬病院 2026-11-27 /dot-fps #7) hide in a locker and come out: every other locker / cabinet still at its rest (shut) - leaving
+//   used to open them all (error).
+//   P68 (1.39.18, 水無瀬病院 2026-11-27 /dot-fps #2 「紙芝居で同じ画像が連続」) two cards of one kamishibai in a row with the same picture (error); a
+//       picture repeated further on in the same ending (warning)
 //   P67 (1.39.16, 札の家 2026-11-26 #8 「日記が空中に浮いている場合があります」) a pickup (an item, a document: a diary, a letter) that does
 //       not rest on anything - P47 for the things you pick up, an error whatever checks.rest says (a dot version swaps the furniture under a
 //       paper placed at an explicit "y" for a lower dot part: the letter on 奥の間's chest hung 33 cm in the air on /dot and /dot-fps only)
@@ -90,7 +94,7 @@
 //   1.38.0 (水無瀬病院 4th play test 2026-11-23; tools/water-edge.mjs): P60 a water surface whose side stands open over a lower or dry floor
 //   (a cut face: 「水の断面が見える」) (an error); P61 a figure reaching through a shut door (「モンスターが扉を少し貫通」) (an error); P62 a
 //   hiding place's look standing in a wall of its room (「ロッカーが壁に埋まっています」) (an error)
-// Exit 1 on an error (P54, P4, P7, P9, P19, P24, P25 overlap, P26, P30, P31, P32, P33, P34, P35, P36, P37, P38, P39, P40, P41, P42, P43, P44, P46, P49, P56, P57, P58, P59, P60, P61, P62, P63 (over half), P64, P66 (under a quarter), P67, P47 / P48 with checks.rest = "error", P52 over 600 MB) or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
+// Exit 1 on an error (P54, P4, P7, P9, P19, P24, P25 overlap, P26, P30, P31, P32, P33, P34, P35, P36, P37, P38, P39, P40, P41, P42, P43, P44, P46, P49, P56, P57, P58, P59, P60, P61, P62, P63 (over half), P64, P66 (under a quarter), P67, P68, P69, P47 / P48 with checks.rest = "error", P52 over 600 MB) or, with --strict, on a warning. The play scripts of a game check the rest (contact, speed, softlocks).
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -173,6 +177,18 @@ if (game.deaths) {
     if (!pg.photo) E('P64', `${at} has no picture`); else if (!fs.existsSync(path.join(dir, pg.photo))) E('P64', `${at}: picture ${pg.photo} is missing`);
     if (!pg.voice) Wn('P64', `${at} is not voiced (the kamishibai reads every card aloud)`); else if (!fs.existsSync(path.join(dir, pg.voice))) E('P64', `${at}: voice ${pg.voice} is missing`);
     if ([...String(pg.text || '')].length > KS_MAX_CHARS) E('P64', `${at}: ${[...String(pg.text)].length} characters (over ${KS_MAX_CHARS}: split the card)`);
+  }
+  // P68 (1.39.18, 水無瀬病院 2026-11-27 /dot-fps #2 「最後の紙芝居について同じ画像が連続して表示されるような実装はやめて、必要があれば画像を
+  // 生成してください」): every card of a kamishibai has its own picture - the same picture on the next card is an error, on any other card of
+  // the same ending a warning (make the picture: tools/media.json + the media queue)
+  for (const e of Array.isArray(ends) ? ends : []) {
+    const pages = Array.isArray(e.pages) ? e.pages : [], seen = new Map();
+    for (const [i, pg] of pages.entries()) {
+      if (!pg.photo) continue;
+      if (i > 0 && pages[i - 1].photo === pg.photo) E('P68', `ending "${e.id}" cards ${i} and ${i + 1} show the same picture ${pg.photo}: give each card its own picture`);
+      else if (seen.has(pg.photo)) Wn('P68', `ending "${e.id}" card ${i + 1} repeats the picture of card ${seen.get(pg.photo) + 1} (${pg.photo})`);
+      if (!seen.has(pg.photo)) seen.set(pg.photo, i);
+    }
   }
 }
 // P65 (1.39.6, 夜勤明けの街 D-15 「先に済ませることがある：〜」): a task with needs says what the thing itself is waiting for (tasks.json
@@ -692,6 +708,16 @@ try {
   }
   // P43 (1.22.0): pickups clear of other things
   { const O = await G(pickOverlapSource()); for (const x of (Array.isArray(O) ? O : []).slice(0, 12)) E('P43', `pickup "${x[0]}": "${x[1]}" cuts into it by ${JSON.stringify(x[2])} m at ${JSON.stringify(x[3])}`); }
+  // P69 (1.39.18, 水無瀬病院 2026-11-27 /dot-fps #7 「地下通路のロッカーが開いている状態になっています。閉まった状態に」): hide in a locker, come out,
+  // wait - every OTHER locker / cabinet stays as it stood (shut); only the one you left swings and shuts again (leaving opened them all)
+  if (await G('!!(g.hideLooks && g.hideLooks.size > 1 && typeof g.useInteract === "function")')) {
+    const R = await G(`(async () => { const sl = (ms) => new Promise((r) => setTimeout(r, ms)), cam = g.camera.position.clone(), looks = [...g.hideLooks.values()];
+      const ia = g.world.interactables.map((o) => o.userData.interact).find((x) => x && x.kind === 'hide' && looks.some((l) => l.h.id === x.id && l.rest === 1)); if (!ia) return null;
+      g.useInteract(ia); await sl(900); const inside = !!g.hidden; g.useInteract(ia); await sl(2600);
+      const bad = looks.filter((l) => Math.abs(l.k - l.rest) > 0.05).map((l) => [l.h.id, +l.k.toFixed(2), l.rest]); if (g.hidden) g.useInteract(ia); g.camera.position.copy(cam); return { id: ia.id, inside, bad }; })()`);
+    if (R && R.inside) for (const [id, k, rest] of R.bad) E('P69', `after hiding in "${R.id}" and coming out, the hide "${id}" stands ${k < rest ? 'open' : 'shut'} (${k}, rests at ${rest}): only the hide you left may swing, the others keep their rest`);
+    else if (R && !R.inside) Wn('P69', `could not hide in "${R.id}" (a gate?): the lockers were not checked`);
+  }
   // P47 / P48 (1.28.0, 夜勤明けの街): every placed thing rests on something; known kinds have a body-sized size (tools/rest-check.mjs).
   // Warnings in 1.28.0 (errors with --strict) until the fleet is cleared; game.json "checks": { "rest": "error" } makes them errors.
   { let ck = {}; try { ck = JSON.parse(fs.readFileSync(path.join(dir, 'game.json'), 'utf8')).checks || {}; } catch {} const R = ck.rest === 'error' ? E : Wn;

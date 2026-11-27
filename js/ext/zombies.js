@@ -4,6 +4,7 @@
 // Their sounds (groans, screams, bursting) are the game's own files (assets/sfx/z-*.mp3, made through the local media queue).
 import * as THREE from 'three';
 import { loadZombiePattern, createZombie, createGoreFx } from '../kit/dot-zombie.js';
+import { KINDS, profileOf } from './profiles.js';
 import { SPAWNS, PATTERNS } from './spawns.js';
 import { corpseLine } from './corpses.js';
 
@@ -153,7 +154,10 @@ export function installZombies(ext, G) {
     const floor = R.floor, y = ctx.world.floorY(floor);
     const dead = G.killed.has(def.id) || def.state === 'corpse', at = G.killedAt[def.id];
     const state = dead ? 'corpse' : def.riser ? 'lie' : def.state || 'idle';
-    const z = createZombie(pat, { position: [at ? at[0] : def.x, y, at ? at[1] : def.z], yaw: at ? at[2] : def.yaw ?? Math.PI, gore: G.gore, state, missing: def.missing || [], lodDistance: touch() ? 7 : 9, sight: def.sight || 13 });
+    // 1.8.0 #3 「個体ごとに違う設計に」: who it was decides how it moves (js/ext/profiles.js): its kind (speed, toughness, reach, sight) and its moves
+    const prof = profileOf(def), K = KINDS[prof.kind] || KINDS.slow;
+    const reach = (def.brute ? 1.4 : 1.0) * K.reach;
+    const z = createZombie(pat, { position: [at ? at[0] : def.x, y, at ? at[1] : def.z], yaw: at ? at[2] : def.yaw ?? Math.PI, gore: G.gore, state, missing: def.missing || [], lodDistance: touch() ? 7 : 9, sight: def.sight || K.sight || 13, reach, role: K.role });
     // the person it was: height, stoop, the colour of the clothes and the skin, how far it has rotted
     const r = rnd(hash(def.id));
     // 1.4.0 #2 「大きくて強い個体」: a brute is half as big again, slow and heavy, three times as tough, hits harder and charges
@@ -161,6 +165,12 @@ export function installZombies(ext, G) {
     z.root.scale.setScalar(tall);
     toughen(z, G.toughOf(def) * (def.brute ? 3 : 1));
     fiercen(z, def);
+    if (def.p !== 'giant') {
+      if (z.stats.walk) z.stats.walk = +Math.min(1.25, z.stats.walk * K.walk).toFixed(3);
+      if (K.run) z.stats.run = Math.min(2.6, Math.max(z.stats.run || 0, K.run));   // FR-08: the sustained speed stays at a runner's 2.6 m/s
+      z.stats.damage = Math.round((z.stats.damage || 15) * K.damage);
+      toughen(z, K.hp);
+    }
     if (def.brute) { z.stats.walk = (z.stats.walk || 0.5) * 0.85; z.stats.damage = Math.round((z.stats.damage || 15) * 1.6); z.stats.grab = Math.max(z.stats.grab || 0, 1.1); z.stats.knockImmune = true; }
     z.body.rotation.x = (r() - 0.35) * 0.12;   // some lean forward, a few lean back
     const rot = def.rot ?? (/-rot|drowned|bloated/.test(def.p) ? 0.6 : /-dry|skeletal|burnt/.test(def.p) ? 0.3 : r() * 0.45);
@@ -178,7 +188,7 @@ export function installZombies(ext, G) {
     });
     ctx.scene.add(z.root);
     fx.watch(z);
-    const L = { def, z, room: def.room, floor, alert: 0, wp: null, groan: 2 + r() * 6, wander: r() * 4, home: [def.x, def.z], alive: !dead, r, charge: 0, chargeCool: 3, step: 0 };
+    const L = { def, prof, moves: prof.moves || [], reach, z, room: def.room, floor, alert: 0, wp: null, groan: 2 + r() * 6, wander: r() * 4, home: [def.x, def.z], alive: !dead, r, charge: 0, chargeCool: 3, step: 0 };
     L.armor = armoredParts(L);
     for (const p of L.armor) z.parts[p].armor = 1;   // the game's armour rule decides (hitZombie), not the kit's flat factor
     if (def.armor && def.armor.length) addArmorLook(L);
@@ -186,7 +196,7 @@ export function installZombies(ext, G) {
     else if (def.sheet && state === 'lie') L.sheet = { g: makeSheet(def), t: 0, placed: false };
     z.on('attack', (e) => {
       const p = ctx.camera.position;
-      if (Math.hypot(p.x - z.pos[0], p.z - z.pos[2]) > 1.55 || ctx.floor !== L.floor) return;
+      if (Math.hypot(p.x - z.pos[0], p.z - z.pos[2]) > reach + 0.55 || ctx.floor !== L.floor) return;
       G.hurt(e.damage, { grab: e.grab, reason: 'bitten', by: L });
     });
     z.on('spit', (e) => { const p = ctx.camera.position; if (Math.hypot(p.x - z.pos[0], p.z - z.pos[2]) < 9 && ctx.floor === L.floor) setTimeout(() => G.hurt(e.damage * 0.6, { reason: 'spit' }), 450); });
@@ -529,6 +539,7 @@ export function installZombies(ext, G) {
           }
         }
         const ox = z.pos[0], oz = z.pos[2];
+        if (G.moveTick && G.moveTick(L, d, dt, same)) { settle(L, ox, oz); z.root.position.set(z.pos[0], z.root.position.y, z.pos[2]); continue; }   // 1.8.0 #3: one of its ten moves
         if (L.def.brute && bruteTick(L, d, dt, same)) { settle(L, ox, oz); z.root.position.set(z.pos[0], z.root.position.y, z.pos[2]); continue; }
         if (L.charge > 0) { z.update(dt, { camera: cam }); settle(L, ox, oz); z.root.position.set(z.pos[0], z.root.position.y, z.pos[2]); continue; }
         if (goal) { tgt.position.set(goal[0], p.y, goal[1]); tgt.camera = cam; z.update(dt, tgt); if (L.wp && !chasing && Math.hypot(goal[0] - z.pos[0], goal[1] - z.pos[2]) < 0.6) L.wp = null; }

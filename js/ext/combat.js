@@ -326,8 +326,9 @@ export function installCombat(ext, G) {
   G.shake = (k, t = 0.35) => { shakeK = Math.max(shakeK, k * (ctx && ctx.calm ? 0.3 : 1)); shakeT = Math.max(shakeT, t); };
   G.hurt = (dmg, o = {}) => {
     if (!ctx || ctx.state.ended || G.dead) return;
-    G.hp -= dmg; hurtFlash = 1; regen = 0; G.sfx('hurt');
-    if (dmg > 0) { G.shake(Math.min(1, 0.25 + dmg / 30)); if (dmg >= 15) G.sfx('gasp'); }
+    // 1.8.0: o.soft - a slow loss (bleeding, the spew): a faint flash, no cry, no shake
+    G.hp -= dmg; hurtFlash = o.soft ? Math.max(hurtFlash, 0.3) : 1; regen = 0; if (!o.soft) G.sfx('hurt');
+    if (dmg > 0 && !o.soft) { G.shake(Math.min(1, 0.25 + dmg / 30)); if (dmg >= 15) G.sfx('gasp'); }
     if (dmg > 0) G.emit('hurt', { dmg, reason: o.reason });
     if (o.grab && !grab) { const t0 = Math.max(1.7, o.grab + 1.1); grab = { t: t0, t0, by: o.by, n: 0 }; paintGrab(); grabTag.classList.add('on'); G.sfx('gasp'); G.emit('grab:start', {}); }
     hud();
