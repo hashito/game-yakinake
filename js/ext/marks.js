@@ -18,8 +18,10 @@ export function installMarks(ext, G) {
     const gcv = document.createElement('canvas'); gcv.width = gcv.height = 64;
     { const c = gcv.getContext('2d'), gr = c.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,226,160,1)'); gr.addColorStop(0.3, 'rgba(255,190,110,0.6)'); gr.addColorStop(1, 'rgba(255,150,60,0)'); c.fillStyle = gr; c.fillRect(0, 0, 64, 64); }
     const gtex = new THREE.CanvasTexture(gcv); gtex.colorSpace = THREE.SRGBColorSpace;
-    const iconM = new THREE.SpriteMaterial({ map: itex, transparent: true, opacity: 0.55, depthWrite: false, depthTest: false, fog: false }); iconM.name = 'yk-mark-icon'; iconM.userData.guideMark = true; iconM.userData.dot = 'fx';
+    const iconM = new THREE.SpriteMaterial({ map: itex, transparent: true, opacity: 0.55, depthWrite: false, depthTest: true, fog: false }); iconM.name = 'yk-mark-icon'; iconM.userData.guideMark = true; iconM.userData.dot = 'fx';
     const softM = new THREE.SpriteMaterial({ map: gtex, color: 0xffe2a8, transparent: true, opacity: 0.28, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }); softM.name = 'yk-mark-glow'; softM.userData.dot = 'fx';
+    // 1.9.0: the icon tests depth too - a wall in front hides it in every draw, whatever the tick or the sight rays have done (P42 still
+    // failed in check-playtest's held start); it floats 0.34 m over its thing, so the thing itself does not cover it
     const marks = new Map();
     const layer = new THREE.Group(); layer.name = 'yk-marks'; ctx.scene.add(layer);
     const markAll = () => {
@@ -61,14 +63,14 @@ export function installMarks(ext, G) {
     };
     // 1.8.0: the frame is drawn even while the tick is held (a window, a mini game, a check moving the camera): before each draw, a mark
     // the camera has moved behind a wall is hidden (marks out of the view too: they are not drawn, so they cannot hide themselves)
-    let lastCam = null;
+    let wallsAt = null;   // 1.9.0: every draw (a check may move the camera away and back between two draws)
     const prevBR = ctx.scene.onBeforeRender;
     ctx.scene.onBeforeRender = function (...a) {
       if (prevBR) prevBR.apply(this, a);
       const c = ctx.camera.position;
-      if (lastCam && lastCam.distanceToSquared(c) < 0.04) return; lastCam = (lastCam || c.clone()).copy(c);
-      // 1.9.0: the walls the sight rays test were collected while far rooms were hidden; with the tick held nothing refreshes them
-      if (performance.now() - tickAt > 250) sight.refresh();
+      // 1.9.0: the walls the sight rays test were collected while far rooms were hidden: with the tick held, or after a jump (a
+      // teleport, a door to another area), collect them again before testing
+      if (performance.now() - tickAt > 250 || !wallsAt || wallsAt.distanceToSquared(c) > 2.25) { sight.refresh(); wallsAt = (wallsAt || c.clone()).copy(c); }
       for (const M of marks.values()) if (M.m.visible && M.ic.visible && !sight.clear(M.ic)) M.ic.visible = false;
     };
   });
