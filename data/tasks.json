@@ -224,19 +224,22 @@
    "type": "sort-items",
    "cfg": {
     "title": "薬品棚",
-    "help": "散らばった薬を、正しい棚へ戻す。インスリンは冷蔵の棚。",
+    "help": "棚から落ちて散らばった薬を、しまう場所ごとに戻す。戻し終えると、インスリンが手に入る。",
     "bins": [
      {
       "id": "cold",
-      "label": "冷蔵"
+      "label": "冷蔵",
+      "desc": "冷やしておく薬（2〜8℃）"
      },
      {
       "id": "room",
-      "label": "常温"
+      "label": "常温",
+      "desc": "ふつうの棚。冷やさなくていい物"
      },
      {
       "id": "lock",
-      "label": "鍵付き（劇薬）"
+      "label": "鍵付き（劇薬）",
+      "desc": "鍵のかかる箱。強い薬・麻薬"
      }
     ],
     "items": [
@@ -244,33 +247,44 @@
       "id": "ins",
       "label": "インスリン",
       "bin": "cold",
-      "why": "インスリンは冷やしておく薬。"
+      "why": "インスリンは冷やしておく薬。",
+      "desc": "血糖を下げる注射。戸川さんに要る薬",
+      "pic": "assets/photos-px/mg-ins.png"
      },
      {
       "id": "abx",
       "label": "抗生物質",
       "bin": "room",
-      "why": "抗生物質の錠剤は、常温でいい。"
+      "why": "抗生物質の錠剤は、常温でいい。",
+      "desc": "ばい菌を殺す飲み薬（錠剤）",
+      "pic": "assets/photos-px/mg-abx.png"
      },
      {
       "id": "mor",
       "label": "鎮痛剤（麻薬）",
       "bin": "lock",
-      "why": "麻薬は、鍵付きの棚にしまう決まり。"
+      "why": "麻薬は、鍵付きの棚にしまう決まり。",
+      "desc": "とても強い痛み止め。麻薬",
+      "pic": "assets/photos-px/mg-mor.png"
      },
      {
       "id": "vac",
       "label": "ワクチン",
       "bin": "cold",
-      "why": "ワクチンも冷蔵。"
+      "why": "ワクチンも冷蔵。",
+      "desc": "病気を防ぐ注射の小瓶",
+      "pic": "assets/photos-px/mg-vac.png"
      },
      {
       "id": "gauze",
       "label": "ガーゼ",
       "bin": "room",
-      "why": "ガーゼは常温の棚。"
+      "why": "ガーゼは常温の棚。",
+      "desc": "傷に当てる布",
+      "pic": "assets/photos-px/mg-gauze.png"
      }
-    ]
+    ],
+    "ok": "全部、棚に戻した。冷蔵の棚から、インスリンを一本もらっていく。"
    }
   }
  },

@@ -159,9 +159,29 @@
   "file": "item-STETHO.png",
   "src": "47648f5aabac88ff"
  },
+ "mg-abx.webp": {
+  "file": "mg-abx.png",
+  "src": "cb1f034a93674dcb"
+ },
  "mg-desk.webp": {
   "file": "mg-desk.png",
   "src": "142cd1a63ef120df"
+ },
+ "mg-gauze.webp": {
+  "file": "mg-gauze.png",
+  "src": "ffca356301f0472e"
+ },
+ "mg-ins.webp": {
+  "file": "mg-ins.png",
+  "src": "04cc8879fc128106"
+ },
+ "mg-mor.webp": {
+  "file": "mg-mor.png",
+  "src": "6da5a45f283de47e"
+ },
+ "mg-vac.webp": {
+  "file": "mg-vac.png",
+  "src": "dabc5a859b52628d"
  },
  "op-1.webp": {
   "file": "op-1.png",

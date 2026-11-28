@@ -381,6 +381,31 @@
    "key": "th-board",
    "size": "1344x768",
    "prompt": "wooden planks cut to the same length and stacked neatly on a workbench in a dim carpenter workshop at night, a hand saw left on top, one plank cut only halfway, sawdust, a single bare bulb"
+  },
+  {
+   "key": "mg-ins",
+   "size": "768x768",
+   "prompt": "a single insulin pen injector and a small glass insulin vial lying on a white hospital tray, close-up, cold blue light from an open medicine refrigerator"
+  },
+  {
+   "key": "mg-abx",
+   "size": "768x768",
+   "prompt": "a blister pack of white antibiotic tablets and its small paper box on a pharmacy shelf, close-up, dim fluorescent light"
+  },
+  {
+   "key": "mg-mor",
+   "size": "768x768",
+   "prompt": "a small brown glass ampoule of morphine with a red warning label beside a locked steel drug box, close-up, dim hospital pharmacy at night"
+  },
+  {
+   "key": "mg-vac",
+   "size": "768x768",
+   "prompt": "a row of small vaccine vials with blue caps in a plastic tray, frost on the tray, close-up, cold light"
+  },
+  {
+   "key": "mg-gauze",
+   "size": "768x768",
+   "prompt": "a stack of folded white gauze pads in a sealed paper packet on a shelf, close-up, dim light"
   }
  ],
  "seeds": {
@@ -391,6 +416,6 @@
   "end-e6": 7,
   "item-MARTKEY": 13,
   "item-CELLARKEY": 7,
-   "th-board": 11
+  "th-board": 11
  }
 }
