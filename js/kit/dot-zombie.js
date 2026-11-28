@@ -1,4 +1,4 @@
-/* game-kit 8c79cf3c: js/dot-zombie.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 5e19661c: js/dot-zombie.js — edit in game-kit and run tools/kit-sync.js */
 // Dot zombies with parts that come off (docs/zombies.md). 50 patterns in assets/zombies/ (tools/sprite-stacks/zombie_export.py).
 // A zombie is 13 rigid sprite-stack pieces on the shared rig (11 parts: head, chest, pelvis, upper arms, forearms with
 // hands, thighs, shins with feet). A shot part comes off: a stump cap shows on the body, the piece falls as a gib and
@@ -819,6 +819,8 @@ export function createGoreFx(THREE, scene, o = {}) {
   const fx = {
     get gore() { return gore; },
     set gore(g) { gore = g; for (const d of decals) d.visible = g !== 'off'; },
+    /** 1.40.2: the floor and wall marks laid so far, oldest first (a game going back to a save hides the ones laid since: 夜勤明けの街 2026-11-28 #1) */
+    get decals() { return decals; },
     watch(z) {
       z.on('blood', (e) => fx.spray(e.point, e.dir, e.amount));
       z.on('hit', (e) => { if (e.point) { fx.spray(e.point, e.dir, 0.35); fx.flash(e.point, e.part === 'head' ? 1.3 : 1); } });

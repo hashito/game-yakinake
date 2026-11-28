@@ -1,4 +1,4 @@
-/* game-kit 33762870: css/kit.css — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 5e19661c: css/kit.css — edit in game-kit and run tools/kit-sync.js */
 /* game-kit: shared styles for first-person browser games (windows, HUD, buttons, touch controls,
    status chips, steppers, kanban, app-like software screens, tabs, stamps, share buttons; at the end
    progression pg-*, sim UI nt-/tb-/dl-/ch-*, journal jr-* / stream veil st-* / hiding hd-*, chat cx-*).
@@ -3245,7 +3245,20 @@ body.gf-warming .wm-layer, body.gf-warming .rn-wrap, body.gf-warming #mg, body.g
 .mgx-sort-empty { color: var(--gf-text-dim); align-self: center; }
 .mgx-sort-bins { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
 .mgx-sort-bin { display: flex; flex-direction: column; gap: 4px; align-items: center; min-height: 92px; padding: 10px 8px; border: 2px dashed var(--gf-border-strong, #b8b0a0); border-radius: 8px; background: transparent; color: var(--gf-text); font: inherit; cursor: pointer; }
-.mgx-sort-in { font-size: 0.8em; color: var(--gf-text-dim); }
+.mgx-sort-in { font-size: 0.8em; color: var(--gf-text-dim); display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+/* 1.40.1 sort-items: pictures, what each thing and place is, the line of what to do now */
+.mgx-sort-now { margin: 0; text-align: center; color: var(--gf-text); line-height: 1.5; }
+.mgx-sort-now b { color: var(--gf-text); }
+.mgx-sort-count { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 10px; background: var(--gf-surface-2, #ece6d6); color: var(--gf-text); font-size: 0.86em; }
+.mgx-sort-item { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; max-width: 150px; }
+.mgx-sort-item small { font-size: 0.74em; color: var(--gf-text-dim); line-height: 1.3; }
+.mgx-sort-item.has-pic { padding: 6px 8px 8px; }
+.mgx-sort-pic { display: block; width: 72px; height: 72px; object-fit: cover; border-radius: 4px; image-rendering: pixelated; pointer-events: none; }
+.mgx-sort-bdesc { font-size: 0.76em; color: var(--gf-text-dim); line-height: 1.3; }
+.mgx-sort-chip { display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px 1px 2px; border-radius: 10px; background: var(--gf-surface-2, #ece6d6); color: var(--gf-text); font-style: normal; }
+.mgx-sort-chip .mgx-sort-pic { width: 20px; height: 20px; border-radius: 50%; }
+.mgx-sort-bin.ready { border-color: var(--gf-accent, #3a7a5a); border-style: solid; }
+@media (max-width: 480px) { .mgx-sort-pic { width: 52px; height: 52px; } .mgx-sort-item { max-width: 112px; padding: 6px; } .mgx-sort-item small { display: none; } }
 /* standard 1.8.3: the frame's motion (open, message, miss, clear stamp, pips) and the skins (cfg.skin); ctx.calm / reduce motion: .mgx--calm */
 .mgx { animation: mgx-open 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
 @keyframes mgx-open { from { opacity: 0; transform: translateX(-50%) translateY(-14px) scale(0.97); } to { opacity: 1; transform: translateX(-50%); } }

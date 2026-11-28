@@ -152,8 +152,9 @@ export function installZombies(ext, G) {
     const pat = pats.get(def.p); if (!pat) return null;
     const R = roomById.get(def.room); if (!R) return null;
     const floor = R.floor, y = ctx.world.floorY(floor);
-    const dead = G.killed.has(def.id) || def.state === 'corpse', at = G.killedAt[def.id];
-    const state = dead ? 'corpse' : def.riser ? 'lie' : def.state || 'idle';
+    const dead = G.killed.has(def.id) || def.state === 'corpse', up = !dead && G.upAt && G.upAt[def.id], at = G.killedAt[def.id] || up;
+    // 1.10.0 #1: one that had got up (or walked off) by the save is where it was then, on its feet (no sheet over it again)
+    const state = dead ? 'corpse' : up ? 'idle' : def.riser ? 'lie' : def.state || 'idle';
     // 1.8.0 #3 「個体ごとに違う設計に」: who it was decides how it moves (js/ext/profiles.js): its kind (speed, toughness, reach, sight) and its moves
     const prof = profileOf(def), K = KINDS[prof.kind] || KINDS.slow;
     const reach = (def.brute ? 1.4 : 1.0) * K.reach;
@@ -225,7 +226,8 @@ export function installZombies(ext, G) {
     const line = corpseLine(L.def); if (!line || !ctx || !live.has(L.def.id)) return;
     unbody(L.def.id);
     // #12: a pool spreads under a fallen body (at once under one that lay there already)
-    if (fx && fx.pool && !L.pooled) { L.pooled = true; fx.pool([L.z.pos[0], ctx.world.floorY(L.floor), L.z.pos[2]], L.def.brute ? 1.5 : 1.0, o.quiet ? 0.01 : 9); }
+    // 1.10.0 #1: a body laid again (back to a save) keeps the pool it already has - one pool per body, never a second one over it
+    if (fx && fx.pool && !L.pooled) { L.pooled = true; const D = fx.decals || []; if (!D.some((d) => d.userData.body === L.def.id && d.position.y > -100)) { fx.pool([L.z.pos[0], ctx.world.floorY(L.floor), L.z.pos[2]], L.def.brute ? 1.5 : 1.0, o.quiet ? 0.01 : 9); const m = D[D.length - 1]; if (m) m.userData.body = L.def.id; } }
     const z = L.z, c = new THREE.Vector3(); let n = 0;
     { const a = z.root.matrixWorldAutoUpdate; z.root.matrixWorldAutoUpdate = true; z.root.updateMatrixWorld(true); z.root.matrixWorldAutoUpdate = a; }   // an unseen body too (1.6.0)
     z.root.traverse((m) => { if (m.isBone && /chest|pelvis|spine|head/i.test(m.name)) { c.add(m.getWorldPosition(new THREE.Vector3())); n++; } });
@@ -562,7 +564,11 @@ export function installZombies(ext, G) {
   });
 
   ext.registerPersist('yk-zombies', {
-    serialize: () => ({ killed: [...G.killed], at: G.killedAt }),
-    restore: (s) => { G.killed = new Set((s && s.killed) || []); G.killedAt = (s && s.at) || {}; if (ctx && pats.size) G.resetZombies([...G.killed], G.killedAt); },
+    serialize: () => {
+      const up = {};
+      for (const L of live.values()) { if (!L.alive || L.z.dead || !SPAWNS.includes(L.def) || L.z.state === 'lie') continue; up[L.def.id] = [+L.z.pos[0].toFixed(2), +L.z.pos[2].toFixed(2), +(L.z.yaw || 0).toFixed(2)]; }
+      return { killed: [...G.killed], at: G.killedAt, up };
+    },
+    restore: (s) => { G.killed = new Set((s && s.killed) || []); G.killedAt = (s && s.at) || {}; G.upAt = (s && s.up) || {}; if (ctx && pats.size) G.resetZombies([...G.killed], G.killedAt); },
   });
 }

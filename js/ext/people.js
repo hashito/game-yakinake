@@ -74,9 +74,11 @@ export function installPeople(ext, G) {
     else if (s.mode === 'down') { p.mode = 'down'; p.f.anim.play('fear'); }
     else if (s.mode === 'fight' || s.mode === 'shoot') { p.mode = s.mode; }
     if (s.at) p.f.root.position.set(s.at[0], p.f.root.position.y, s.at[1]);
+    // 1.10.0 #1: out of sight (佐竹 once turned) or not, as the save has it - his station comes back with him
+    if (s.hid != null) { p.hidden = !!s.hid; p.f.root.visible = !s.hid; if (s.hid) { if (G.hideStation) G.hideStation(p.P.station); } else if (G.showStation) G.showStation(p.P.station); }
   }
   ext.registerPersist('yk-people', {
-    serialize: () => { const o = { ...saved }; for (const [id, p] of figs) o[id] = { mode: ['dead', 'down', 'fight', 'shoot'].includes(p.mode) ? p.mode : 'stand', hp: p.hp, ok: !!p.ok, okDown: !!p.okDown, ...(p.mode === 'dead' || p.mode === 'down' ? { at: [+p.f.root.position.x.toFixed(2), +p.f.root.position.z.toFixed(2)] } : {}) }; return o; },
+    serialize: () => { const o = { ...saved }; for (const [id, p] of figs) o[id] = { mode: ['dead', 'down', 'fight', 'shoot'].includes(p.mode) ? p.mode : 'stand', hp: p.hp, ok: !!p.ok, okDown: !!p.okDown, hid: !!p.hidden, at: [+p.f.root.position.x.toFixed(2), +p.f.root.position.z.toFixed(2)] }; return o; },
     restore: (s) => {
       saved = s || {};
       for (const p of figs.values()) {

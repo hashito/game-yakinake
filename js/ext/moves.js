@@ -135,6 +135,7 @@ export function installMoves(ext, G) {
   const bleed = () => { if (bleedT <= 0 && !G.flags['hint:bleed']) { G.flags['hint:bleed'] = true; ctx.ui.say('引っかかれた傷から、血が出ている。手当てをすれば止まる。', 5); } bleedT = 14; G.emit('bleed', {}); };
   const sick = (s) => { sickT = Math.max(sickT, s); G.emit('sick', {}); if (!G.flags['hint:sick']) { G.flags['hint:sick'] = true; ctx.ui.say('吐きかけられた。しばらく、体が蝕まれる。', 4.5); } };
   G.on('healed', () => { bleedT = 0; });
+  ext.on('game:start', () => { bleedT = 0; sickT = 0; dotAcc = 0; for (const o of objs) { o.on = false; o.m.visible = false; } for (const s of spews) { s.on = false; s.m.visible = false; } });   // 1.10.0 #1
   G.bleeding = () => ({ bleed: +bleedT.toFixed(1), sick: +sickT.toFixed(1) });
   const objs = [];
   function toss(L) {

@@ -41,6 +41,10 @@ function crackTex() {
 export function installImpacts(ext, G) {
   let ctx = null, holeM = null, crackM = null, plane = null, chunks = null;
   const holes = [], cracks = [];
+  // 1.10.0 (2026-11-28 #1 「セーブはその断面をしっかり保存して」): every mark gets a serial; a save keeps the serial it was made at (SN is bumped,
+  // and the blood marks laid so far are given it); going back to that save takes away every mark made after it - the holes, the cracks, the
+  // cubes, the blood on the floor and walls. A new game takes them all away.
+  let SN = 0;
   const touch = () => (ctx && ctx.isTouch) || (typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches);
   const CAP = () => (touch() ? { holes: 32, cracks: 12, cubes: 360 } : { holes: 64, cracks: 24, cubes: 900 });
   // the glass panes of the doors (transparent, see-through: not in G.solidMeshes, a round goes through them)
@@ -58,6 +62,7 @@ export function installImpacts(ext, G) {
   function stick(pool, max, mat, size, obj, point, normal, off) {
     let m;
     if (pool.length >= max) { m = pool.shift(); m.removeFromParent(); } else { m = new THREE.Mesh(plane, mat); m.renderOrder = 2; m.name = 'yk-impact'; m.raycast = () => {}; }
+    m.userData.sn = ++SN;
     nrm.copy(normal).normalize();
     m.position.copy(point).addScaledVector(nrm, off);
     m.quaternion.copy(q.setFromUnitVectors(zAxis, nrm));
@@ -90,12 +95,13 @@ export function installImpacts(ext, G) {
     const tmpC = new THREE.Color();
     const write = (i) => {
       const s = S[i];
+      if (s.gone) { M.makeScale(0, 0, 0); mesh.setMatrixAt(i, M); return; }
       SC.set(s.s * (s.flat ? 1.25 : 1), s.s * (s.flat ? 1.25 : 1), s.s * (s.flat ? 0.35 : 1));
       if (s.flat) Q.setFromUnitVectors(zAxis, s.n); else Q.setFromEuler(E.set(s.rot[0], s.rot[1], s.rot[2]));
       M.compose(P.set(s.p[0], s.p[1], s.p[2]), Q, SC); mesh.setMatrixAt(i, M);
     };
     const api = {
-      count: () => S.length,
+      count: () => S.filter((s) => !s.gone).length,
       burst(point, dir, n, o = {}) {
         if (G.gore === 'off' || !point) return;
         const solid = G.solidMeshes ? G.solidMeshes() : [];
@@ -109,7 +115,7 @@ export function installImpacts(ext, G) {
           const kind = Math.random() < 0.42 ? 'blood' : Math.random() < 0.6 ? 'flesh' : o.cloth !== false && Math.random() < 0.6 ? 'cloth' : 'bone';
           const pal = COLS[kind]; tmpC.setHex(pal[Math.floor(Math.random() * pal.length)]);
           if (o.tint && kind === 'flesh') tmpC.multiply(o.tint);
-          const s = { p: [point.x, point.y, point.z], v, t: 0, hitT: Infinity, hitP: null, n: new THREE.Vector3(0, 1, 0), floor: fl, flat: false, rest: false, s: 0.8 + Math.random() * 0.9, rot: [Math.random() * 6, Math.random() * 6, Math.random() * 6], kind };
+          const s = { sn: ++SN, p: [point.x, point.y, point.z], v, t: 0, hitT: Infinity, hitP: null, n: new THREE.Vector3(0, 1, 0), floor: fl, flat: false, rest: false, s: 0.8 + Math.random() * 0.9, rot: [Math.random() * 6, Math.random() * 6, Math.random() * 6], kind };
           // where its flight (taken as a straight line for its first 0.45 s) meets a wall: it sticks there
           const hv = new THREE.Vector3(v[0], v[1] - 1.1, v[2]), len = hv.length() * 0.45;
           ray.set(new THREE.Vector3(...s.p), hv.clone().normalize()); ray.far = len;
@@ -124,7 +130,7 @@ export function installImpacts(ext, G) {
       update(dt) {
         let moved = false;
         for (let i = 0; i < S.length; i++) {
-          const s = S[i]; if (s.rest) continue;
+          const s = S[i]; if (s.rest || s.gone) continue;
           s.t += dt; moved = true;
           if (s.t >= s.hitT) {   // against the wall: flattened onto it, a little blood splat for the first ones
             s.p = [s.hitP.x + s.n.x * 0.006, s.hitP.y + s.n.y * 0.006, s.hitP.z + s.n.z * 0.006]; s.flat = true; s.rest = true;
@@ -142,10 +148,22 @@ export function installImpacts(ext, G) {
         if (moved) mesh.instanceMatrix.needsUpdate = true;
       },
       clear() { S.length = 0; mesh.count = 0; },
+      rollback(mark) { for (let i = 0; i < S.length; i++) if (S[i] && !S[i].gone && S[i].sn > mark) { S[i].gone = true; S[i].rest = true; write(i); } mesh.instanceMatrix.needsUpdate = true; },
     };
     return api;
   }
   G.chunkBurst = (point, dir, n, o) => chunks && chunks.burst(point, dir, n, o);
+  const decalList = () => (G.zfx && G.zfx.decals) || [];
+  G.impactMark = () => { const m = ++SN; for (const d of decalList()) if (d.userData.sn == null) d.userData.sn = m; return m; };
+  G.impactRollback = (mark) => {
+    for (const pool of [holes, cracks]) for (let i = pool.length - 1; i >= 0; i--) if (!(pool[i].userData.sn <= mark)) { pool[i].removeFromParent(); pool.splice(i, 1); }
+    if (chunks) { if (mark <= 0) chunks.clear(); else chunks.rollback(mark); }
+    for (const d of decalList()) if (!(d.userData.sn <= mark)) { d.position.y = -9999; d.userData.grow = null; d.userData.sn = 0; d.userData.body = null; }   // a pooled mark: reused (and placed again) later
+  };
+  ext.registerPersist('yk-impacts', {
+    serialize: () => ({ sn: G.impactMark() }),
+    restore: (s) => { G.impactRollback((s && s.sn) || 0); },
+  });
 
   ext.on('game:ready', (c) => {
     ctx = c;

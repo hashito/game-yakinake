@@ -83,8 +83,10 @@ export function installCase(ext, G) {
     const g = lootMeshes.get(id); if (!g || !ctx) return;
     g.removeFromParent(); const i = ctx.world.interactables.indexOf(g); if (i >= 0) ctx.world.interactables.splice(i, 1); lootMeshes.delete(id);
   }
+  let drops = [];
   C.placeLoot = () => {
     for (const [id] of lootMeshes) removeLoot(id);
+    for (const d of drops) if (!taken.has(d.id)) dropLoot({ ...d });
     const plan = ctx.data.plan;
     for (const def of LOOT) {
       if (taken.has(def.id)) continue;
@@ -370,7 +372,8 @@ export function installCase(ext, G) {
 
   // the save: the case, the storage box, the loot taken
   ext.registerPersist('yk-case', {
-    serialize: () => ({ ...C.snapshot(), taken: [...taken] }),
-    restore: (s, c) => { if (s) { C.restore(s); taken.clear(); for (const t of s.taken || []) taken.add(t); } else { C.items = []; C.store = []; C.bag = 'doctor'; taken.clear(); G.equip = null; } if (ctx) C.placeLoot(); },
+    // 1.10.0 #1: the things left on the floor (put down from the case, fallen from a body) are in the save, where they lay
+    serialize: () => ({ ...C.snapshot(), taken: [...taken], drops: [...lootMeshes.values()].map((g) => g.userData.def).filter((d) => d && !LOOT.some((l) => l.id === d.id)).map((d) => ({ id: d.id, item: d.item, n: d.n, o: d.o || {}, x: +d.x.toFixed(2), z: +d.z.toFixed(2), floor: d.floor || 0, y: d.y || 0.05, why: d.why })) }),
+    restore: (s, c) => { if (s) { C.restore(s); taken.clear(); for (const t of s.taken || []) taken.add(t); } else { C.items = []; C.store = []; C.bag = 'doctor'; taken.clear(); G.equip = null; } drops = (s && s.drops) || []; if (ctx) C.placeLoot(); },
   });
 }

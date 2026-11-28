@@ -1,8 +1,11 @@
-/* game-kit 10af67dd: js/mg-sort-items.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit 5e19661c: js/mg-sort-items.js — edit in game-kit and run tools/kit-sync.js */
 // Library mini game "sort-items" (standard 1.8.2: sorting mail, putting things back on the shelf, offerings to their altars): drag each item
 // to the place it belongs (or tap the item, then tap the place; with keys Tab / Enter the same way). A wrong place sends it back with a short
 // reason; nothing is lost.
-//   cfg: title, help, bins ([{ id, label }]), items ([{ id, label, bin, why }]: why = the line when put in a wrong place), ok
+//   cfg: title, help, bins ([{ id, label, desc }]), items ([{ id, label, bin, why, desc, pic }]: why = the line when put in a wrong place), ok
+//   1.40.1 (夜勤明けの街 2026-11-28 #7 「病院の棚のミニゲームやアイテムで表示がないため分かりづらい」): each thing shows its picture (pic: an image URL) and a
+//   line of what it is (desc); each place says what goes there (desc) and shows the things already in it; a line over the places says what to
+//   do now (choose a thing / it is held: press its place) and 戻した n / N counts them.
 //   hooks: { sound(name, ctx) }  name = 'pick' | 'put' | 'wrong' | 'ok'
 import { mgFrame, esc } from './mg-frame.js';
 
@@ -22,12 +25,16 @@ export default {
       const bins = cfg.bins || DEF.bins, items = cfg.items || DEF.items, snd = (k) => hooks.sound && hooks.sound(k, ctx);
       const placed = {}; let picked = null, drag = null;
       const f = mgFrame(host, { cfg, ctx, title: cfg.title || '仕分ける', help: cfg.help || '物を置き場へドラッグしてください（物を押してから置き場を押しても動かせます）。' }, (ok) => { if (drag && drag.ghost) drag.ghost.remove(); done(ok); });
-      f.body.innerHTML = `<div class="mgx-sort"><div class="mgx-sort-tray" aria-label="まだ仕分けていない物"></div><div class="mgx-sort-bins">${bins.map((b) => `<button type="button" class="mgx-sort-bin" data-bin="${esc(b.id)}"><b>${esc(b.label)}</b><span class="mgx-sort-in"></span></button>`).join('')}</div></div>`;
+      f.body.innerHTML = `<div class="mgx-sort"><p class="mgx-sort-now" aria-live="polite"></p><div class="mgx-sort-tray" aria-label="まだ仕分けていない物"></div><div class="mgx-sort-bins">${bins.map((b) => `<button type="button" class="mgx-sort-bin" data-bin="${esc(b.id)}"><b>${esc(b.label)}</b>${b.desc ? `<small class="mgx-sort-bdesc">${esc(b.desc)}</small>` : ''}<span class="mgx-sort-in"></span></button>`).join('')}</div></div>`;
+      const now = f.body.querySelector('.mgx-sort-now');
+      const pic = (it) => (it.pic ? `<img class="mgx-sort-pic" src="${esc(it.pic)}" alt="" draggable="false">` : '');
       const tray = f.body.querySelector('.mgx-sort-tray');
       const draw = () => {
-        tray.innerHTML = items.filter((it) => !placed[it.id]).map((it) => `<button type="button" class="mgx-sort-item${picked === it.id ? ' picked' : ''}" data-item="${esc(it.id)}" aria-pressed="${picked === it.id}">${esc(it.label)}</button>`).join('') || '<span class="mgx-sort-empty">すべて仕分けた</span>';
+        tray.innerHTML = items.filter((it) => !placed[it.id]).map((it) => `<button type="button" class="mgx-sort-item${it.pic ? ' has-pic' : ''}${picked === it.id ? ' picked' : ''}" data-item="${esc(it.id)}" aria-pressed="${picked === it.id}">${pic(it)}<b>${esc(it.label)}</b>${it.desc ? `<small>${esc(it.desc)}</small>` : ''}</button>`).join('') || '<span class="mgx-sort-empty">すべて仕分けた</span>';
+        const P = items.find((x) => x.id === picked), n = Object.keys(placed).length;
+        now.innerHTML = P ? `<b>「${esc(P.label)}」を持っている。</b>入れる所を押す。` : n < items.length ? `<b>${n === 0 ? '① 物を一つ押す' : '次の物を押す'}</b>　→　② 入れる所を押す　<span class="mgx-sort-count">戻した ${n} / ${items.length}</span>` : `<b>すべて戻した</b>　<span class="mgx-sort-count">${n} / ${items.length}</span>`;
         f.progress(Object.keys(placed).length, items.length);
-        for (const b of f.body.querySelectorAll('.mgx-sort-bin')) b.querySelector('.mgx-sort-in').textContent = items.filter((it) => placed[it.id] === b.dataset.bin).map((it) => it.label).join('・');
+        for (const b of f.body.querySelectorAll('.mgx-sort-bin')) { b.querySelector('.mgx-sort-in').innerHTML = items.filter((it) => placed[it.id] === b.dataset.bin).map((it) => `<i class="mgx-sort-chip">${pic(it)}${esc(it.label)}</i>`).join(''); b.classList.toggle('ready', !!picked); }
       };
       const put = (id, binId) => {
         const it = items.find((x) => x.id === id); if (!it || f.done) return;

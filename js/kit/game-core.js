@@ -1,4 +1,4 @@
-/* game-kit 8c79cf3c: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
+/* game-kit fefa0cb8: js/game-core.js — edit in game-kit and run tools/kit-sync.js */
 // The standard bootstrap of a 3D first-person game (docs/standard-3d.md). Wires the standard modules from DATA (game.json + data/*.json):
 //   runtime base  render-presets (renderer, lights, fog, post, quality tiers; the preset may be a name or { base, ...overrides }),
 //                 frame-guard (?perf overlay, dynamic resolution, job queue), controller (walk / look / touch),
@@ -78,7 +78,7 @@ import { installTimedShot } from './timed-shot.js';
 import { VoiceQueue } from './voice-queue.js';
 import { installNpcAudit } from './npc-audit.js';
 
-export const CORE_VERSION = '1.40.0';
+export const CORE_VERSION = '1.40.2';
 // the mini game library's types (js/mg-library.js LIBRARY; test/story-hooks.test.mjs keeps the two equal): game.json "minigames" naming one of these loads the library
 export const MG_LIB_TYPES = ['pour', 'turn-dials', 'match-mark', 'timing', 'code-drums', 'tune-radio', 'trace-path', 'slide-tiles', 'search-dark', 'rotate-pipes', 'sort-items', 'memory-pairs', 'lock-pick', 'photo-focus', 'rhythm-taps', 'connect-dots', 'balance-scale', 'echo-bells', 'switch-panel', 'rotate-pieces', 'count-shadows', 'spot-difference', 'maze-path', 'cipher-wheel', 'steady-hand', 'pump-gauge', 'order-steps', 'compass-bearing', 'mirror-beam', 'kana-word', 'jug-measure', 'hold-breath', 'layer-board', 'darkroom-develop', 'tape-splice', 'switchboard', 'steam-letter', 'puzzle-box', 'rubbing', 'knot-untangle', 'torn-paper', 'safe-listen', 'footprint-track'];
 const $ = (id) => document.getElementById(id);
@@ -1139,13 +1139,16 @@ ${it.desc}` : ''}`, ...(it.photo ? { img: it.photo } : {}) };
         Object.assign(state, { inv: snap.inv || [...startInv], docsRead: snap.docsRead || [], doors: snap.doors || [], visited: snap.visited || [] });
         prog.restore(snap.prog);
         state.tasks = [...(snap.tasks || [])]; state.flags = [...(snap.flags || [])];
-        for (const id of state.doors) { const d = world.doors.get(id); if (d && d.open() && d.snap) d.snap(); }   // a restored door is already open (no swing on load)
         unremoveSince(snap.gone);
         for (const id of state.inv) remove('item', id);
         for (const k of snap.gone || []) { const [kind, ...r] = k.split(':'); remove(kind, r.join(':')); }
         if (snap.pos) { placeCamera(snap.pos.x, snap.pos.z, snap.pos.floor || 0); fp.yaw = snap.pos.yaw || 0; }
         ctx.checkpoint = snap.cp ? { ...snap.cp } : snap.pos ? { x: snap.pos.x, z: snap.pos.z, yaw: snap.pos.yaw || 0, floor: snap.pos.floor || 0 } : { ...world.spawn, floor: world.spawn.floor || 0 };
       } else { ctx.checkpoint = { ...world.spawn, floor: world.spawn.floor || 0 }; if (!o.keepSave && !TEST_MODE) store.clear(); }
+      // 1.40.1 (夜勤明けの街 2026-11-28 #1 「セーブはその断面をしっかり保存して…死んで戻るとドアがあいていたりして」): every door is put back as the save
+      // has it - open if the save has it open, SHUT if it was opened after the save (before, only the saved ones were opened, and a door opened
+      // since stayed open after a death back to the save). A new game shuts them all. No swing, no event (the games' restore runs after this).
+      for (const [id, d] of world.doors) { if (!d.mesh || d.barrier) continue; const want = state.doors.includes(id); if (want && !d.isOpen) d.open(); else if (!want && d.isOpen) d.close(); if (d.snap) d.snap(); }
       for (const p of ext.reg.persist.list()) p.restore(resume ? (snap.ext && snap.ext[p.id]) ?? null : null, ctx, { ...o, resume, saved: resume ? snap : null });
       title.classList.add('hidden'); hud.classList.remove('hidden'); state.started = true; applyInput();
       // ?scene=<id> (standard 1.12): a known scene of ext.registerTestScenes runs after game:start; an unknown one says so and starts from the beginning

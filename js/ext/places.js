@@ -109,8 +109,11 @@ export function installPlaces(ext, G) {
   G.hideStation = (sid) => {
     if (!ctx || !sid) return;
     const W = ctx.world;
-    for (let i = W.interactables.length - 1; i >= 0; i--) { const o = W.interactables[i], it = o.userData && o.userData.interact; if (it && it.kind === 'station' && it.id === sid) { W.interactables.splice(i, 1); o.visible = false; } }
+    for (let i = W.interactables.length - 1; i >= 0; i--) { const o = W.interactables[i], it = o.userData && o.userData.interact; if (it && it.kind === 'station' && it.id === sid) { W.interactables.splice(i, 1); o.visible = false; (hiddenSt.get(sid) || hiddenSt.set(sid, []).get(sid)).push(o); } }
   };
+  // 1.10.0 #1: back to a save made before he turned - the station is there again
+  const hiddenSt = new Map();
+  G.showStation = (sid) => { if (!ctx || !sid) return; const L = hiddenSt.get(sid); if (!L) return; for (const o of L) { o.visible = true; if (!ctx.world.interactables.includes(o)) ctx.world.interactables.push(o); } hiddenSt.delete(sid); };
   ext.on('game:ready', (c) => {
     ctx = c;
     try { buildRubble(); } catch (e) { console.warn('[yakinake] rubble', e); }
